@@ -45,17 +45,16 @@ def problems(slug, title, text):
             f"sections: expected {', '.join(SECTIONS)} and optionally State, "
             f"in that order; found {', '.join(headings) or 'none'}"
         )
-        return found
 
     body = dict(parsed)
-    if not body["Done"]:
+    if "Done" in body and not body["Done"]:
         found.append("Done: name at least one outcome")
-    for line in body["Decided"].splitlines():
+    for line in body.get("Decided", "").splitlines():
         if LIST_ITEM.match(line) and "why:" not in line.lower():
             found.append(f"Decided: give this decision its why: {line.strip()}")
-    if not body["Next"]:
+    if "Next" in body and not body["Next"]:
         found.append("Next: write one concrete action")
-    elif any(LIST_ITEM.match(line) for line in body["Next"].splitlines()) or "\n\n" in body["Next"]:
+    elif any(LIST_ITEM.match(line) for line in body.get("Next", "").splitlines()) or "\n\n" in body.get("Next", ""):
         found.append("Next: write a single action, not a list or several paragraphs")
     if "State" in body and not body["State"]:
         found.append("State: leave the section out when there is nothing to name")
