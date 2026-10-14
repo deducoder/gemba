@@ -5,8 +5,8 @@ Usage: python3 handoff.py <slug> < handoff.md   (from the project root)
 
 The handoff comes on stdin. When it follows the template, the script writes it
 to .gemba/sessions/<YYYY-MM-DD-HHMM>-<slug>.md, with the date taken from its
-title, creates that folder with a .gitignore that ignores everything in it,
-and prints the path.
+title, creates that folder with a .gitignore that ignores everything in it
+when it has none, and prints the path.
 
 When something doesn't follow the template, it prints one line per problem to
 stderr, writes nothing and exits 1.
@@ -86,7 +86,9 @@ def main(argv):
 
     try:
         SESSIONS.mkdir(parents=True, exist_ok=True)
-        (SESSIONS / ".gitignore").write_text("*\n", encoding="utf-8")
+        ignore = SESSIONS / ".gitignore"
+        if not ignore.exists():
+            ignore.write_text("*\n", encoding="utf-8")
         path.write_text(text.strip() + "\n", encoding="utf-8")
     except OSError as error:
         print(f"handoff.py: {error}", file=sys.stderr)
