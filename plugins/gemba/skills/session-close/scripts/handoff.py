@@ -93,10 +93,14 @@ def main(argv):
 
     try:
         sessions.mkdir(parents=True, exist_ok=True)
+        with path.open("x", encoding="utf-8") as handle:
+            handle.write(text.strip() + "\n")
         ignore = sessions / ".gitignore"
         if not ignore.exists():
             ignore.write_text("*\n", encoding="utf-8")
-        path.write_text(text.strip() + "\n", encoding="utf-8")
+    except FileExistsError:
+        print(f"{path.as_posix()} already exists: choose another slug", file=sys.stderr)
+        return 1
     except OSError as error:
         print(f"handoff.py: {error}", file=sys.stderr)
         return 1
