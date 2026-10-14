@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Checks a handoff against the template and saves it.
 
-Usage: python3 handoff.py <slug> < handoff.md   (from the project root)
+Usage: python3 handoff.py <slug> < handoff.md
 
 The handoff comes on stdin. When it follows the template, the script writes it
-to .gemba/sessions/<YYYY-MM-DD-HHMM>-<slug>.md, with the date taken from its
+to .gemba/sessions/<YYYY-MM-DD-HHMM>-<slug>.md at the root of the git repository
+(or of the current directory outside one), with the date taken from its
 title, creates that folder with a .gitignore that ignores everything in it
 when it has none, and prints the path.
 
@@ -13,10 +14,10 @@ stderr, writes nothing and exits 1.
 """
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
-SESSIONS = Path(".gemba/sessions")
 SECTIONS = ["Done", "Decided", "Open", "Next"]
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+){1,2}$")
@@ -61,10 +62,16 @@ def problems(slug, title, text):
     return found
 
 
-def target(slug, title):
+def sessions_dir():
+    """Returns .gemba/sessions at the git repository's root, or under the current directory outside one."""
+    root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    return Path(root.stdout.strip() if root.returncode == 0 else ".") / ".gemba" / "sessions"
+
+
+def target(sessions, slug, title):
     """Returns the handoff's path, with the date from its title."""
     year, month, day, hour, minute = title.groups()
-    return SESSIONS / f"{year}-{month}-{day}-{hour}{minute}-{slug}.md"
+    return sessions / f"{year}-{month}-{day}-{hour}{minute}-{slug}.md"
 
 
 def main(argv):
@@ -75,8 +82,9 @@ def main(argv):
 
     title = TITLE.match(text.lstrip().splitlines()[0] if text.strip() else "")
     found = problems(slug, title, text)
+    sessions = sessions_dir()
     if not found:
-        path = target(slug, title)
+        path = target(sessions, slug, title)
         if path.exists():
             found.append(f"{path.as_posix()} already exists: choose another slug")
     if found:
@@ -84,8 +92,8 @@ def main(argv):
         return 1
 
     try:
-        SESSIONS.mkdir(parents=True, exist_ok=True)
-        ignore = SESSIONS / ".gitignore"
+        sessions.mkdir(parents=True, exist_ok=True)
+        ignore = sessions / ".gitignore"
         if not ignore.exists():
             ignore.write_text("*\n", encoding="utf-8")
         path.write_text(text.strip() + "\n", encoding="utf-8")
