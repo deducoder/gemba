@@ -67,7 +67,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
 
 6. **Git history,** last, so the initial commit holds what the steps above wrote.
 
-   - **With history:** change nothing; report what is missing among `main`, `origin`, `develop` and their upstreams, each with the command that adds it.
+   - **With history:** change nothing; report what is missing among `main`, `origin`, `develop` and their upstreams, each with the command that adds it, and name the files the steps above changed, which stay uncommitted.
    - **Without history:**
      1. Ask for the URL of an empty remote repository in a plain message. Check it with `git ls-remote <url>`: stop if it fails or lists any ref.
      2. Run `git init -b main` when `.git` is missing, else `git symbolic-ref HEAD refs/heads/main`, and show `git status --short --untracked-files=all` as the files the initial commit will hold.
