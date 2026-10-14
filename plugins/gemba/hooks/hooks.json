@@ -1,0 +1,17 @@
+{
+  "description": "Injects Gemba's values, method, communication and language rules into every session.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/context/gemba.md"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
