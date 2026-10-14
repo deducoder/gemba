@@ -16,11 +16,8 @@ import re
 import sys
 from pathlib import Path
 
-sys.dont_write_bytecode = True
-
 SESSIONS = Path(".gemba/sessions")
 SECTIONS = ["Done", "Decided", "Open", "Next"]
-OPTIONAL_LAST = "State"
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+){1,2}$")
 TITLE = re.compile(r"^# Session (\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}) [—–-] \S.*$")
@@ -33,21 +30,19 @@ def sections(text):
     return [(parts[i], parts[i + 1].strip()) for i in range(1, len(parts), 2)]
 
 
-def problems(slug, text):
+def problems(slug, title, text):
     """Returns what doesn't follow the template; empty when the handoff does."""
     found = []
     if not SLUG.match(slug):
         found.append(f"slug {slug!r}: use 2 or 3 lowercase words joined by hyphens")
-
-    first_line = text.lstrip().splitlines()[0] if text.strip() else ""
-    if not TITLE.match(first_line):
+    if not title:
         found.append("title: the first line must be '# Session <YYYY-MM-DD HH:MM> — <focus>'")
 
     parsed = sections(text)
     headings = [heading for heading, _ in parsed]
-    if headings not in (SECTIONS, SECTIONS + [OPTIONAL_LAST]):
+    if headings not in (SECTIONS, SECTIONS + ["State"]):
         found.append(
-            f"sections: expected {', '.join(SECTIONS)} and optionally {OPTIONAL_LAST}, "
+            f"sections: expected {', '.join(SECTIONS)} and optionally State, "
             f"in that order; found {', '.join(headings) or 'none'}"
         )
         return found
@@ -62,14 +57,14 @@ def problems(slug, text):
         found.append("Next: write one concrete action")
     elif any(LIST_ITEM.match(line) for line in body["Next"].splitlines()) or "\n\n" in body["Next"]:
         found.append("Next: write a single action, not a list or several paragraphs")
-    if OPTIONAL_LAST in body and not body[OPTIONAL_LAST]:
-        found.append(f"{OPTIONAL_LAST}: leave the section out when there is nothing to name")
+    if "State" in body and not body["State"]:
+        found.append("State: leave the section out when there is nothing to name")
     return found
 
 
-def target(slug, text):
+def target(slug, title):
     """Returns the handoff's path, with the date from its title."""
-    year, month, day, hour, minute = TITLE.match(text.lstrip().splitlines()[0]).groups()
+    year, month, day, hour, minute = title.groups()
     return SESSIONS / f"{year}-{month}-{day}-{hour}{minute}-{slug}.md"
 
 
@@ -79,10 +74,12 @@ def main(argv):
         return 1
     slug, text = argv[1], sys.stdin.read()
 
-    found = problems(slug, text)
-    path = None if found else target(slug, text)
-    if path is not None and path.exists():
-        found.append(f"{path.as_posix()} already exists: choose another slug")
+    title = TITLE.match(text.lstrip().splitlines()[0] if text.strip() else "")
+    found = problems(slug, title, text)
+    if not found:
+        path = target(slug, title)
+        if path.exists():
+            found.append(f"{path.as_posix()} already exists: choose another slug")
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
