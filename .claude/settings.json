@@ -9,5 +9,10 @@
   },
   "enabledPlugins": {
     "gemba@gemba": true
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
   }
 }
