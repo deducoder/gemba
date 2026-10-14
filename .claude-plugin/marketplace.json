@@ -1,0 +1,14 @@
+{
+  "name": "gemba",
+  "description": "Gemba plugins for Claude Code.",
+  "owner": {
+    "name": "Daniel Efraín Domínguez Urbina",
+    "url": "https://deducoder.com/"
+  },
+  "plugins": [
+    {
+      "name": "gemba",
+      "source": "./plugins/gemba"
+    }
+  ]
+}
