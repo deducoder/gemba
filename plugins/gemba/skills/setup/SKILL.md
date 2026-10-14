@@ -38,7 +38,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
 
 1. **Languages.** Ask for the Conversation and the Content language, each as `Language (Region)`, such as `Spanish (Mexico)`. Structure is always English and is not asked.
 
-2. **Atlassian.** Ask for the site, the Jira space and the Confluence space, offering only what the Atlassian tools return; without them, ask in a plain message. Keep keys, never numeric IDs.
+2. **Atlassian.** Ask for the site, the Jira space and the Confluence space from what the Atlassian tools return; without them, ask in a plain message. Keep keys, never numeric IDs.
    - List Confluence spaces without a type filter (a team space can be `knowledge_base`, not `global`) and leave out personal ones (keys starting with `~`).
    - With a single site, use it and say so.
    - Ask for the Jira and the Confluence space with their keys as options, even when there is a single one, adding an option to type another key.
