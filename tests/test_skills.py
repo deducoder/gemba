@@ -68,7 +68,7 @@ class SkillStructure(unittest.TestCase):
         handoff = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(handoff)
         template = (skill / "assets/handoff.md").read_text(encoding="utf-8")
-        self.assertEqual(re.findall(r"^## (.+)$", template, re.MULTILINE), handoff.SECTIONS + ["State"])
+        self.assertEqual([heading for heading, _ in handoff.sections(template)], handoff.SECTIONS + ["State"])
 
     @unittest.skipUnless(shutil.which("claude"), "claude CLI not installed")
     def test_claude_plugin_validate_strict_passes(self):
