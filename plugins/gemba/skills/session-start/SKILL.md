@@ -13,7 +13,7 @@ Project root: !`git rev-parse --show-toplevel 2>/dev/null || pwd`
 
 Latest handoff: !`ls -1t .gemba/sessions/*.md 2>/dev/null | head -n 1 | grep . || echo "(none)"`
 
-Branch: !`git branch --show-current 2>/dev/null | grep . || echo "(none)"`
+Branch: !`git branch --show-current 2>/dev/null | grep . || git rev-parse --short HEAD 2>/dev/null || echo "(none)"`
 
 Uncommitted changes:
 
