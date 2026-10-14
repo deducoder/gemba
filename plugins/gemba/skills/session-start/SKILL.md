@@ -9,6 +9,8 @@ disallowed-tools:
 
 # Session start
 
+Project root: !`git rev-parse --show-toplevel 2>/dev/null || pwd`
+
 Latest handoff: !`ls -1 .gemba/sessions/*.md 2>/dev/null | tail -n 1 | grep . || echo "(none)"`
 
 Branch: !`git branch --show-current 2>/dev/null | grep . || echo "(none)"`
@@ -25,7 +27,7 @@ Recent commits:
 !`git log --oneline -5 2>/dev/null | grep . || echo "(none)"`
 ```
 
-1. **Without a handoff, stop there.** When the latest handoff is none, say so and ask the user what to work on.
+1. **Without a handoff, stop there.** When the latest handoff is none, look for the latest `.gemba/sessions/*.md` at the project root above; when there is none there either, say so and ask the user what to work on.
 
 2. **Read the latest handoff.**
 
