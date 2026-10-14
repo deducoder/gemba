@@ -70,8 +70,8 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    - **With history:** change nothing; report what is missing among `main`, `origin`, `develop` and their upstreams, each with the command that adds it.
    - **Without history:**
      1. Ask for the URL of an empty remote repository in a plain message. Check it with `git ls-remote <url>`: stop if it fails or lists any ref.
-     2. Run `git init -b main` (skip it when `.git` exists) and show `git status --short --untracked-files=all` as the files the initial commit will hold.
-     3. Run `git add -A`, `git commit -m "initial commit"` and `git remote add origin <url>`.
+     2. Run `git init -b main` when `.git` is missing, else `git symbolic-ref HEAD refs/heads/main`, and show `git status --short --untracked-files=all` as the files the initial commit will hold.
+     3. Run `git add -A`, `git commit -m "initial commit"` and `git remote add origin <url>` (`git remote set-url origin <url>` when `origin` exists).
      4. Ask whether to push. Only on a yes, run `git push -u origin main`, `git switch -c develop` and `git push -u origin develop`.
 
 7. **Report** one line per step: what changed, or that it was already right. Say that the changes apply from the next session. Reply in the Conversation language.
