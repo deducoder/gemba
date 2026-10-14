@@ -27,7 +27,7 @@ Recent commits:
 !`git log --oneline -5 2>/dev/null | grep . || echo "(none)"`
 ```
 
-1. **Without a handoff, stop there.** When the latest handoff is none, look for the latest `.gemba/sessions/*.md` at the project root above; when there is none there either, say so and ask the user what to work on.
+1. **Find the handoff.** When the latest handoff above is none, look for the newest `.gemba/sessions/*.md` at the project root above and use it. When there is none there either, say so, ask the user what to work on and stop.
 
 2. **Read the latest handoff.**
 
