@@ -13,8 +13,6 @@ PLUGIN = Path(__file__).resolve().parent.parent / "plugins" / "gemba"
 SKILLS = sorted(PLUGIN.glob("skills/*/SKILL.md"))
 SIDE_EFFECTS = ["setup", "session-close"]
 
-sys.dont_write_bytecode = True  # importing handoff.py must leave no __pycache__ inside the plugin
-
 
 def read(path):
     """Returns the frontmatter fields and the full text of a SKILL.md."""
@@ -66,7 +64,11 @@ class SkillStructure(unittest.TestCase):
         skill = PLUGIN / "skills/session-close"
         spec = importlib.util.spec_from_file_location("handoff", skill / "scripts/handoff.py")
         handoff = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(handoff)
+        sys.dont_write_bytecode = True  # importing handoff.py must leave no __pycache__ inside the plugin
+        try:
+            spec.loader.exec_module(handoff)
+        finally:
+            sys.dont_write_bytecode = False
         template = (skill / "assets/handoff.md").read_text(encoding="utf-8")
         self.assertEqual([heading for heading, _ in handoff.sections(template)], handoff.SECTIONS + ["State"])
 
