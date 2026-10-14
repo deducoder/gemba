@@ -1,0 +1,12 @@
+{
+  "name": "gemba",
+  "displayName": "Gemba",
+  "version": "0.0.0",
+  "description": "Agentic development framework built on genchi genbutsu: go to the source, observe the facts, then act.",
+  "author": {
+    "name": "Daniel Efraín Domínguez Urbina",
+    "url": "https://deducoder.com/"
+  },
+  "license": "Apache-2.0",
+  "repository": "https://github.com/deducoder/gemba"
+}
