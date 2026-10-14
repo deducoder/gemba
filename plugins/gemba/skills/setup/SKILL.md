@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira project and Confluence space in .gemba/project/atlassian.json, turns off commit and PR attribution, and creates the initial git history. Safe to re-run.
+description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, turns off commit and PR attribution, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
 ---
 
