@@ -34,13 +34,19 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 3. **Revalidate the Done when.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop. A story already in Implement is resumed on its own branch, so for it do this step after step 6.
 
-4. **Check the project is ready** with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check`. When it refuses, relay its reason and stop.
+4. **Check the project is ready** with this command, the Summary in single quotes and an inner `'` written `'\''`:
+
+   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check story <KEY> '<Summary>'
+   ```
+
+   Uncommitted changes on the branch of this same story do not stop it: they are the work to continue. When it refuses, relay its reason and stop.
 
 5. **Mark it Implement,** only when it is in Backlog: a story already in Implement is resumed, so skip this step and the push of step 6. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, create no branch and run no more commands.
 
-6. **Create the branch,** or switch to it when it already exists, with this command, the Summary in single quotes and an inner `'` written `'\''`:
+6. **Create the branch,** or switch to it when it already exists, with the same arguments and without `--check`:
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py story <KEY> '<Summary>'
