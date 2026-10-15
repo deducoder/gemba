@@ -22,4 +22,4 @@ graders:
     match: not_contains
   - name: why
     type: regex
-    pattern: 'Done'
+    pattern: 'Done(?! when)'
