@@ -1,2 +1,5 @@
 # Python bytecode caches created when running the tests
 __pycache__/
+
+# Results written by claude plugin eval
+evals/results/
