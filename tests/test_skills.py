@@ -49,6 +49,18 @@ class SkillStructure(unittest.TestCase):
                 with self.subTest(skill=path.parent.name, command=command):
                     self.assertNotIn("$(", command)
 
+    def test_assets_are_injected_and_readable_outside_the_project(self):
+        for path in SKILLS:
+            text = read(path)[1]
+            assets = set(re.findall(r"\$\{CLAUDE_SKILL_DIR\}/assets/([\w.-]+)", text))
+            if not assets:
+                continue
+            with self.subTest(skill=path.parent.name):
+                frontmatter = re.match(r"---\n(.*?)\n---\n", text, re.DOTALL).group(1)
+                self.assertIn("- Read(/${CLAUDE_SKILL_DIR}/assets/*)", [line.strip() for line in frontmatter.splitlines()])
+                for asset in assets:
+                    self.assertIn(f"!`cat ${{CLAUDE_SKILL_DIR}}/assets/{asset}`", text)
+
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:
             with self.subTest(skill=name):
