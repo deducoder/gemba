@@ -25,7 +25,7 @@ Template:
 
 !`cat ${CLAUDE_SKILL_DIR}/references/estimate.md`
 
-The story stays in Backlog: this skill changes no status and creates no branch. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. When part of a request calls for a spike or a bug, name it in the reply instead of creating it. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
 1. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built.
 
