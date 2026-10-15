@@ -96,6 +96,13 @@ class StoryDraft(unittest.TestCase):
         result = run(draft)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_code_may_hold_equals_and_arrows_and_keys_may_hold_underscores(self):
+        draft = DRAFT.replace("* ran: `curl -i /invoices/0` → 404", "* ran: `python3 -c 'print(1 == 1)'` → True")
+        draft = draft.replace("* Facturas de otros clientes", "* Renombrar `a → b`").replace("→ ABC-7", "→ MY_PROJ-7")
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"https://{SITE}/browse/MY_PROJ-7", result.stdout)
+
     def test_the_template_has_the_sections_the_script_expects(self):
         template = (SKILL / "assets/story.md").read_text(encoding="utf-8")
         self.assertEqual(re.findall(r"^### (.+)$", template, re.MULTILINE), ["Done when", "Evidence", "Out of scope"])
@@ -109,6 +116,11 @@ class StoryDraft(unittest.TestCase):
             "evidence without ran or read": DRAFT.replace("* read: `app/invoices.py:12`", "* see the code"),
             "an arrow to something that is not a key": DRAFT.replace("→ ABC-7", "→ a story of its own"),
             "equals outside Done when": DRAFT.replace("* Facturas de otros clientes", "* ==Facturas de otros clientes=="),
+            "a repeated section": DRAFT + "\n### Out of scope\n\n* Otra cosa\n",
+            "a partly wrapped criterion": DRAFT.replace("* ==Si la factura no existe, la descarga responde 404.==", "* ==Si la factura no existe== responde 404."),
+            "equals in the Summary": DRAFT.replace("Let customers download", "Let ==customers== download"),
+            "an empty bullet": DRAFT.replace("* Facturas de otros clientes", "* "),
+            "a deduced criterion with only code": DRAFT.replace("* ==Si la factura no existe, la descarga responde 404.==", "* ==`--json`=="),
             "a line that is not a bullet": DRAFT.replace("* Facturas de otros clientes", "Facturas de otros clientes"),
             "two opening paragraphs": DRAFT.replace("para llevar mis cuentas.", "para llevar mis cuentas.\n\nOtra frase."),
             "no criteria": DRAFT.replace("* La página de facturas ofrece `Download` para cada factura.\n", "").replace(
