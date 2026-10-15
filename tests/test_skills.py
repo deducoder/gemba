@@ -55,12 +55,13 @@ class SkillStructure(unittest.TestCase):
     def test_assets_are_injected_and_readable_outside_the_project(self):
         for path in SKILLS:
             text = read(path)[1]
-            assets = {ref for ref in REFERENCE.findall(text) if ref.startswith("assets/") and ref != "assets/"}
+            assets = {ref for ref in REFERENCE.findall(text) if ref.startswith("assets/") and not ref.endswith("/")}
             if not assets:
                 continue
             with self.subTest(skill=path.parent.name):
-                frontmatter = FRONTMATTER.match(text).group(1).splitlines()
-                self.assertIn("- Read(/${CLAUDE_SKILL_DIR}/assets/*)", [line.strip() for line in frontmatter])
+                match = FRONTMATTER.match(text)
+                self.assertIsNotNone(match)
+                self.assertIn("- Read(/${CLAUDE_SKILL_DIR}/assets/*)", [line.strip() for line in match.group(1).splitlines()])
                 commands = INJECTED.findall(text)
                 for asset in assets:
                     self.assertIn("cat ${CLAUDE_SKILL_DIR}/" + asset, commands)
