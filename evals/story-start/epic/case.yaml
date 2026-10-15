@@ -18,7 +18,7 @@ graders:
   - name: parent
     type: regex
     target: mock_calls
-    pattern: 'createJiraIssue.*parent\W+(key\W+)?ABC-7'
+    pattern: 'createJiraIssue.*parent\W+ABC-7'
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-42'

@@ -1,6 +1,6 @@
 ---
 name: story-start
-description: Declares a story in Jira from an idea. Reads the code the idea touches, drafts the story with its Done when and the evidence behind each criterion, and creates it in Backlog. Use when the user asks for a feature or a change to build ("make it…", "add…", "haz que…"), or asks to declare, define or write a story. Not for a small edit that needs no work item, an open question to research, or something that is broken. It starts no work.
+description: Declares a story in Jira from an idea. Reads the code the idea touches, drafts the story with its Done when and the evidence behind each criterion, and creates it in Backlog. Use when the user asks for a feature or a change to build ("make it…", "add…", "haz que…"), or asks to declare, define or write a story, including one that names the key of an epic to nest it under or of a work item to read. Not for a small edit that needs no work item, an open question to research, or something that is broken: it names the bug or the spike instead. It starts no work.
 argument-hint: "[idea]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -57,6 +57,6 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
    When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories within the limit it names, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, and link them with `createIssueLink`: `Blocks` where one cannot start before another is done, `Relates` between the rest.
 
-8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the epic of step 2 as `parent` when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
+8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
 
 9. **Reply** with the key and link of each story it created, the spikes or bugs it named instead, and why an epic it named is not the parent, and nothing else.
