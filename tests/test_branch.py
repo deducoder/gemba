@@ -240,6 +240,57 @@ class Branch(unittest.TestCase):
                 self.assertEqual(result.returncode, 2)
                 self.assertIn("--ready", result.stderr)
 
+    def push_the_work_with_a_commit_of_its_own(self):
+        branch = self.start_the_work_with_a_commit_of_its_own()
+        git(self.work, "push", "-q", "-u", "origin", branch)
+        return branch
+
+    def test_merge_puts_the_remote_branch_in_develop_with_a_merge_commit_that_names_it(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout.strip()), (0, branch), result.stderr)
+        self.assertEqual(git(self.work, "log", "-1", "--format=%s", "develop"), f"Merge branch '{branch}' into develop")
+        self.assertEqual(len(git(self.work, "log", "-1", "--format=%P", "develop").split()), 2)
+        self.assertEqual((self.work / "c").read_text(), "c")
+
+    def test_merge_leaves_the_work_on_develop(self):
+        self.push_the_work_with_a_commit_of_its_own()
+        run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
+    def test_merge_brings_in_what_reached_origin_develop_after_the_branch_was_cut(self):
+        self.push_the_work_with_a_commit_of_its_own()
+        self.push_a_commit_to_develop_from_another_clone()
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.work / "b").read_text(), "b")
+        self.assertEqual(git(self.work, "rev-list", "--count", "origin/develop..develop"), "1")
+
+    def test_merge_takes_the_branch_from_origin_and_not_the_local_commits_it_lacks(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        (self.work / "d").write_text("d")
+        git(self.work, "add", "d")
+        git(self.work, "commit", "-qm", "fix(billing): not pushed")
+        run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertFalse((self.work / "d").exists())
+        self.assertTrue((self.work / "c").exists())
+        self.assertEqual(git(self.work, "rev-list", "--count", f"develop..{branch}"), "1")
+
+    def test_merge_neither_pushes_nor_deletes_a_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        before = git(self.remote, "rev-parse", "develop")
+        run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual(git(self.remote, "rev-parse", "develop"), before)
+        self.assertEqual(git(self.work, "branch", "--list", branch), f"  {branch}")
+        self.assertIn(branch, git(self.remote, "branch", "--list"))
+
+    def test_merge_needs_the_work_item_arguments(self):
+        for args in (("--merge",), ("--merge", "story", "ABC-1")):
+            with self.subTest(args=args):
+                result = run(self.work, *args)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("--merge", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
