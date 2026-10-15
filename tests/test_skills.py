@@ -15,7 +15,7 @@ SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 INJECTED = re.compile(r"!`([^`]*)`")
-PROJECT_FILE = re.compile(r"(?<![\w/}\"])(?:\.gemba/|\.claude/|CLAUDE\.md)")
+PROJECT_FILE = re.compile(r"(?<![\w/])(?:\.gemba/|\.claude/|CLAUDE\.md)")
 
 
 def read(path):
