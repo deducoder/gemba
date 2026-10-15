@@ -75,6 +75,14 @@ class SkillStructure(unittest.TestCase):
                 for asset in assets:
                     self.assertIn("cat ${CLAUDE_SKILL_DIR}/" + asset, commands)
 
+    def test_gemba_code_skills_allow_only_their_own_files(self):
+        for path in sorted(ROOT.glob("plugins/gemba-code/skills/*/SKILL.md")):
+            match = FRONTMATTER.match(read(path)[1])
+            allowed = re.search(r"^allowed-tools:\n((?:  - .*\n)+)", match.group(1) + "\n", re.MULTILINE)
+            for line in allowed.group(1).splitlines() if allowed else []:
+                with self.subTest(skill=path.parent.name, tool=line.strip()):
+                    self.assertIn("${CLAUDE_SKILL_DIR}/", line)
+
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:
             with self.subTest(skill=name):
