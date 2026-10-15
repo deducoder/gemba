@@ -13,13 +13,16 @@ counts as --fixed minutes. Prints {"minutes": N, "timeSpent": "1h 12m", "started
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
 
 
 def parse(text):
-    return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    """Reads an ISO timestamp, also with the `Z` or the colon-less offset (`-0600`) that
+    Jira writes, which Python before 3.11 does not read."""
+    return datetime.fromisoformat(re.sub(r"([+-]\d\d)(\d\d)$", r"\1:\2", text.replace("Z", "+00:00")))
 
 
 def commit_times(base):

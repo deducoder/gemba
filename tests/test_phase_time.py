@@ -78,6 +78,15 @@ class PhaseTime(unittest.TestCase):
     def test_a_phase_without_commits_is_the_interval_of_its_marks(self):
         self.assertEqual(self.run_script("01:00:00", "01:20:00")["minutes"], 20)
 
+    def test_it_reads_the_timestamps_as_jira_writes_them(self):
+        self.commit("00:56:49")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--start", "2026-10-15T00:54:27.000-0600", "--end", "2026-10-15T01:03:46.123-0600", "--base", "develop"],
+            cwd=self.repo, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["minutes"], 9)
+
     def test_the_end_is_now_when_it_is_not_given(self):
         start = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat()
         result = subprocess.run(
