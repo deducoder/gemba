@@ -230,6 +230,50 @@
           "commentBody"
         ]
       }
+    },
+    {
+      "name": "createIssueLink",
+      "description": "Create a link between two Jira issues. For directional link types (e.g. Blocks): inwardIssue = issue that blocks, outwardIssue = issue that is blocked (e.g. \"A is blocked by B\" \u2192 inwardIssue: B, outwardIssue: A). Use getIssueLinkTypes if link type is unknown.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment on the outward issue."
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ]
+          },
+          "inwardIssue": {
+            "type": "string",
+            "description": "Inward issue key (e.g. HSP-1)."
+          },
+          "outwardIssue": {
+            "type": "string",
+            "description": "Outward issue key (e.g. MKY-1)."
+          },
+          "type": {
+            "type": "string",
+            "description": "Link type name (e.g. Duplicate, Blocks, Clones, Relates). Use getIssueLinkTypes to list available types."
+          }
+        },
+        "required": [
+          "cloudId",
+          "inwardIssue",
+          "outwardIssue",
+          "type"
+        ]
+      }
     }
   ]
 }

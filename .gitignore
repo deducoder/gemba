@@ -3,3 +3,7 @@ __pycache__/
 
 # Results written by claude plugin eval
 evals/results/
+
+# Transcripts that claude plugin eval writes next to a resumed history_file
+evals/**/*.jsonl
+!evals/**/history.jsonl
