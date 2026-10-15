@@ -116,7 +116,7 @@ class Branch(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
         self.assertIn("Uncommitted", result.stderr)
-        self.assertIn("a", result.stderr)
+        self.assertIn(" M a", result.stderr)
 
     def test_check_refuses_without_origin_develop_even_when_the_local_ref_is_stale(self):
         self.delete_develop_from_the_remote_only()
