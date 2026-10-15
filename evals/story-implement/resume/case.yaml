@@ -1,0 +1,40 @@
+schema_version: "1.1"
+name: story-implement-resume
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement ABC-39.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 20
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-39'
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addWorklogToJiraIssue'
+    match: not_contains
+  - name: switched
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py story ABC-39'
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0
+  - name: branch
+    type: regex
+    pattern: 'story/ABC-39/print-the-invoices-as-csv'
+    flags: i
