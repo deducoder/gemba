@@ -27,7 +27,7 @@ Uncommitted changes:
 !`git status --short 2>/dev/null | grep . || echo "(none)"`
 ```
 
-1. **Fill the template** above with what this block did, decided and left open, with the title date above. Keep its headings and labels in English, and write the content in the `Content:` language of the `## Language` section in `CLAUDE.md`, or in the conversation's language when there is none.
+1. **Fill the template** above with what this block did, decided and left open, titled with the date above. Keep its headings and labels in English, and write the content in the `Content:` language of the `## Language` section in `CLAUDE.md`, or in the conversation's language when there is none.
 
 2. **Give every decision in Decided its why, and make Next one concrete action:** without the why, the decision gets reopened, and a list postpones the decision Next forces.
 
