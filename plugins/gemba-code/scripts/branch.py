@@ -17,9 +17,13 @@ item when given. `--ready` asks whether the work is ready to be reviewed and ref
 touching nothing, with the first reason that fails: it is not on the branch of the work
 item, it has uncommitted changes in files with tracking, origin/develop does not exist,
 it has no commits of its own or it is behind origin/develop. `--merge` brings the
-work done into develop: it updates develop (`git pull --ff-only`), merges origin/<branch>
-with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on develop
-and prints the branch. It never pushes: the push is a command of its own, visible to
+work done into develop. It refuses, touching nothing, with the first reason that fails:
+uncommitted changes in files with tracking (also on the work branch), origin/<branch> does
+not exist, local commits origin/<branch> lacks, or a develop that does not fast-forward.
+Otherwise it updates develop (`git pull --ff-only`), merges origin/<branch> with `--no-ff`
+and the message `Merge branch '<branch>' into develop`, stays on develop and prints the
+branch; on conflicts it aborts the merge, goes back to the branch it came from and names
+the files. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
 
@@ -77,10 +81,40 @@ def switch_to(branch):
     print(branch)
 
 
+class Refused(Exception):
+    """A refusal that is not a failed git command: it carries the reason to print."""
+
+
+def mergeable(branch):
+    """Returns the first reason the branch cannot be merged into develop yet, or None."""
+    reason = check(None)
+    if reason:
+        return reason
+    if not has_ref(f"refs/remotes/origin/{branch}"):
+        return f"origin/{branch} does not exist"
+    if has_ref(f"refs/heads/{branch}"):
+        ahead = int(git("rev-list", "--count", f"origin/{branch}..{branch}").stdout)
+        if ahead:
+            return f"{branch} has {ahead} commit(s) that origin/{branch} does not have"
+    if has_ref("refs/heads/develop") and subprocess.run(["git", "merge-base", "--is-ancestor", "develop", DEVELOP]).returncode:
+        return f"develop does not fast-forward to {DEVELOP}"
+    return None
+
+
 def merge_into_develop(branch):
+    current = git("branch", "--show-current").stdout.strip()
     git("switch", "-q", "develop")
     git("pull", "-q", "--ff-only")
-    git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
+    try:
+        git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
+    except subprocess.CalledProcessError:
+        conflicts = git("diff", "--name-only", "--diff-filter=U").stdout.split()
+        if not conflicts:
+            raise
+        git("merge", "--abort")
+        if current:
+            git("switch", "-q", current)
+        raise Refused(f"Merge conflicts in: {', '.join(conflicts)}") from None
     print(branch)
 
 
@@ -94,6 +128,9 @@ def guarded(branch, action, verify=check):
         action()
     except subprocess.CalledProcessError as error:
         print(error.stderr.strip(), file=sys.stderr)
+        return 1
+    except Refused as refusal:
+        print(refusal, file=sys.stderr)
         return 1
     return 0
 
@@ -112,7 +149,7 @@ def main(argv):
         return 2
     branch = f"{kind}/{key}/{slug(summary)}"
     if mode == "--merge":
-        return guarded(branch, lambda: merge_into_develop(branch))
+        return guarded(branch, lambda: merge_into_develop(branch), mergeable)
     if mode == "--ready":
         return guarded(branch, lambda: None, ready)
     return guarded(branch, (lambda: None) if mode else (lambda: switch_to(branch)))
