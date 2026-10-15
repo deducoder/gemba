@@ -1,0 +1,34 @@
+schema_version: "1.1"
+name: story-review-resume
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the story ABC-56.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 900
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-56'
+  - name: checked
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --ready story ABC-56'
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+    match: not_contains
+  - name: simplify
+    type: tool_used
+    tool: Skill
+    input_match: 'simplify.*origin/develop\.\.\.HEAD'

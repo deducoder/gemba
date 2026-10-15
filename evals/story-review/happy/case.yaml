@@ -1,0 +1,65 @@
+schema_version: "1.1"
+name: story-review-happy
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the story ABC-31.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 900
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-31'
+  - name: mark-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+41'
+  - name: only-reads-before-the-mark
+    type: regex
+    target: mock_calls
+    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
+    match: not_contains
+  - name: simplify-after-the-mark
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    after:
+      tool: Skill
+      input_match: 'simplify.*origin/develop\.\.\.HEAD'
+  - name: code-review-after-simplify
+    type: tool_order
+    before:
+      tool: Skill
+      input_match: 'simplify.*origin/develop\.\.\.HEAD'
+    after:
+      tool: Skill
+      input_match: 'code-review.*origin/develop\.\.\.HEAD'
+  - name: revalidated-before-the-push
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'invoices\.py acme'
+    after:
+      tool: Bash
+      input_match: 'git push'
+  - name: pushed-after-the-review
+    type: tool_order
+    before:
+      tool: Skill
+      input_match: 'code-review.*origin/develop\.\.\.HEAD'
+    after:
+      tool: Bash
+      input_match: 'git push'
+  - name: no-worklog-yet
+    type: regex
+    target: mock_calls
+    pattern: addWorklogToJiraIssue
+    match: not_contains

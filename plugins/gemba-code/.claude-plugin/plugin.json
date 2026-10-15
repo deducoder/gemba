@@ -1,12 +1,13 @@
 {
   "name": "gemba-code",
   "displayName": "Gemba Code",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gemba applied to code: the work cycle of bugs, epics, spikes and stories, and the git rules.",
   "author": {
     "name": "Daniel Efraín Domínguez Urbina",
     "url": "https://deducoder.com/"
   },
+  "dependencies": ["gemba"],
   "license": "Apache-2.0",
   "repository": "https://github.com/deducoder/gemba"
 }

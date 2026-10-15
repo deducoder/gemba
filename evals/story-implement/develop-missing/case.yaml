@@ -1,0 +1,40 @@
+schema_version: "1.1"
+name: story-implement-develop-missing
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement ABC-37.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 12
+  timeout_seconds: 300
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-37'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue'
+    match: not_contains
+  - name: no-branch
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py story'
+    min: 0
+    max: 0
+  - name: checked
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --check'
+  - name: why
+    type: regex
+    pattern: 'origin/develop'
+    flags: i

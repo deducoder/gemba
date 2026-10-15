@@ -1,4 +1,13 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "enabledPlugins": {
+    "gemba@gemba": true,
+    "gemba-code@gemba": true
+  },
   "extraKnownMarketplaces": {
     "gemba": {
       "source": {
@@ -6,13 +15,5 @@
         "repo": "deducoder/gemba"
       }
     }
-  },
-  "enabledPlugins": {
-    "gemba@gemba": true
-  },
-  "attribution": {
-    "commit": "",
-    "pr": "",
-    "sessionUrl": false
   }
 }

@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: story-start-idea
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a story: add a --csv option to invoices.py that prints the customer''s invoices as CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+  - name: sections
+    type: regex
+    target: mock_calls
+    pattern: 'Done when.*Out of scope'
+  - name: evidence-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue.*(ran|read): '
+  - name: priority
+    type: regex
+    target: mock_calls
+    pattern: 'priority\W+name\W+(Highest|High|Medium|Low)'
+  - name: estimate
+    type: regex
+    target: mock_calls
+    pattern: 'timetracking\W*\{\W*originalEstimate\W+\d+[mhd]'
+  - name: reply
+    type: regex
+    pattern: 'https://example\.atlassian\.net/browse/ABC-42'

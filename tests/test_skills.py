@@ -16,8 +16,29 @@ SKILLS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
 SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
+PLUGIN_SCRIPT = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/(scripts/[\w./-]+)")
+RUN_SCRIPT = re.compile(r"python3 (\$\{CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)\}/[\w./-]+)")
 INJECTED = re.compile(r"!`([^`]*)`")
 PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md)")
+
+
+def allowed_tools(text):
+    """Returns the allowed-tools entries in the frontmatter of a SKILL.md, written
+    as a block list or as a flow list."""
+    match = FRONTMATTER.match(text)
+    lines = match.group(1).splitlines() if match else []
+    for i, line in enumerate(lines):
+        if line.startswith("allowed-tools:"):
+            rest = line.split(":", 1)[1].strip()
+            if rest.startswith("["):
+                return [item.strip().strip("'\"") for item in rest.strip("[]").split(",") if item.strip()]
+            items = []
+            for item in lines[i + 1:]:
+                if not re.match(r"^\s*- ", item):
+                    break
+                items.append(item.strip()[2:].strip().strip("'\""))
+            return items
+    return []
 
 
 def read(path):
@@ -68,12 +89,31 @@ class SkillStructure(unittest.TestCase):
             if not assets:
                 continue
             with self.subTest(skill=path.parent.name):
-                match = FRONTMATTER.match(text)
-                self.assertIsNotNone(match)
-                self.assertIn("- Read(/${CLAUDE_SKILL_DIR}/assets/*)", [line.strip() for line in match.group(1).splitlines()])
+                self.assertIn("Read(/${CLAUDE_SKILL_DIR}/assets/*)", allowed_tools(text))
                 commands = INJECTED.findall(text)
                 for asset in assets:
                     self.assertIn("cat ${CLAUDE_SKILL_DIR}/" + asset, commands)
+
+    def test_skills_allow_only_their_own_files_and_the_scripts_of_their_plugin(self):
+        for path in SKILLS:
+            for tool in allowed_tools(read(path)[1]):
+                with self.subTest(skill=path.parent.name, tool=tool):
+                    self.assertTrue("${CLAUDE_SKILL_DIR}/" in tool or "${CLAUDE_PLUGIN_ROOT}/scripts/" in tool)
+
+    def test_plugin_scripts_allowed_by_a_skill_exist(self):
+        for path in SKILLS:
+            for tool in allowed_tools(read(path)[1]):
+                for script in PLUGIN_SCRIPT.findall(tool):
+                    with self.subTest(skill=path.parent.name, script=script):
+                        self.assertTrue((path.parents[2] / script).is_file())
+
+    def test_a_skill_allows_exactly_the_scripts_it_runs(self):
+        for path in SKILLS:
+            text = read(path)[1]
+            allowed = {script for tool in allowed_tools(text) for script in RUN_SCRIPT.findall(tool)}
+            run = set(RUN_SCRIPT.findall(INJECTED.sub("", FRONTMATTER.sub("", text, count=1))))
+            with self.subTest(skill=path.parent.name):
+                self.assertEqual(allowed, run)
 
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:

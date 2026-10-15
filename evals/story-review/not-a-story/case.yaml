@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: story-review-not-a-story
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the story ABC-51.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 12
+  timeout_seconds: 300
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-51'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue'
+    match: not_contains
+  - name: no-check
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py'
+    min: 0
+    max: 0
+  - name: reason
+    type: regex
+    pattern: 'spike'
+    flags: i
