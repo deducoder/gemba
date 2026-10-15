@@ -102,6 +102,8 @@ class StoryDraft(unittest.TestCase):
         result = run(draft)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f"https://{SITE}/browse/MY_PROJ-7", result.stdout)
+        cards = [n for n in texts(json.loads(result.stdout)["description"]) if n["type"] == "inlineCard"]
+        self.assertEqual(cards, [{"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/MY_PROJ-7"}}])
 
     def test_the_template_has_the_sections_the_script_expects(self):
         template = (SKILL / "assets/story.md").read_text(encoding="utf-8")
