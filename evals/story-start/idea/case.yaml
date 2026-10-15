@@ -30,7 +30,7 @@ graders:
   - name: estimate
     type: regex
     target: mock_calls
-    pattern: 'originalEstimate\W+\d+[mhd]'
+    pattern: 'timetracking\W*\{\W*originalEstimate\W+\d+[mhd]'
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-42'
