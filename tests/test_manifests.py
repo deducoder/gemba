@@ -23,7 +23,9 @@ class Dependencies(unittest.TestCase):
 
     def test_every_dependency_is_a_plugin_of_the_marketplace(self):
         in_marketplace = {plugin["name"] for plugin in manifest(".claude-plugin/marketplace.json")["plugins"]}
-        for path in sorted(ROOT.glob("plugins/*/.claude-plugin/plugin.json")):
+        paths = sorted(ROOT.glob("plugins/*/.claude-plugin/plugin.json"))
+        self.assertTrue(paths)
+        for path in paths:
             with self.subTest(plugin=path.parents[1].name):
                 self.assertLessEqual(set(manifest(path).get("dependencies", [])), in_marketplace)
 
@@ -49,7 +51,7 @@ class InstallingWithDependencies(unittest.TestCase):
         path.write_text(json.dumps(data), encoding="utf-8")
 
     def claude(self, *args):
-        return subprocess.run(["claude", "plugin", *args], cwd=self.project, env=self.env, capture_output=True, text=True)
+        return subprocess.run(["claude", "plugin", *args], cwd=self.project, env=self.env, capture_output=True, text=True, timeout=120)
 
     def test_installing_gemba_code_enables_gemba_and_gemba_cannot_be_disabled_while_it_is_enabled(self):
         added = self.claude("marketplace", "add", str(self.marketplace), "--scope", "project")
