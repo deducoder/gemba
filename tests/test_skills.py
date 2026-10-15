@@ -1,4 +1,4 @@
-"""Checks the structure of every skill in the plugin: frontmatter, the files
+"""Checks the structure of every skill in the marketplace plugins: frontmatter, the files
 each SKILL.md references, and the shapes other parts depend on."""
 
 import importlib.util
@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "plugins" / "gemba"
-SKILLS = sorted(PLUGIN.glob("skills/*/SKILL.md"))
+SKILLS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
 SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
