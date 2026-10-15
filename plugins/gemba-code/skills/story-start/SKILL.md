@@ -46,8 +46,8 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
    STORY
    ```
 
-   When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories of 8 criteria at most, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, and link them with `createIssueLink`: `Blocks` where one cannot start before another is done, `Relates` between the rest.
+   When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories within the limit it names, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, and link them with `createIssueLink`: `Blocks` where one cannot start before another is done, `Relates` between the rest.
 
 6. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), and in `additional_fields` its `priority` and its `timetracking.originalEstimate`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
 
-7. **Reply** with the key and link of each story it created, and nothing else.
+7. **Reply** with the key and link of each story it created and the spikes or bugs it named instead, and nothing else.
