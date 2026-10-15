@@ -42,11 +42,11 @@ class Branch(unittest.TestCase):
         git(self.work, "switch", "-q", "-c", "develop")
         git(self.work, "push", "-q", "-u", "origin", "develop")
 
-    def push_a_commit_to_develop_from_another_clone(self):
+    def push_a_commit_to_develop_from_another_clone(self, name="b", content="b"):
         git(self.other.parent, "clone", "-q", str(self.remote), str(self.other))
         git(self.other, "switch", "-q", "develop")
-        (self.other / "b").write_text("b")
-        git(self.other, "add", "b")
+        (self.other / name).write_text(content)
+        git(self.other, "add", name)
         git(self.other, "commit", "-qm", "feat(billing): add invoice export")
         git(self.other, "push", "-q", "origin", "develop")
 
@@ -268,15 +268,63 @@ class Branch(unittest.TestCase):
         ancestor = subprocess.run(["git", "merge-base", "--is-ancestor", "origin/develop", "develop"], cwd=self.work)
         self.assertEqual(ancestor.returncode, 0)
 
-    def test_merge_takes_the_branch_from_origin_and_not_the_local_commits_it_lacks(self):
+    def refused_merge(self, branch, reason):
+        """Runs --merge and checks it refused, with the reason named, and touched nothing."""
+        develops = (git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop"))
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""), result.stderr)
+        self.assertIn(reason, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual((git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop")), develops)
+        return result
+
+    def test_merge_refuses_a_branch_that_is_not_on_origin_and_names_it(self):
+        branch = self.start_the_work_with_a_commit_of_its_own()
+        self.refused_merge(branch, f"origin/{branch} does not exist")
+
+    def test_merge_refuses_local_commits_that_origin_lacks_and_counts_them(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
         (self.work / "d").write_text("d")
         git(self.work, "add", "d")
         git(self.work, "commit", "-qm", "fix(billing): not pushed")
-        run(self.work, "--merge", "story", "ABC-1", SUMMARY)
-        self.assertFalse((self.work / "d").exists())
-        self.assertTrue((self.work / "c").exists())
-        self.assertEqual(git(self.work, "rev-list", "--count", f"develop..{branch}"), "1")
+        self.refused_merge(branch, "1 commit")
+
+    def test_merge_refuses_uncommitted_changes_in_files_with_tracking_even_on_the_work_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        self.make_the_tracked_file_dirty()
+        self.refused_merge(branch, " M a")
+        self.assertEqual((self.work / "a").read_text(), "changed")
+
+    def test_merge_refuses_a_develop_that_does_not_fast_forward(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        git(self.work, "switch", "-q", "develop")
+        (self.work / "e").write_text("e")
+        git(self.work, "add", "e")
+        git(self.work, "commit", "-qm", "feat(local): only here")
+        git(self.work, "switch", "-q", branch)
+        self.push_a_commit_to_develop_from_another_clone()
+        self.refused_merge(branch, "fast-forward")
+
+    def test_merge_with_conflicts_aborts_names_the_files_and_leaves_develop_unmerged(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        self.push_a_commit_to_develop_from_another_clone("c", "not c")
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""), result.stderr)
+        self.assertIn("Merge conflicts in: c", result.stderr)
+        self.assertEqual(git(self.work, "rev-parse", "develop"), git(self.work, "rev-parse", "origin/develop"))
+        self.assertNotEqual(subprocess.run(["git", "rev-parse", "-q", "--verify", "MERGE_HEAD"], cwd=self.work, capture_output=True).returncode, 0)
+        self.assertEqual(git(self.work, "status", "--porcelain", "--untracked-files=no"), "")
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+
+    def test_merge_that_fails_without_conflicts_leaves_the_person_on_the_work_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        self.push_a_commit_to_develop_from_another_clone("u", "from develop")
+        (self.work / "u").write_text("untracked and in the way")
+        develops = (git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop"))
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""), result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual((git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop")), (develops[0], develops[1]))
 
     def test_merge_neither_pushes_nor_deletes_a_branch(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
