@@ -29,6 +29,9 @@ def main(argv):
         print("Usage: python3 branch.py <type> <KEY> '<Summary>'", file=sys.stderr)
         return 2
     kind, key, summary = argv
+    if not slug(summary):
+        print("The Summary has no letters or digits to name the branch with", file=sys.stderr)
+        return 2
     branch = f"{kind}/{key}/{slug(summary)}"
     try:
         git("fetch", "-q", "origin")

@@ -25,7 +25,10 @@ FIXED = 15
 def parse(text):
     """Reads an ISO timestamp, also with the `Z` or the colon-less offset (`-0600`) that
     Jira writes, which Python before 3.11 does not read."""
-    return datetime.fromisoformat(re.sub(r"([+-]\d\d)(\d\d)$", r"\1:\2", text.replace("Z", "+00:00")))
+    time = datetime.fromisoformat(re.sub(r"([+-]\d\d)(\d\d)$", r"\1:\2", text.replace("Z", "+00:00")))
+    if time.tzinfo is None:
+        raise ValueError(f"{text} has no UTC offset")
+    return time
 
 
 def commit_times(base):
@@ -39,7 +42,7 @@ def minutes(start, end, commits):
     for before, after in zip(events, events[1:]):
         interval = (after - before).total_seconds() / 60
         total += interval if interval <= CUT else FIXED
-    return round(total)
+    return max(1, round(total))
 
 
 def jira_format(total):
@@ -53,8 +56,12 @@ def main(argv):
     parser.add_argument("--end")
     parser.add_argument("--base", default="origin/develop")
     args = parser.parse_args(argv)
-    start = parse(args.start)
-    end = parse(args.end) if args.end else datetime.now().astimezone()
+    try:
+        start = parse(args.start)
+        end = parse(args.end) if args.end else datetime.now().astimezone()
+    except ValueError as error:
+        print(f"cannot read the timestamp: {error}. Give it as ISO 8601 with a UTC offset, such as 2026-10-15T13:24:07-06:00", file=sys.stderr)
+        return 2
     if end < start:
         print("--end is before --start", file=sys.stderr)
         return 2
