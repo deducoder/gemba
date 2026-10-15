@@ -114,18 +114,19 @@ def mergeable(branch):
 
 def merge_into_develop(branch):
     current = current_branch()
-    git("switch", "-q", "develop")
-    git("pull", "-q", "--ff-only")
     try:
+        git("switch", "-q", "develop")
+        git("pull", "-q", "--ff-only")
         git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
     except subprocess.CalledProcessError:
         conflicts = git("diff", "--name-only", "--diff-filter=U").stdout.split()
-        if not conflicts:
-            raise
-        git("merge", "--abort")
+        if conflicts:
+            git("merge", "--abort")
         if current:
-            git("switch", "-q", current)
-        return f"Merge conflicts in: {', '.join(conflicts)}"
+            subprocess.run(["git", "switch", "-q", current], capture_output=True)
+        if conflicts:
+            return f"Merge conflicts in: {', '.join(conflicts)}"
+        raise
     print(branch)
 
 
