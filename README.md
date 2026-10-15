@@ -11,6 +11,7 @@ This repository is a Claude Code marketplace named `gemba`.
 | Plugin | What it provides |
 | --- | --- |
 | `gemba` | Values, method, communication and language rules, injected into every session, plus the setup and session skills |
+| `gemba-code` | Gemba applied to code: the work cycle of bugs, epics, spikes and stories, and the git rules |
 
 ## Quick start
 
