@@ -34,7 +34,7 @@ Git:
 !`git log --oneline -1 2>/dev/null && git branch -vv && git remote -v || echo "(no history)"`
 ```
 
-## CLAUDE.md template
+Template:
 
 ```markdown
 !`cat ${CLAUDE_SKILL_DIR}/assets/CLAUDE.md`
