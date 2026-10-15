@@ -58,7 +58,7 @@ graders:
     after:
       tool: Bash
       input_match: 'git push'
-  - name: no-worklog-before-the-confirmation
+  - name: no-worklog-yet
     type: regex
     target: mock_calls
     pattern: addWorklogToJiraIssue
