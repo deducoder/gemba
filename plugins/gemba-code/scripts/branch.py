@@ -14,8 +14,8 @@ not count), unless the work is already on that branch: changes made on it are th
 same work and may continue. `--check` only does the check, with the branch of the work
 item when given. `--ready` asks whether the work is ready to be reviewed and refuses,
 touching nothing, with the first reason that fails: it is not on the branch of the work
-item, it has no commits of its own, it has uncommitted changes in files with tracking or
-it is behind origin/develop. It never pushes: the push is a command of its own, visible to
+item, it has uncommitted changes in files with tracking, origin/develop does not exist,
+it has no commits of its own or it is behind origin/develop. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
 
@@ -54,17 +54,14 @@ def ready(branch):
     current = git("branch", "--show-current").stdout.strip()
     if current != branch:
         return f"On {current or 'a detached HEAD'}, expected {branch}"
-    git("fetch", "-q", "--prune", "origin")
-    if not has_ref(f"refs/remotes/{DEVELOP}"):
-        return f"{DEVELOP} does not exist"
-    if git("rev-list", "--count", f"{DEVELOP}..HEAD").stdout.strip() == "0":
+    reason = check(None)
+    if reason:
+        return reason
+    behind, ahead = map(int, git("rev-list", "--left-right", "--count", f"{DEVELOP}...HEAD").stdout.split())
+    if not ahead:
         return f"{branch} has no commits of its own on top of {DEVELOP}"
-    changes = git("status", "--porcelain", "--untracked-files=no").stdout.rstrip()
-    if changes:
-        return f"Uncommitted changes in files with tracking:\n{changes}"
-    behind = int(git("rev-list", "--count", f"HEAD..{DEVELOP}").stdout)
     if behind:
-        return f"{branch} is behind {DEVELOP} by {behind} commit{'s' if behind > 1 else ''}"
+        return f"{branch} is behind {DEVELOP} by {behind} commit(s)"
     return None
 
 
