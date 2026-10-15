@@ -1,0 +1,73 @@
+{
+  "tools": [
+    {
+      "name": "getJiraIssue",
+      "description": "Get issue details. Use getTeamworkGraphContext to get linked deployments, PRs, builds, branches, commits, designs, issues, confluence whiteboards, feature flags, vulnerabilities, sprints and remote links to Jira Issues.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionSource": {
+            "description": "Invocation attribution. Set to jira_mcp_card when called from a Jira MCP Widget UI; omit or set to model_tool_call for model/tool-loop calls.",
+            "enum": [
+              "jira_mcp_card",
+              "model_tool_call"
+            ],
+            "type": "string"
+          },
+          "cloudId": {
+            "description": "Cloud ID (UUID or site URL)",
+            "type": "string"
+          },
+          "expand": {
+            "description": "Additional issue details to expand in the response (for example, renderedFields or names).",
+            "type": "string"
+          },
+          "failFast": {
+            "description": "Whether to fail quickly when some fields cannot be loaded instead of partially returning data.",
+            "type": "boolean"
+          },
+          "fields": {
+            "description": "Issue fields to return. When omitted or empty, defaults to: summary, description, status, issuetype, priority, labels, components, assignee, reporter, created, updated, resolution, project. Pass \"*all\" to return every field (including custom fields). Include \"comment\" to fetch issue comments in fields.comment.comments.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fieldsByKeys": {
+            "description": "Whether fields in the request are referenced by field keys instead of IDs.",
+            "type": "boolean"
+          },
+          "issueIdOrKey": {
+            "description": "Issue ID or key (e.g., PROJ-123 or 10000)",
+            "type": "string"
+          },
+          "properties": {
+            "description": "Issue property keys to include in the response.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "responseContentFormat": {
+            "description": "Content format for body content. Use \"markdown\" for simplified plain text. Use \"adf\" (Atlassian Document Format, JSON) for full programmatic fidelity. Defaults vary by tool when omitted.",
+            "enum": [
+              "markdown",
+              "adf"
+            ],
+            "type": "string"
+          },
+          "updateHistory": {
+            "description": "Whether to update the user's recently viewed projects/history for this issue request.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cloudId",
+          "issueIdOrKey"
+        ]
+      }
+    }
+  ]
+}
