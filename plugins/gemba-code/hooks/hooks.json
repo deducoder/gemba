@@ -1,0 +1,17 @@
+{
+  "description": "Injects Gemba Code's work item, branch and commit rules into every session.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/context/gemba-code.md"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
