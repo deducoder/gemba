@@ -233,7 +233,7 @@
     },
     {
       "name": "createIssueLink",
-      "description": "Create a link between two Jira issues. For directional link types (e.g. Blocks): inwardIssue = issue that blocks, outwardIssue = issue that is blocked (e.g. \"A is blocked by B\" \u2192 inwardIssue: B, outwardIssue: A). Use getIssueLinkTypes if link type is unknown.",
+      "description": "Create a link between two Jira issues. For directional link types (e.g. Blocks): inwardIssue = issue that blocks, outwardIssue = issue that is blocked (e.g. \"A is blocked by B\" → inwardIssue: B, outwardIssue: A). Use getIssueLinkTypes if link type is unknown.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -272,6 +272,274 @@
           "inwardIssue",
           "outwardIssue",
           "type"
+        ]
+      }
+    },
+    {
+      "name": "getTransitionsForJiraIssue",
+      "description": "Get transitions",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionSource": {
+            "type": "string",
+            "enum": [
+              "jira_mcp_card",
+              "model_tool_call"
+            ],
+            "description": "Invocation attribution. Set to jira_mcp_card when called from a Jira MCP Widget UI; omit or set to model_tool_call for model/tool-loop calls."
+          },
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "expand": {
+            "type": "string"
+          },
+          "includeUnavailableTransitions": {
+            "type": "boolean"
+          },
+          "issueIdOrKey": {
+            "type": "string",
+            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
+          },
+          "skipRemoteOnlyCondition": {
+            "type": "boolean"
+          },
+          "sortByOpsBarAndStatus": {
+            "type": "boolean"
+          },
+          "transitionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cloudId",
+          "issueIdOrKey"
+        ]
+      }
+    },
+    {
+      "name": "transitionJiraIssue",
+      "description": "Transition issue status",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionSource": {
+            "type": "string",
+            "enum": [
+              "jira_mcp_card",
+              "model_tool_call"
+            ],
+            "description": "Invocation attribution. Set to jira_mcp_card when called from a Jira MCP Widget UI; omit or set to model_tool_call for model/tool-loop calls."
+          },
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "historyMetadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "activityDescription": {
+                "type": "string"
+              },
+              "activityDescriptionKey": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "avatarUrl": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              },
+              "cause": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "avatarUrl": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              },
+              "description": {
+                "type": "string"
+              },
+              "descriptionKey": {
+                "type": "string"
+              },
+              "emailDescription": {
+                "type": "string"
+              },
+              "emailDescriptionKey": {
+                "type": "string"
+              },
+              "extraData": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "generator": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "avatarUrl": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          },
+          "issueIdOrKey": {
+            "type": "string",
+            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
+          },
+          "transition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "update": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "required": [
+          "cloudId",
+          "issueIdOrKey",
+          "transition"
+        ]
+      }
+    },
+    {
+      "name": "addWorklogToJiraIssue",
+      "description": "Add or update a worklog on a Jira issue. When worklogId is provided, updates that worklog;",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "commentBody": {
+            "type": "string",
+            "description": "Comment body"
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ],
+            "description": "Content format for body content. Use \"markdown\" for simplified plain text. Use \"adf\" (Atlassian Document Format, JSON) for full programmatic fidelity. Defaults vary by tool when omitted."
+          },
+          "issueIdOrKey": {
+            "type": "string",
+            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
+          },
+          "started": {
+            "type": "string",
+            "description": "When the work was started (ISO 8601 date-time, e.g. 2026-03-09T09:00:00.000+0000). If omitted, the worklog is booked at the current date/time."
+          },
+          "timeSpent": {
+            "type": "string",
+            "description": "Time spent (e.g. 2h, 30m, 4d). Required for new worklogs; use to set or change time when updating."
+          },
+          "visibility": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "group",
+                  "role"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          },
+          "worklogId": {
+            "type": "string",
+            "description": "ID of an existing worklog to update. If omitted, a new worklog is created."
+          }
+        },
+        "required": [
+          "cloudId",
+          "issueIdOrKey",
+          "timeSpent"
         ]
       }
     }
