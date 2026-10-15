@@ -24,11 +24,17 @@ claude plugin marketplace add deducoder/gemba --scope project
 claude plugin install gemba@gemba --scope project
 ```
 
+In a code project, also install `gemba-code` to add the work item, branch and commit rules:
+
+```bash
+claude plugin install gemba-code@gemba --scope project
+```
+
 For a project without commits, first create an empty remote repository, such as one on GitHub. Then open Claude Code in the project and run `/gemba:setup` to declare Gemba and the project's languages in `CLAUDE.md`, and the Atlassian site, Jira space and Confluence space in `.gemba/project/atlassian.json`, and to turn off commit and PR attribution in `.claude/settings.json`. Without commits, setup ends by creating the history: `initial commit` on `main` with everything not ignored, `origin`, and, once you approve the push, `develop`. With commits, it only reports what the history lacks and the files it left uncommitted, so commit `.claude/settings.json`, `CLAUDE.md` and `.gemba/project/atlassian.json` yourself.
 
 To pause a block of work, run `/gemba:session-close`: it leaves a handoff in `.gemba/sessions/`, kept out of git. After `/clear` or in a new session, run `/gemba:session-start` to resume from it.
 
-Auto-update is off by default for third-party marketplaces. To receive new versions, turn it on in `/plugin` > Marketplaces > Enable auto-update, or update manually with `claude plugin update gemba@gemba --scope project` and restart Claude Code.
+Auto-update is off by default for third-party marketplaces. To receive new versions, turn it on in `/plugin` > Marketplaces > Enable auto-update, or update manually with `claude plugin update gemba@gemba --scope project` (and `gemba-code@gemba` when installed) and restart Claude Code.
 
 ## Development
 
