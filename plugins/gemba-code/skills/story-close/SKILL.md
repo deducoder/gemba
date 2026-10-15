@@ -18,7 +18,9 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read the story.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype` and `status`.
+2. **Read the story.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype` and `status`. Stop, writing nothing and naming it, when:
+   - it is not a Story: say its type;
+   - its status is not Review: say its status.
 
 3. **Merge the branch** with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
@@ -26,11 +28,13 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --merge story <KEY> '<Summary>'
    ```
 
-   It updates `develop` with `git pull --ff-only`, merges `origin/<branch>` into it with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on `develop` and prints the branch. Keep that branch name for step 6. When it refuses, relay its reason and stop.
+   It updates `develop` with `git pull --ff-only`, merges `origin/<branch>` into it with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on `develop` and prints the branch. Keep that branch name for step 6. It refuses, touching nothing, when files with tracking have uncommitted changes, `origin/<branch>` does not exist, the local branch has commits `origin/<branch>` lacks (they were not reviewed) or `develop` does not fast-forward; and when the merge has conflicts it aborts it, goes back to the branch it came from and names the files. When it refuses, relay its reason and stop: nothing is pushed or marked.
 
 4. **Push `develop`,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends. When the push fails or the person declines it, stop: the story is not marked.
 
 5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only after the push of step 4.
+
+   When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, delete no branch and say that `develop` was already pushed.
 
 6. **Delete the branch,** once the story is marked: first locally with `git branch -d <branch>`, then on the remote with `git push origin --delete <branch>`, the second as a command of its own that the person approves.
 
