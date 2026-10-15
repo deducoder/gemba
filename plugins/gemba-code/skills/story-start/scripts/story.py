@@ -12,8 +12,8 @@ key after `→` in Out of scope becomes a link to the issue on the site.
 
 When the draft follows the template, prints {"summary": ..., "description":
 <ADF>, "comment": <ADF>} as JSON: the description holds the opening sentence,
-Done when and Out of scope, and the comment holds the Evidence. Otherwise prints one line per problem to stderr, prints nothing
-to stdout and exits 1.
+Done when and Out of scope, and the comment holds the Evidence. Otherwise
+prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
 import argparse
@@ -29,10 +29,11 @@ CODE = re.compile(r"`([^`]+)`")
 
 
 def parse(text):
-    """Returns the Summary, the opening sentence and the bullets of each section."""
+    """Returns the Summary, the opening sentence, the bullets of each section and
+    the sections that have lines that are not bullets."""
     lines = text.strip().splitlines()
     summary = lines[0].strip() if lines else ""
-    intro, sections, current = [], {}, None
+    intro, sections, loose, current = [], {}, set(), None
     for line in lines[1:]:
         heading = re.match(r"^### (.+?)\s*$", line)
         if heading:
@@ -44,11 +45,11 @@ def parse(text):
         elif line.startswith("* "):
             sections[current].append(line[2:].strip())
         elif line.strip():
-            sections[current].append(None)
-    return summary, intro, sections
+            loose.add(current)
+    return summary, intro, sections, loose
 
 
-def problems(summary, intro, sections):
+def problems(summary, intro, sections, loose):
     """Returns what doesn't follow the template; empty when the draft does."""
     found = []
     if not summary or len(summary) > 64:
@@ -61,7 +62,7 @@ def problems(summary, intro, sections):
         found.append(f"sections: expected {', '.join(SECTIONS)}, in that order; found {', '.join(sections) or 'none'}")
         return found
     for name, bullets in sections.items():
-        if None in bullets:
+        if name in loose:
             found.append(f"{name}: write each item as a '* ' bullet on one line")
         if not bullets:
             found.append(f"{name}: write at least one item")
@@ -70,14 +71,14 @@ def problems(summary, intro, sections):
         found.append(f"Done when: {len(criteria)} criteria; split the story into stories of {MAX_CRITERIA} criteria at most")
     if len(evidence) != len(criteria):
         found.append(f"Evidence: give one line per Done when criterion, in order ({len(criteria)} criteria, {len(evidence)} lines)")
-    for line in filter(None, evidence):
+    for line in evidence:
         if not line.startswith(("ran:", "read:")):
             found.append(f"Evidence: start with 'ran:' or 'read:': {line}")
     for name in ("Evidence", "Out of scope"):
-        for line in filter(None, sections[name]):
+        for line in sections[name]:
             if "==" in line:
                 found.append(f"{name}: only Done when criteria are wrapped in ==: {line}")
-    for line in filter(None, scope):
+    for line in scope:
         if "→" in line and not KEY.match(line.rsplit("→", 1)[1].strip()):
             found.append(f"Out of scope: keep the arrow only for the key of an existing work item: {line}")
     return found
@@ -139,8 +140,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--site", required=True, help="the Atlassian site, e.g. example.atlassian.net")
     site = parser.parse_args().site
-    summary, intro, sections = parse(sys.stdin.read())
-    found = problems(summary, intro, sections)
+    summary, intro, sections, loose = parse(sys.stdin.read())
+    found = problems(summary, intro, sections, loose)
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
