@@ -15,7 +15,7 @@ allowed-tools:
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
 ```
 
-This skill takes a declared story from Backlog to built on its own branch. It never merges and creates or edits no work item. Until the Implement mark, it only reads. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -39,7 +39,7 @@ This skill takes a declared story from Backlog to built on its own branch. It ne
 
 8. **Report** each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met.
 
-9. **Register the time of the phase.** Read the story again with `getJiraIssue` and `expand: "changelog"`, and take the time of the change into Implement. Run:
+9. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the change into Implement. Run:
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>

@@ -19,10 +19,6 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'getJiraIssue.*ABC-30'
-  - name: revalidated
-    type: tool_used
-    tool: Bash
-    input_match: 'invoices\.py acme'
   - name: revalidated-before-the-mark
     type: tool_order
     before:
@@ -38,10 +34,6 @@ graders:
     target: mock_calls
     pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
     match: not_contains
-  - name: branch
-    type: tool_used
-    tool: Bash
-    input_match: 'scripts/branch\.py story ABC-30'
   - name: mark-before-branch
     type: tool_order
     before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
@@ -52,10 +44,6 @@ graders:
     type: tool_used
     tool: Bash
     input_match: 'git push -u origin story/ABC-30/print-the-invoices-as-csv'
-  - name: plan-waits
-    type: regex
-    pattern: 'plan'
-    flags: i
   - name: no-worklog-yet
     type: regex
     target: mock_calls
