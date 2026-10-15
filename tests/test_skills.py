@@ -15,6 +15,7 @@ SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 INJECTED = re.compile(r"!`([^`]*)`")
+PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md)")
 
 
 def read(path):
@@ -51,6 +52,12 @@ class SkillStructure(unittest.TestCase):
             for command in INJECTED.findall(read(path)[1]):
                 with self.subTest(skill=path.parent.name, command=command):
                     self.assertNotIn("$(", command)
+
+    def test_injected_commands_read_project_files_from_the_project_dir(self):
+        for path in SKILLS:
+            for command in INJECTED.findall(read(path)[1]):
+                with self.subTest(skill=path.parent.name, command=command):
+                    self.assertIsNone(PROJECT_FILE.search(command))
 
     def test_assets_are_injected_and_readable_outside_the_project(self):
         for path in SKILLS:
