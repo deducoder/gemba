@@ -12,9 +12,15 @@ HOOKS = {
 }
 
 
-def command_hooks(hooks, event):
-    """Returns each command hook of an event."""
-    return [hook for group in hooks.get(event, []) for hook in group["hooks"] if hook["type"] == "command"]
+def command_hooks(event=None):
+    """Yields each plugin, event and command hook, for one event or for all."""
+    for plugin, hooks in HOOKS.items():
+        for name, groups in hooks.items():
+            if event in (None, name):
+                for group in groups:
+                    for hook in group["hooks"]:
+                        if hook["type"] == "command":
+                            yield plugin, name, hook
 
 
 def argv(plugin, hook):
@@ -25,37 +31,33 @@ def argv(plugin, hook):
 class Hooks(unittest.TestCase):
     def test_session_start_has_a_command_hook(self):
         self.assertTrue(HOOKS)
-        for plugin, hooks in HOOKS.items():
+        injecting = {plugin for plugin, _, _ in command_hooks("SessionStart")}
+        for plugin in HOOKS:
             with self.subTest(plugin=plugin.name):
-                self.assertTrue(command_hooks(hooks, "SessionStart"))
+                self.assertIn(plugin, injecting)
 
     def test_every_plugin_path_a_hook_references_exists(self):
-        for plugin, hooks in HOOKS.items():
-            for event in hooks:
-                for hook in command_hooks(hooks, event):
-                    for part in argv(plugin, hook):
-                        with self.subTest(plugin=plugin.name, event=event, part=part):
-                            self.assertNotIn("${", part)  # a misspelled placeholder is never filled in
-                            if str(plugin) in part:
-                                self.assertTrue(Path(part).exists())
+        for plugin, event, hook in command_hooks():
+            for part in argv(plugin, hook):
+                with self.subTest(plugin=plugin.name, event=event, part=part):
+                    self.assertNotIn("${", part)  # a misspelled placeholder is never filled in
+                    if str(plugin) in part:
+                        self.assertTrue(Path(part).exists())
 
     def test_every_command_hook_sets_a_positive_timeout(self):
-        for plugin, hooks in HOOKS.items():
-            for event in hooks:
-                for hook in command_hooks(hooks, event):
-                    with self.subTest(plugin=plugin.name, event=event, command=hook["command"]):
-                        self.assertIsInstance(hook.get("timeout"), int)
-                        self.assertGreater(hook["timeout"], 0)
+        for plugin, event, hook in command_hooks():
+            with self.subTest(plugin=plugin.name, event=event, command=hook["command"]):
+                self.assertIsInstance(hook.get("timeout"), int)
+                self.assertGreater(hook["timeout"], 0)
 
     def test_session_start_output_fits_the_10000_character_cap(self):
-        for plugin, hooks in HOOKS.items():
-            for hook in command_hooks(hooks, "SessionStart"):
-                with self.subTest(plugin=plugin.name, command=hook["command"]):
-                    result = subprocess.run(
-                        argv(plugin, hook), capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=hook["timeout"]
-                    )
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertTrue(0 < len(result.stdout) <= 10000)
+        for plugin, _, hook in command_hooks("SessionStart"):
+            with self.subTest(plugin=plugin.name, command=hook["command"]):
+                result = subprocess.run(
+                    argv(plugin, hook), capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=hook["timeout"]
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(0 < len(result.stdout) <= 10000)
 
 
 if __name__ == "__main__":
