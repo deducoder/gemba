@@ -93,7 +93,65 @@ class Branch(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
         self.assertIn("Usage", result.stderr)
+        self.assertIn("--check", result.stderr)
         self.assertEqual(git(self.work, "branch", "--list", "story/*"), "")
+
+    def make_the_tracked_file_dirty(self):
+        (self.work / "a").write_text("changed")
+
+    def delete_develop_from_the_remote_only(self):
+        git(self.remote, "update-ref", "-d", "refs/heads/develop")
+
+    def test_check_passes_on_a_clean_tree_and_prints_nothing(self):
+        result = run(self.work, "--check")
+        self.assertEqual((result.returncode, result.stdout), (0, ""), result.stderr)
+
+    def test_check_ignores_untracked_files(self):
+        (self.work / "private.md").write_text("notes")
+        self.assertEqual(run(self.work, "--check").returncode, 0)
+
+    def test_check_refuses_a_modified_tracked_file_and_names_it(self):
+        self.make_the_tracked_file_dirty()
+        result = run(self.work, "--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("Uncommitted", result.stderr)
+        self.assertIn("a", result.stderr)
+
+    def test_check_refuses_without_origin_develop_even_when_the_local_ref_is_stale(self):
+        self.delete_develop_from_the_remote_only()
+        result = run(self.work, "--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("origin/develop", result.stderr)
+
+    def test_the_create_command_refuses_and_creates_nothing_when_the_check_fails(self):
+        for name, prepare in (("dirty tree", self.make_the_tracked_file_dirty), ("no origin/develop", self.delete_develop_from_the_remote_only)):
+            with self.subTest(case=name):
+                prepare()
+                result = run(self.work, "story", "ABC-1", SUMMARY)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(git(self.work, "branch", "--list", "story/*"), "")
+                git(self.work, "checkout", "-q", "--", "a")
+
+    def test_an_existing_local_branch_is_switched_to_without_new_commits(self):
+        branch = run(self.work, "story", "ABC-1", SUMMARY).stdout.strip()
+        git(self.work, "switch", "-q", "develop")
+        result = run(self.work, "story", "ABC-1", SUMMARY)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), branch)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual(git(self.work, "log", "--oneline", "develop..HEAD"), "")
+
+    def test_a_branch_that_exists_only_on_origin_is_switched_to_as_a_tracking_branch(self):
+        branch = "story/ABC-1/let-customers-download-their-invoices"
+        git(self.other.parent, "clone", "-q", str(self.remote), str(self.other))
+        git(self.other, "switch", "-q", "-c", branch, "origin/develop")
+        git(self.other, "push", "-q", "-u", "origin", branch)
+        result = run(self.work, "story", "ABC-1", SUMMARY)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual(git(self.work, "rev-parse", "--abbrev-ref", "@{upstream}"), f"origin/{branch}")
 
 
 if __name__ == "__main__":
