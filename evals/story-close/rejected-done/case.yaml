@@ -1,0 +1,41 @@
+schema_version: "1.1"
+name: story-close-rejected-done
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Close the story ABC-75.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 30
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-close
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-75'
+  - name: tried
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+  - name: no-local-delete
+    type: tool_used
+    tool: Bash
+    input_match: 'git branch -d'
+    min: 0
+    max: 0
+  - name: no-remote-delete
+    type: tool_used
+    tool: Bash
+    input_match: 'git push origin --delete'
+    min: 0
+    max: 0
+  - name: reason
+    type: regex
+    pattern: 'not valid|refus|reject'
+    flags: i
