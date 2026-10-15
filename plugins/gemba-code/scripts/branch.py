@@ -38,13 +38,13 @@ def check():
     changes = git("status", "--porcelain", "--untracked-files=no").stdout.rstrip()
     if changes:
         return f"Uncommitted changes in files with tracking:\n{changes}"
-    if not has_ref(DEVELOP):
+    if not has_ref(f"refs/remotes/{DEVELOP}"):
         return f"{DEVELOP} does not exist"
     return None
 
 
 def switch_to(branch):
-    if has_ref(branch) or has_ref(f"origin/{branch}"):
+    if has_ref(f"refs/heads/{branch}") or has_ref(f"refs/remotes/origin/{branch}"):
         git("switch", "-q", branch)
     else:
         git("switch", "-q", "-c", branch, "--no-track", DEVELOP)
