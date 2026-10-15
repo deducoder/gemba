@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: story-start-too-big
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a story: turn invoices.py into a full invoicing tool. Add --csv, --json and --pdf output, filters by date range, amount and status, sorting by any column, totals per customer and per month, sending an invoice by email, marking invoices as paid, and an audit log of every change.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+    match: not_contains
+  - name: split
+    type: regex
+    pattern: 'split|partir|divid'
+    flags: i
