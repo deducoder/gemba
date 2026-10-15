@@ -7,6 +7,7 @@
     "name": "Daniel Efraín Domínguez Urbina",
     "url": "https://deducoder.com/"
   },
+  "dependencies": ["gemba"],
   "license": "Apache-2.0",
   "repository": "https://github.com/deducoder/gemba"
 }

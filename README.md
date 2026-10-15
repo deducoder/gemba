@@ -24,7 +24,7 @@ claude plugin marketplace add deducoder/gemba --scope project
 claude plugin install gemba@gemba --scope project
 ```
 
-In a code project, also install `gemba-code` to add the work item, branch and commit rules:
+In a code project, install `gemba-code` to add the work item, branch and commit rules. It depends on `gemba`, so installing it installs `gemba` too:
 
 ```bash
 claude plugin install gemba-code@gemba --scope project
