@@ -30,9 +30,9 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    - it is not a Story: say its type;
    - its status is not Backlog or Implement: say its status;
    - something linked as "is blocked by" is not Done or Cancelled: say which work item;
-   - its epic (`parent`) is not in Implement: say the epic and its status.
+   - it has an epic (`parent`) that is not in Implement: say the epic and its status. A story without an epic has nothing to check here.
 
-3. **Revalidate the Done when.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop.
+3. **Revalidate the Done when.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop. A story already in Implement is resumed on its own branch, so for it do this step after step 6.
 
 4. **Check the project is ready** with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check`. When it refuses, relay its reason and stop.
 
@@ -56,11 +56,11 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 10. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the last change into Implement. Run:
 
-   ```
-   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
-   ```
+     ```
+     python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
+     ```
 
-   It prints `timeSpent` and `started`. Propose them to the person as an estimate and wait for the confirmation or for another time. With it, write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment.
+     It prints `timeSpent` and `started`. Propose them to the person as an estimate and wait for the confirmation or for another time. With it, write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment.
 
 ## Leave a drift comment
 
