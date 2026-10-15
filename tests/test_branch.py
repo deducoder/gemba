@@ -134,6 +134,13 @@ class Branch(unittest.TestCase):
                 self.assertEqual(git(self.work, "branch", "--list", "story/*"), "")
                 git(self.work, "checkout", "-q", "--", "a")
 
+    def test_a_tag_with_the_name_of_the_branch_does_not_stand_for_the_branch(self):
+        branch = "story/ABC-1/let-customers-download-their-invoices"
+        git(self.work, "tag", branch)
+        result = run(self.work, "story", "ABC-1", SUMMARY)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+
     def test_an_existing_local_branch_is_switched_to_without_new_commits(self):
         branch = run(self.work, "story", "ABC-1", SUMMARY).stdout.strip()
         git(self.work, "switch", "-q", "develop")
