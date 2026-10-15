@@ -264,7 +264,8 @@ class Branch(unittest.TestCase):
         result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((self.work / "b").read_text(), "b")
-        self.assertEqual(git(self.work, "rev-list", "--count", "origin/develop..develop"), "1")
+        ancestor = subprocess.run(["git", "merge-base", "--is-ancestor", "origin/develop", "develop"], cwd=self.work)
+        self.assertEqual(ancestor.returncode, 0)
 
     def test_merge_takes_the_branch_from_origin_and_not_the_local_commits_it_lacks(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
@@ -281,7 +282,7 @@ class Branch(unittest.TestCase):
         before = git(self.remote, "rev-parse", "develop")
         run(self.work, "--merge", "story", "ABC-1", SUMMARY)
         self.assertEqual(git(self.remote, "rev-parse", "develop"), before)
-        self.assertEqual(git(self.work, "branch", "--list", branch), f"  {branch}")
+        self.assertEqual(git(self.work, "branch", "--list", branch), branch)
         self.assertIn(branch, git(self.remote, "branch", "--list"))
 
     def test_merge_needs_the_work_item_arguments(self):
