@@ -62,5 +62,7 @@ if __name__ == "__main__":
     unittest.main()
 PY
 git init -q
+git config user.name eval
+git config user.email eval@example.com
 git add -A
-git -c user.name=eval -c user.email=eval@example.com commit -qm "initial commit"
+git commit -qm "initial commit"

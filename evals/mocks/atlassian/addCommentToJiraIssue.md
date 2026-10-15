@@ -1,6 +1,6 @@
 ---
 expect:
-  issueIdOrKey: ABC-42
+  issueIdOrKey: string
   contentFormat: adf
 ---
 
