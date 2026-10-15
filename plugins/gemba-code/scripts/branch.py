@@ -78,7 +78,6 @@ def switch_to(branch):
 
 
 def merge_into_develop(branch):
-    git("fetch", "-q", "--prune", "origin")
     git("switch", "-q", "develop")
     git("pull", "-q", "--ff-only")
     git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
