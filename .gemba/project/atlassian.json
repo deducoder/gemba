@@ -1,0 +1,5 @@
+{
+  "site": "deducoder.atlassian.net",
+  "jira": { "project": "GEMBA" },
+  "confluence": { "space": "GEMBA" }
+}
