@@ -35,7 +35,7 @@ def has_ref(ref):
 def check():
     """Returns the reason the project cannot take a work item branch, or None."""
     git("fetch", "-q", "--prune", "origin")
-    changes = git("status", "--porcelain", "--untracked-files=no").stdout.strip()
+    changes = git("status", "--porcelain", "--untracked-files=no").stdout.rstrip()
     if changes:
         return f"Uncommitted changes in files with tracking:\n{changes}"
     if not has_ref(DEVELOP):
