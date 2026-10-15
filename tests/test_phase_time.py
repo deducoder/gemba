@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -76,6 +77,15 @@ class PhaseTime(unittest.TestCase):
 
     def test_a_phase_without_commits_is_the_interval_of_its_marks(self):
         self.assertEqual(self.run_script("01:00:00", "01:20:00")["minutes"], 20)
+
+    def test_the_end_is_now_when_it_is_not_given(self):
+        start = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat()
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--start", start, "--base", "develop"],
+            cwd=self.repo, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(json.loads(result.stdout)["minutes"], (20, 21))
 
     def test_the_worklog_starts_at_the_first_mark_and_uses_jiras_format(self):
         self.commit("01:10:00")
