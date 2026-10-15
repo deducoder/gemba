@@ -18,7 +18,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read the story.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype`, `status` and `comment`.
+2. **Read the story.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `description` and `comment`.
 
 3. **Mark it Review.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
 
