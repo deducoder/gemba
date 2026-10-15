@@ -1,0 +1,21 @@
+schema_version: "1.1"
+name: story-start-natural-language
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Haz que invoices.py acepte --csv para imprimir las facturas del cliente en CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue

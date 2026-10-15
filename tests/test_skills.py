@@ -20,6 +20,25 @@ INJECTED = re.compile(r"!`([^`]*)`")
 PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md)")
 
 
+def allowed_tools(text):
+    """Returns the allowed-tools entries in the frontmatter of a SKILL.md, written
+    as a block list or as a flow list."""
+    match = FRONTMATTER.match(text)
+    lines = match.group(1).splitlines() if match else []
+    for i, line in enumerate(lines):
+        if line.startswith("allowed-tools:"):
+            rest = line.split(":", 1)[1].strip()
+            if rest.startswith("["):
+                return [item.strip().strip("'\"") for item in rest.strip("[]").split(",") if item.strip()]
+            items = []
+            for item in lines[i + 1:]:
+                if not re.match(r"^\s*- ", item):
+                    break
+                items.append(item.strip()[2:].strip().strip("'\""))
+            return items
+    return []
+
+
 def read(path):
     """Returns the frontmatter fields and the full text of a SKILL.md."""
     text = path.read_text(encoding="utf-8")
@@ -68,12 +87,16 @@ class SkillStructure(unittest.TestCase):
             if not assets:
                 continue
             with self.subTest(skill=path.parent.name):
-                match = FRONTMATTER.match(text)
-                self.assertIsNotNone(match)
-                self.assertIn("- Read(/${CLAUDE_SKILL_DIR}/assets/*)", [line.strip() for line in match.group(1).splitlines()])
+                self.assertIn("Read(/${CLAUDE_SKILL_DIR}/assets/*)", allowed_tools(text))
                 commands = INJECTED.findall(text)
                 for asset in assets:
                     self.assertIn("cat ${CLAUDE_SKILL_DIR}/" + asset, commands)
+
+    def test_skills_allow_only_their_own_files(self):
+        for path in SKILLS:
+            for tool in allowed_tools(read(path)[1]):
+                with self.subTest(skill=path.parent.name, tool=tool):
+                    self.assertIn("${CLAUDE_SKILL_DIR}/", tool)
 
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:

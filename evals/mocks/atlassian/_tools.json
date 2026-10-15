@@ -68,6 +68,212 @@
           "issueIdOrKey"
         ]
       }
+    },
+    {
+      "name": "createJiraIssue",
+      "description": "Create a Jira issue. Use additional_fields to set any Jira field that does not have its own parameter (e.g. custom fields, priority, components).",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "additional_fields": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "REQUIRED for custom fields. This is the ONLY parameter to set priority, labels, custom fields, components, fix versions, or any other Jira fields not listed above. Pass a JSON object with field names as keys. Examples: {\"components\": [{\"name\": \"Backend\"}]}, {\"fixVersions\": [{\"name\": \"v1.2\"}]}, {\"priority\": {\"name\": \"High\"}}, {\"labels\": [\"bug\"]}, {\"customfield_10001\": \"value\"}."
+          },
+          "assignee_account_id": {
+            "type": "string",
+            "description": "Assignee ID"
+          },
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ],
+            "description": "Content format for body content. Use \"markdown\" for simplified plain text. Use \"adf\" (Atlassian Document Format, JSON) for full programmatic fidelity. Defaults vary by tool when omitted."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32000
+              },
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "doc"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            ],
+            "description": "Issue description. With contentFormat \"markdown\" (default), pass plain text or Markdown as a string. With contentFormat \"adf\", pass an ADF JSON string or a document object with type \"doc\"."
+          },
+          "issueTypeName": {
+            "type": "string",
+            "description": "Type (Task, Bug, Story)"
+          },
+          "parent": {
+            "type": "string",
+            "description": "Parent for subtasks"
+          },
+          "projectKey": {
+            "type": "string",
+            "description": "Project key"
+          },
+          "responseContentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "transition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        "required": [
+          "cloudId",
+          "projectKey",
+          "issueTypeName",
+          "summary"
+        ]
+      }
+    },
+    {
+      "name": "addCommentToJiraIssue",
+      "description": "Add or update a comment on a Jira issue",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "commentBody": {
+            "type": "string",
+            "description": "Comment body"
+          },
+          "commentId": {
+            "type": "string",
+            "maxLength": 18,
+            "description": "ID of an existing comment to update. If omitted, a new comment is added."
+          },
+          "commentVisibility": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "group",
+                  "role"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ],
+            "description": "Content format for body content. Use \"markdown\" for simplified plain text. Use \"adf\" (Atlassian Document Format, JSON) for full programmatic fidelity. Defaults vary by tool when omitted."
+          },
+          "issueIdOrKey": {
+            "type": "string",
+            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
+          },
+          "responseContentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ]
+          }
+        },
+        "required": [
+          "cloudId",
+          "issueIdOrKey",
+          "commentBody"
+        ]
+      }
+    },
+    {
+      "name": "createIssueLink",
+      "description": "Create a link between two Jira issues. For directional link types (e.g. Blocks): inwardIssue = issue that blocks, outwardIssue = issue that is blocked (e.g. \"A is blocked by B\" \u2192 inwardIssue: B, outwardIssue: A). Use getIssueLinkTypes if link type is unknown.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment on the outward issue."
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "adf"
+            ]
+          },
+          "inwardIssue": {
+            "type": "string",
+            "description": "Inward issue key (e.g. HSP-1)."
+          },
+          "outwardIssue": {
+            "type": "string",
+            "description": "Outward issue key (e.g. MKY-1)."
+          },
+          "type": {
+            "type": "string",
+            "description": "Link type name (e.g. Duplicate, Blocks, Clones, Relates). Use getIssueLinkTypes to list available types."
+          }
+        },
+        "required": [
+          "cloudId",
+          "inwardIssue",
+          "outwardIssue",
+          "type"
+        ]
+      }
     }
   ]
 }
