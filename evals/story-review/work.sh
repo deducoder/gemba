@@ -1,7 +1,7 @@
 #!/bin/bash
-# Builds the project the story-review cases observe: the story-implement project with
-# the branch of the story pushed empty at the Implement mark. With "commit" it adds the
-# one commit of its own that builds the story.
+# Builds the project the story-review and story-close cases observe: the story-implement
+# project with the branch of the story pushed empty at the Implement mark. With "commit"
+# it adds the one commit of its own that builds the story.
 # Usage: . work.sh <KEY> [commit]
 set -e
 . "$(dirname "${BASH_SOURCE[0]}")/../story-implement/project.sh"

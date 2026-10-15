@@ -4,6 +4,7 @@
 Usage: python3 branch.py <type> <KEY> '<Summary>'
        python3 branch.py --check [<type> <KEY> '<Summary>']   (from the project root)
        python3 branch.py --ready <type> <KEY> '<Summary>'
+       python3 branch.py --merge <type> <KEY> '<Summary>'
 
 The branch is `<type>/<KEY>/<summary>`, with the Summary in lowercase kebab-case.
 It starts from origin/develop after fetching, so a develop that is behind does not
@@ -15,8 +16,11 @@ same work and may continue. `--check` only does the check, with the branch of th
 item when given. `--ready` asks whether the work is ready to be reviewed and refuses,
 touching nothing, with the first reason that fails: it is not on the branch of the work
 item, it has uncommitted changes in files with tracking, origin/develop does not exist,
-it has no commits of its own or it is behind origin/develop. It never pushes: the push
-is a command of its own, visible to whoever gates it.
+it has no commits of its own or it is behind origin/develop. `--merge` brings the
+work done into develop: it updates develop (`git pull --ff-only`), merges origin/<branch>
+with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on develop
+and prints the branch. It never pushes: the push is a command of its own, visible to
+whoever gates it.
 """
 
 import re
@@ -73,6 +77,13 @@ def switch_to(branch):
     print(branch)
 
 
+def merge_into_develop(branch):
+    git("switch", "-q", "develop")
+    git("pull", "-q", "--ff-only")
+    git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
+    print(branch)
+
+
 def guarded(branch, action, verify=check):
     """Runs the action once the project passes the verification for the branch; returns the exit status."""
     try:
@@ -88,18 +99,20 @@ def guarded(branch, action, verify=check):
 
 
 def main(argv):
-    mode = argv[0] if argv[:1] in (["--check"], ["--ready"]) else None
+    mode = argv[0] if argv[:1] in (["--check"], ["--ready"], ["--merge"]) else None
     args = argv[1:] if mode else argv
     if mode == "--check" and not args:
         return guarded(None, lambda: None)
     if len(args) != 3:
-        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'", file=sys.stderr)
+        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'  |  python3 branch.py --merge <type> <KEY> '<Summary>'", file=sys.stderr)
         return 2
     kind, key, summary = args
     if not slug(summary):
         print("The Summary has no letters or digits to name the branch with", file=sys.stderr)
         return 2
     branch = f"{kind}/{key}/{slug(summary)}"
+    if mode == "--merge":
+        return guarded(branch, lambda: merge_into_develop(branch))
     if mode == "--ready":
         return guarded(branch, lambda: None, ready)
     return guarded(branch, (lambda: None) if mode else (lambda: switch_to(branch)))

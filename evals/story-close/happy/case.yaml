@@ -1,0 +1,64 @@
+schema_version: "1.1"
+name: story-close-happy
+plugins:
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Close the story ABC-61.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 30
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-close
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-61'
+  - name: merged
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --merge story ABC-61'
+  - name: pushed-after-the-merge
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'branch\.py --merge'
+    after:
+      tool: Bash
+      input_match: 'git push(?! +origin +--delete)'
+  - name: done-after-the-push
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'git push(?! +origin +--delete)'
+    after:
+      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: done-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+7'
+  - name: local-delete-after-done
+    type: tool_order
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    after:
+      tool: Bash
+      input_match: 'git branch -d'
+  - name: remote-delete-after-local-delete
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'git branch -d'
+    after:
+      tool: Bash
+      input_match: 'git push origin --delete'
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue'
+    match: not_contains
