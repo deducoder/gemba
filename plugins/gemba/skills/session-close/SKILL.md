@@ -3,6 +3,7 @@ name: session-close
 description: Closes a block of work and leaves a handoff in .gemba/sessions/ to resume it after /clear. Use when the user ends a block of work, stops, switches focus or is about to /clear. Writes only the handoff.
 disable-model-invocation: true
 allowed-tools:
+  - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/handoff.py *)
 disallowed-tools:
   - Write
@@ -14,13 +15,19 @@ disallowed-tools:
 
 Title date: !`date "+%Y-%m-%d %H:%M"`
 
+Template:
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/handoff.md`
+```
+
 Uncommitted changes:
 
 ```
 !`git status --short 2>/dev/null | grep . || echo "(none)"`
 ```
 
-1. **Fill the template** at `${CLAUDE_SKILL_DIR}/assets/handoff.md` with what this block did, decided and left open, with the title date above. Keep its headings and labels in English, and write the content in the `Content:` language of the `## Language` section in `CLAUDE.md`, or in the conversation's language when there is none.
+1. **Fill the template** above with what this block did, decided and left open, titled with the date above. Keep its headings and labels in English, and write the content in the `Content:` language of the `## Language` section in `CLAUDE.md`, or in the conversation's language when there is none.
 
 2. **Give every decision in Decided its why, and make Next one concrete action:** without the why, the decision gets reopened, and a list postpones the decision Next forces.
 

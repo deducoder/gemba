@@ -2,6 +2,8 @@
 name: setup
 description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, turns off commit and PR attribution, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
+allowed-tools:
+  - Read(/${CLAUDE_SKILL_DIR}/assets/*)
 ---
 
 # Setup
@@ -32,6 +34,12 @@ Git:
 !`git log --oneline -1 2>/dev/null && git branch -vv && git remote -v || echo "(no history)"`
 ```
 
+## CLAUDE.md template
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/CLAUDE.md`
+```
+
 ## Steps
 
 Ask only for what the current state lacks, in as few questions as possible, and don't narrate between them. A re-run with everything declared asks nothing and changes nothing.
@@ -43,7 +51,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    - With a single site, use it and say so.
    - Ask for the Jira and the Confluence space with their keys as options, even when there is a single one, adding an option to type another key.
 
-3. **CLAUDE.md.** Read the template at `${CLAUDE_SKILL_DIR}/assets/CLAUDE.md` and make `CLAUDE.md` start with it, filled in. When `CLAUDE.md` already has a `# Gemba` block, update that block in place; when it has other content, insert the block above it with Edit, never retyping it; when it is missing, write it.
+3. **CLAUDE.md.** Make `CLAUDE.md` start with the template above, filled in. When `CLAUDE.md` already has a `# Gemba` block, update that block in place; when it has other content, insert the block above it with Edit, never retyping it; when it is missing, write it.
 
 4. **Atlassian declaration.** Write `.gemba/project/atlassian.json` exactly in this shape:
 
