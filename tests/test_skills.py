@@ -17,6 +17,7 @@ SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 PLUGIN_SCRIPT = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/(scripts/[\w./-]+)")
+RUN_SCRIPT = re.compile(r"python3 (\$\{CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)\}/[\w./-]+)")
 INJECTED = re.compile(r"!`([^`]*)`")
 PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md)")
 
@@ -106,12 +107,13 @@ class SkillStructure(unittest.TestCase):
                     with self.subTest(skill=path.parent.name, script=script):
                         self.assertTrue((path.parents[2] / script).is_file())
 
-    def test_story_implement_allows_only_the_plugin_scripts_it_runs(self):
-        text = read(ROOT / "plugins/gemba-code/skills/story-implement/SKILL.md")[1]
-        self.assertEqual(sorted(allowed_tools(text)), [
-            "Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)",
-            "Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)",
-        ])
+    def test_a_skill_allows_exactly_the_scripts_it_runs(self):
+        for path in SKILLS:
+            text = read(path)[1]
+            allowed = {script for tool in allowed_tools(text) for script in RUN_SCRIPT.findall(tool)}
+            run = set(RUN_SCRIPT.findall(INJECTED.sub("", FRONTMATTER.sub("", text, count=1))))
+            with self.subTest(skill=path.parent.name):
+                self.assertEqual(allowed, run)
 
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:
