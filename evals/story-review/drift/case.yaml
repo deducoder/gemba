@@ -22,7 +22,11 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(csv|999\.00)'
+    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*999\.00'
+  - name: re-ran-the-evidence
+    type: tool_used
+    tool: Bash
+    input_match: 'invoices\.py acme'
   - name: no-push
     type: tool_used
     tool: Bash

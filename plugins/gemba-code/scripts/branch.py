@@ -15,8 +15,8 @@ same work and may continue. `--check` only does the check, with the branch of th
 item when given. `--ready` asks whether the work is ready to be reviewed and refuses,
 touching nothing, with the first reason that fails: it is not on the branch of the work
 item, it has uncommitted changes in files with tracking, origin/develop does not exist,
-it has no commits of its own or it is behind origin/develop. It never pushes: the push is a command of its own, visible to
-whoever gates it.
+it has no commits of its own or it is behind origin/develop. It never pushes: the push
+is a command of its own, visible to whoever gates it.
 """
 
 import re
