@@ -42,11 +42,11 @@ class Branch(unittest.TestCase):
         git(self.work, "switch", "-q", "-c", "develop")
         git(self.work, "push", "-q", "-u", "origin", "develop")
 
-    def push_a_commit_to_develop_from_another_clone(self):
+    def push_a_commit_to_develop_from_another_clone(self, name="b", content="b"):
         git(self.other.parent, "clone", "-q", str(self.remote), str(self.other))
         git(self.other, "switch", "-q", "develop")
-        (self.other / "b").write_text("b")
-        git(self.other, "add", "b")
+        (self.other / name).write_text(content)
+        git(self.other, "add", name)
         git(self.other, "commit", "-qm", "feat(billing): add invoice export")
         git(self.other, "push", "-q", "origin", "develop")
 
@@ -307,12 +307,7 @@ class Branch(unittest.TestCase):
 
     def test_merge_with_conflicts_aborts_names_the_files_and_leaves_develop_unmerged(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
-        git(self.other.parent, "clone", "-q", str(self.remote), str(self.other))
-        git(self.other, "switch", "-q", "develop")
-        (self.other / "c").write_text("not c")
-        git(self.other, "add", "c")
-        git(self.other, "commit", "-qm", "feat(other): add c")
-        git(self.other, "push", "-q", "origin", "develop")
+        self.push_a_commit_to_develop_from_another_clone("c", "not c")
         result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
         self.assertEqual((result.returncode, result.stdout), (1, ""), result.stderr)
         self.assertIn("Merge conflicts in: c", result.stderr)
