@@ -8,8 +8,8 @@ context:
 execution:
   prompt: 'Implement ABC-40.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 20
-  timeout_seconds: 600
+  max_turns: 12
+  timeout_seconds: 300
 graders:
   - name: skill
     type: tool_used
@@ -22,7 +22,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift'
+    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(csv|999\.00)'
   - name: no-mark
     type: regex
     target: mock_calls
