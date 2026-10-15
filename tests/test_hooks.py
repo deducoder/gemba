@@ -29,12 +29,18 @@ def argv(plugin, hook):
 
 
 class Hooks(unittest.TestCase):
-    def test_session_start_has_a_command_hook(self):
-        self.assertTrue(HOOKS)
-        injecting = {plugin for plugin, _, _ in command_hooks("SessionStart")}
-        for plugin in HOOKS:
-            with self.subTest(plugin=plugin.name):
-                self.assertIn(plugin, injecting)
+    def test_every_plugin_injects_its_context_at_session_start(self):
+        contexts = sorted(ROOT.glob("plugins/*/context/*.md"))
+        self.assertTrue(contexts)
+        for context in contexts:
+            plugin = context.parent.parent
+            with self.subTest(plugin=plugin.name, context=context.name):
+                outputs = [
+                    subprocess.run(argv(plugin, hook), capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=hook["timeout"]).stdout
+                    for owner, _, hook in command_hooks("SessionStart")
+                    if owner == plugin
+                ]
+                self.assertIn(context.read_text(encoding="utf-8"), outputs)
 
     def test_every_plugin_path_a_hook_references_exists(self):
         for plugin, event, hook in command_hooks():
