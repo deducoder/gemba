@@ -34,12 +34,18 @@ graders:
     target: mock_calls
     pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
     match: not_contains
+  - name: checked-before-the-mark
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/branch\.py --check'
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: mark-before-branch
     type: tool_order
     before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
     after:
       tool: Bash
-      input_match: 'scripts/branch\.py'
+      input_match: 'scripts/branch\.py story ABC-30'
   - name: push
     type: tool_used
     tool: Bash
