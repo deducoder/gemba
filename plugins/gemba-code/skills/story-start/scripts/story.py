@@ -24,21 +24,23 @@ import sys
 SECTIONS = ["Done when", "Evidence", "Out of scope"]
 MAX_CRITERIA = 8
 ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
-KEY = re.compile(r"^[A-Z][A-Z0-9]+-\d+$")
+KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 CODE = re.compile(r"`([^`]+)`")
 
 
 def parse(text):
-    """Returns the Summary, the opening sentence, the bullets of each section and
-    the sections that have lines that are not bullets."""
+    """Returns the Summary, the opening sentence, the bullets of each section, the
+    sections that have lines that are not bullets and the sections written twice."""
     lines = text.strip().splitlines()
     summary = lines[0].strip() if lines else ""
-    intro, sections, loose, current = [], {}, set(), None
+    intro, sections, loose, repeated, current = [], {}, set(), set(), None
     for line in lines[1:]:
         heading = re.match(r"^### (.+?)\s*$", line)
         if heading:
             current = heading.group(1)
-            sections[current] = []
+            if current in sections:
+                repeated.add(current)
+            sections.setdefault(current, [])
         elif current is None:
             if line.strip():
                 intro.append(line.strip())
@@ -46,10 +48,15 @@ def parse(text):
             sections[current].append(line[2:].strip())
         elif line.strip():
             loose.add(current)
-    return summary, intro, sections, loose
+    return summary, intro, sections, loose, repeated
 
 
-def problems(summary, intro, sections, loose):
+def prose(line):
+    """Returns a line without its `code`, where == and → are literal."""
+    return CODE.sub("", line)
+
+
+def problems(summary, intro, sections, loose, repeated):
     """Returns what doesn't follow the template; empty when the draft does."""
     found = []
     if not summary or len(summary) > 64:
@@ -58,14 +65,21 @@ def problems(summary, intro, sections, loose):
         found.append("Summary: sentence case, with no final period")
     if len(intro) != 1 or not intro[0].endswith("."):
         found.append("opening sentence: write one sentence that says who wants what and why")
+    for name, text in (("Summary", summary), ("opening sentence", " ".join(intro))):
+        if "==" in prose(text):
+            found.append(f"{name}: only Done when criteria are wrapped in ==")
     if list(sections) != SECTIONS:
         found.append(f"sections: expected {', '.join(SECTIONS)}, in that order; found {', '.join(sections) or 'none'}")
         return found
     for name, bullets in sections.items():
+        if name in repeated:
+            found.append(f"{name}: write the section once")
         if name in loose:
             found.append(f"{name}: write each item as a '* ' bullet on one line")
         if not bullets:
             found.append(f"{name}: write at least one item")
+        if "" in bullets:
+            found.append(f"{name}: remove the empty bullet")
     criteria, evidence, scope = (sections[name] for name in SECTIONS)
     if len(criteria) > MAX_CRITERIA:
         found.append(f"Done when: {len(criteria)} criteria; split the story into stories of {MAX_CRITERIA} criteria at most")
@@ -74,12 +88,19 @@ def problems(summary, intro, sections, loose):
     for line in evidence:
         if not line.startswith(("ran:", "read:")):
             found.append(f"Evidence: start with 'ran:' or 'read:': {line}")
+    for line in criteria:
+        wrapped = line.startswith("==") and line.endswith("==") and len(line) > 4
+        inner = line[2:-2] if wrapped else line
+        if "==" in prose(inner):
+            found.append(f"Done when: wrap the whole criterion in ==, or none of it: {line}")
+        elif wrapped and not prose(inner).strip():
+            found.append(f"Done when: a deduced criterion needs words outside `code` to show in orange: {line}")
     for name in ("Evidence", "Out of scope"):
         for line in sections[name]:
-            if "==" in line:
+            if "==" in prose(line):
                 found.append(f"{name}: only Done when criteria are wrapped in ==: {line}")
     for line in scope:
-        if "→" in line and not KEY.match(line.rsplit("→", 1)[1].strip()):
+        if "→" in prose(line) and not KEY.match(line.rsplit("→", 1)[1].strip()):
             found.append(f"Out of scope: keep the arrow only for the key of an existing work item: {line}")
     return found
 
@@ -104,7 +125,7 @@ def criterion(line):
 
 
 def excluded(line, site):
-    if "→" not in line:
+    if "→" not in prose(line):
         return inline(line)
     what, key = (part.strip() for part in line.rsplit("→", 1))
     return inline(f"{what} → ") + [{"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}]
@@ -140,8 +161,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--site", required=True, help="the Atlassian site, e.g. example.atlassian.net")
     site = parser.parse_args().site
-    summary, intro, sections, loose = parse(sys.stdin.read())
-    found = problems(summary, intro, sections, loose)
+    summary, intro, sections, loose, repeated = parse(sys.stdin.read())
+    found = problems(summary, intro, sections, loose, repeated)
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
