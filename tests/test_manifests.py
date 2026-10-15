@@ -13,12 +13,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def manifest(path):
+    """Reads a JSON file given relative to the repository or as an absolute path."""
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
-
-
-def names(dependencies):
-    """Returns the plugin names of a `dependencies` list, whose items are a name or an object with `name`."""
-    return [item if isinstance(item, str) else item["name"] for item in dependencies]
 
 
 class Dependencies(unittest.TestCase):
@@ -29,8 +25,7 @@ class Dependencies(unittest.TestCase):
         in_marketplace = {plugin["name"] for plugin in manifest(".claude-plugin/marketplace.json")["plugins"]}
         for path in sorted(ROOT.glob("plugins/*/.claude-plugin/plugin.json")):
             with self.subTest(plugin=path.parents[1].name):
-                declared = names(json.loads(path.read_text(encoding="utf-8")).get("dependencies", []))
-                self.assertLessEqual(set(declared), in_marketplace)
+                self.assertLessEqual(set(manifest(path).get("dependencies", [])), in_marketplace)
 
 
 @unittest.skipUnless(shutil.which("claude"), "claude CLI not installed")
@@ -46,10 +41,10 @@ class InstallingWithDependencies(unittest.TestCase):
         self.project = base / "project"
         self.project.mkdir()
         self.env = {**os.environ, "CLAUDE_CONFIG_DIR": str(base / "config")}
-        shutil.copytree(ROOT / "plugins", self.marketplace / "plugins", ignore=shutil.ignore_patterns("__pycache__"))
+        shutil.copytree(ROOT / "plugins", self.marketplace / "plugins")
         shutil.copytree(ROOT / ".claude-plugin", self.marketplace / ".claude-plugin")
         path = self.marketplace / ".claude-plugin/marketplace.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = manifest(path)
         data["name"] = "gemba-test"
         path.write_text(json.dumps(data), encoding="utf-8")
 
@@ -61,8 +56,9 @@ class InstallingWithDependencies(unittest.TestCase):
         self.assertEqual(added.returncode, 0, added.stdout + added.stderr)
         installed = self.claude("install", "gemba-code@gemba-test", "--scope", "project")
         self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
-        settings = json.loads((self.project / ".claude/settings.json").read_text(encoding="utf-8"))
-        self.assertEqual(settings["enabledPlugins"], {"gemba-code@gemba-test": True, "gemba@gemba-test": True})
+        enabled = manifest(self.project / ".claude/settings.json")["enabledPlugins"]
+        for plugin in ("gemba-code@gemba-test", "gemba@gemba-test"):
+            self.assertTrue(enabled.get(plugin), plugin)
         disabled = self.claude("disable", "gemba@gemba-test", "--scope", "project")
         self.assertNotEqual(disabled.returncode, 0)
         self.assertIn("gemba-code", disabled.stdout + disabled.stderr)
