@@ -316,6 +316,16 @@ class Branch(unittest.TestCase):
         self.assertEqual(git(self.work, "status", "--porcelain", "--untracked-files=no"), "")
         self.assertEqual(git(self.work, "branch", "--show-current"), branch)
 
+    def test_merge_that_fails_without_conflicts_leaves_the_person_on_the_work_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        self.push_a_commit_to_develop_from_another_clone("u", "from develop")
+        (self.work / "u").write_text("untracked and in the way")
+        develops = (git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop"))
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""), result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual((git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop")), (develops[0], develops[1]))
+
     def test_merge_neither_pushes_nor_deletes_a_branch(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
         before = git(self.remote, "rev-parse", "develop")
