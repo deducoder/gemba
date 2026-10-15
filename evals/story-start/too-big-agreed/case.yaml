@@ -7,7 +7,7 @@ context:
   scaffold_script: setup.sh
   history_file: history.jsonl
 execution:
-  prompt: 'Yes, go ahead with that split.'
+  prompt: 'Yes, go ahead with that split. Use a JSON file next to the script, SMTP with the host and credentials from environment variables, and fpdf2 for the PDF.'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 60
   timeout_seconds: 900
@@ -26,4 +26,4 @@ graders:
     min: 1
   - name: keys
     type: regex
-    pattern: 'ABC-10\d[\s\S]*ABC-10\d'
+    pattern: 'ABC-101[\s\S]*ABC-102'
