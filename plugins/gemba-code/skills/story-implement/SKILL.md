@@ -22,7 +22,7 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
-Until the Implement mark this skill only reads, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads, apart from a drift comment, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
