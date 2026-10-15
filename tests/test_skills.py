@@ -21,10 +21,22 @@ PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md
 
 
 def allowed_tools(text):
-    """Returns the allowed-tools entries in the frontmatter of a SKILL.md."""
+    """Returns the allowed-tools entries in the frontmatter of a SKILL.md, written
+    as a block list or as a flow list."""
     match = FRONTMATTER.match(text)
-    block = re.search(r"^allowed-tools:\n((?:  - .*\n)+)", match.group(1) + "\n", re.MULTILINE) if match else None
-    return [line.strip()[2:] for line in block.group(1).splitlines()] if block else []
+    lines = match.group(1).splitlines() if match else []
+    for i, line in enumerate(lines):
+        if line.startswith("allowed-tools:"):
+            rest = line.split(":", 1)[1].strip()
+            if rest.startswith("["):
+                return [item.strip().strip("'\"") for item in rest.strip("[]").split(",") if item.strip()]
+            items = []
+            for item in lines[i + 1:]:
+                if not re.match(r"^\s*- ", item):
+                    break
+                items.append(item.strip()[2:].strip().strip("'\""))
+            return items
+    return []
 
 
 def read(path):
