@@ -1,6 +1,6 @@
 ---
 name: story-start
-description: Declares a story in Jira from an idea. Reads the code the idea touches, drafts the story with its Done when and the evidence behind each criterion, and creates it in Backlog. Use when the user asks for a feature or a change to build ("make it…", "add…", "haz que…"), or asks to declare, define or write a story, including one that names the key of an epic to nest it under or of a work item to read. Not for a small edit that needs no work item, an open question to research, or something that is broken: it names the bug or the spike instead. It starts no work.
+description: Declares a story in Jira from an idea. Reads the code the idea touches, drafts the story with its Done when and the evidence behind each criterion, and creates it in Backlog. Use when the user asks for a feature or a change to build ("make it…", "add…", "haz que…"), or asks to declare, define or write a story, and may name an epic key to nest it under. Not for a small edit that needs no work item, an open question to research, or something that is broken. It starts no work.
 argument-hint: "[idea]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -25,11 +25,11 @@ Template:
 
 !`cat ${CLAUDE_SKILL_DIR}/references/estimate.md`
 
-The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. When part of a request calls for a spike or a bug, name it in the reply instead of creating it. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read each work item key the request names** with `getJiraIssue`, before anything else.
+2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
    - An Epic of the project in Backlog is the parent of the story.
    - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
@@ -43,7 +43,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 5. **Draft the story** with the template, with 8 Done when criteria at most, each one a behavior someone can check from outside: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
-   - Write in Out of scope what is excluded. Add `→ <KEY>` only when another work item already covers it; read that key first.
+   - Write in Out of scope what is excluded. Add `→ <KEY>` only when another work item already covers it; read that key first, unless step 2 already did.
 
 6. **Give it a priority and an original estimate** with the rules above.
 
