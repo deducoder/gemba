@@ -39,7 +39,7 @@ Until the Implement mark this skill only reads, and it creates or edits no work 
 
 8. **Report** each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met.
 
-9. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the change into Implement. Run:
+9. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the last change into Implement. Run:
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
