@@ -35,6 +35,10 @@ graders:
     input_match: 'git push origin --delete'
     min: 0
     max: 0
+  - name: says-develop-was-pushed
+    type: regex
+    pattern: 'pushed'
+    flags: i
   - name: reason
     type: regex
     pattern: 'not valid|refus|reject'
