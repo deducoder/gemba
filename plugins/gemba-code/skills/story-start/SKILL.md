@@ -34,7 +34,9 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
    - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
 
-3. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built.
+3. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built. Then decide whether the idea is a story at all; when it is not, create nothing and reply with what it is instead:
+   - **A bug** when it describes a failure of something that already exists: what fails and the evidence that shows it.
+   - **A spike** when building it depends on how something outside the repository works (a service, an API, a library) and nobody has verified it: the spike with its closed question: a single question that a short research answers with a yes or a no, and no list of open ones.
 
 4. **Ask, in one message, only the decisions the request leaves open (scope, options) and you cannot deduce.** Ask nothing when nothing is missing.
 
