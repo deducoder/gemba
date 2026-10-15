@@ -45,63 +45,54 @@ class PhaseTime(unittest.TestCase):
                 file.write(clock)
             git(self.repo, "commit", "-qam", f"change at {clock}", date=at(clock))
 
-    def run_script(self, start, end, *extra):
+    def run_script(self, start, end=None):
+        args = ["--start", start] + (["--end", end] if end else [])
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), "--start", at(start), "--end", at(end), "--base", "develop", *extra],
+            [sys.executable, str(SCRIPT), *args, "--base", "develop"],
             cwd=self.repo, capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
+    def minutes(self, start, end):
+        return self.run_script(at(start), at(end))["minutes"]
+
     def test_a_short_phase_adds_the_intervals_between_its_marks_and_commits(self):
         self.commit("00:56:49", "00:57:53")
-        self.assertEqual(self.run_script("00:54:27", "01:03:46")["minutes"], 9)
+        self.assertEqual(self.minutes("00:54:27", "01:03:46"), 9)
 
     def test_a_continuous_phase_matches_the_interval_of_its_marks(self):
         self.commit("02:03:28", "02:30:32", "02:33:23", "02:48:27", "02:55:50")
-        self.assertEqual(self.run_script("02:00:14", "02:57:07")["minutes"], 57)
+        self.assertEqual(self.minutes("02:00:14", "02:57:07"), 57)
 
     def test_a_gap_over_the_cut_counts_as_the_fixed_time(self):
         self.commit("10:56:52", "10:56:53", "11:53:09")
-        result = self.run_script("03:19:50", "11:53:41")
+        result = self.run_script(at("03:19:50"), at("11:53:41"))
         self.assertEqual(result["minutes"], 72)
         self.assertEqual(result["timeSpent"], "1h 12m")
 
-    def test_the_cut_and_the_fixed_time_can_be_changed(self):
-        self.commit("10:56:52", "10:56:53", "11:53:09")
-        self.assertEqual(self.run_script("03:19:50", "11:53:41", "--cut", "30", "--fixed", "15")["minutes"], 31)
-
     def test_commits_outside_the_phase_are_ignored(self):
         self.commit("00:10:00", "01:00:00", "01:05:00", "03:00:00")
-        self.assertEqual(self.run_script("00:59:00", "01:10:00")["minutes"], 11)
+        self.assertEqual(self.minutes("00:59:00", "01:10:00"), 11)
 
     def test_a_phase_without_commits_is_the_interval_of_its_marks(self):
-        self.assertEqual(self.run_script("01:00:00", "01:20:00")["minutes"], 20)
+        self.assertEqual(self.minutes("01:00:00", "01:20:00"), 20)
 
     def test_it_reads_the_timestamps_as_jira_writes_them(self):
         self.commit("00:56:49")
-        result = subprocess.run(
-            [sys.executable, str(SCRIPT), "--start", "2026-10-15T00:54:27.000-0600", "--end", "2026-10-15T01:03:46.123-0600", "--base", "develop"],
-            cwd=self.repo, capture_output=True, text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout)["minutes"], 9)
+        result = self.run_script("2026-10-15T00:54:27.000-0600", "2026-10-15T01:03:46.123-0600")
+        self.assertEqual(result["minutes"], 9)
 
     def test_the_end_is_now_when_it_is_not_given(self):
         start = (datetime.now(timezone.utc) - timedelta(minutes=20)).isoformat()
-        result = subprocess.run(
-            [sys.executable, str(SCRIPT), "--start", start, "--base", "develop"],
-            cwd=self.repo, capture_output=True, text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(json.loads(result.stdout)["minutes"], (20, 21))
+        self.assertIn(self.run_script(start)["minutes"], (20, 21))
 
     def test_the_worklog_starts_at_the_first_mark_and_uses_jiras_format(self):
-        self.commit("01:10:00")
-        cases = {("01:00:00", "01:45:00"): "45m", ("01:00:00", "03:00:00"): "2h", ("01:00:00", "02:12:00"): "1h 12m"}
+        self.commit("04:50:00", "05:40:00", "08:50:00")
+        cases = {("01:00:00", "01:45:00"): "45m", ("04:00:00", "06:00:00"): "2h", ("08:00:00", "09:12:00"): "1h 12m"}
         for (start, end), spent in cases.items():
             with self.subTest(spent=spent):
-                result = self.run_script(start, end, "--cut", "600")
+                result = self.run_script(at(start), at(end))
                 self.assertEqual(result["timeSpent"], spent)
                 self.assertEqual(result["started"], at(start))
 

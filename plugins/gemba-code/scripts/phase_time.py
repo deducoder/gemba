@@ -2,12 +2,12 @@
 """Adds up the time of a phase from its marks and the commits between them.
 
 Usage: python3 phase_time.py --start <iso> [--end <iso>] [--base origin/develop]
-                             [--cut 60] [--fixed 15]   (from the project root)
+                             (from the project root)
 
 The events are the start mark, the commits of the branch since --base that fall
 inside the phase, and the end mark (now, when --end is not given). The time is the sum of the intervals between
-consecutive events; an interval longer than --cut minutes (a night, a wait)
-counts as --fixed minutes. Prints {"minutes": N, "timeSpent": "1h 12m", "started":
+consecutive events; an interval longer than CUT minutes (a night, a wait)
+counts as FIXED minutes. Prints {"minutes": N, "timeSpent": "1h 12m", "started":
 <start>} for a worklog: timeSpent is in Jira's format and started is --start.
 """
 
@@ -17,6 +17,9 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+
+CUT = 60
+FIXED = 15
 
 
 def parse(text):
@@ -30,12 +33,12 @@ def commit_times(base):
     return [parse(line) for line in log.stdout.split()]
 
 
-def minutes(start, end, commits, cut, fixed):
+def minutes(start, end, commits):
     events = [start] + sorted(time for time in commits if start <= time <= end) + [end]
     total = 0.0
     for before, after in zip(events, events[1:]):
         interval = (after - before).total_seconds() / 60
-        total += interval if interval <= cut else fixed
+        total += interval if interval <= CUT else FIXED
     return round(total)
 
 
@@ -49,8 +52,6 @@ def main(argv):
     parser.add_argument("--start", required=True)
     parser.add_argument("--end")
     parser.add_argument("--base", default="origin/develop")
-    parser.add_argument("--cut", type=float, default=60)
-    parser.add_argument("--fixed", type=float, default=15)
     args = parser.parse_args(argv)
     start = parse(args.start)
     end = parse(args.end) if args.end else datetime.now().astimezone()
@@ -62,7 +63,7 @@ def main(argv):
     except subprocess.CalledProcessError as error:
         print(error.stderr.strip(), file=sys.stderr)
         return 1
-    total = minutes(start, end, commits, args.cut, args.fixed)
+    total = minutes(start, end, commits)
     print(json.dumps({"minutes": total, "timeSpent": jira_format(total), "started": args.start}))
     return 0
 
