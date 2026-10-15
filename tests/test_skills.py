@@ -2,6 +2,7 @@
 each SKILL.md references, and the shapes other parts depend on."""
 
 import importlib.util
+import json
 import re
 import shutil
 import subprocess
@@ -9,7 +10,8 @@ import sys
 import unittest
 from pathlib import Path
 
-PLUGIN = Path(__file__).resolve().parent.parent / "plugins" / "gemba"
+ROOT = Path(__file__).resolve().parent.parent
+PLUGIN = ROOT / "plugins" / "gemba"
 SKILLS = sorted(PLUGIN.glob("skills/*/SKILL.md"))
 SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
@@ -98,8 +100,11 @@ class SkillStructure(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("claude"), "claude CLI not installed")
     def test_claude_plugin_validate_strict_passes(self):
-        result = subprocess.run(["claude", "plugin", "validate", str(PLUGIN), "--strict"], capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+        for target in [ROOT] + [ROOT / plugin["source"] for plugin in marketplace["plugins"]]:
+            with self.subTest(target=target.relative_to(ROOT).as_posix()):
+                result = subprocess.run(["claude", "plugin", "validate", str(target), "--strict"], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
