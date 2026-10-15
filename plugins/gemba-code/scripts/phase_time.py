@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Adds up the time of a phase from its marks and the commits between them.
 
-Usage: python3 phase_time.py --start <iso> --end <iso> [--base origin/develop]
+Usage: python3 phase_time.py --start <iso> [--end <iso>] [--base origin/develop]
                              [--cut 60] [--fixed 15]   (from the project root)
 
 The events are the start mark, the commits of the branch since --base that fall
-inside the phase, and the end mark. The time is the sum of the intervals between
+inside the phase, and the end mark (now, when --end is not given). The time is the sum of the intervals between
 consecutive events; an interval longer than --cut minutes (a night, a wait)
 counts as --fixed minutes. Prints {"minutes": N, "timeSpent": "1h 12m", "started":
 <start>} for a worklog: timeSpent is in Jira's format and started is --start.
@@ -44,12 +44,13 @@ def jira_format(total):
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--start", required=True)
-    parser.add_argument("--end", required=True)
+    parser.add_argument("--end")
     parser.add_argument("--base", default="origin/develop")
     parser.add_argument("--cut", type=float, default=60)
     parser.add_argument("--fixed", type=float, default=15)
     args = parser.parse_args(argv)
-    start, end = parse(args.start), parse(args.end)
+    start = parse(args.start)
+    end = parse(args.end) if args.end else datetime.now().astimezone()
     if end < start:
         print("--end is before --start", file=sys.stderr)
         return 2
