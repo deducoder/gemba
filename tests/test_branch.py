@@ -181,6 +181,65 @@ class Branch(unittest.TestCase):
         self.assertEqual(git(self.work, "branch", "--show-current"), branch)
         self.assertEqual(git(self.work, "rev-parse", "--abbrev-ref", "@{upstream}"), f"origin/{branch}")
 
+    def start_the_work_with_a_commit_of_its_own(self):
+        branch = run(self.work, "story", "ABC-1", SUMMARY).stdout.strip()
+        (self.work / "c").write_text("c")
+        git(self.work, "add", "c")
+        git(self.work, "commit", "-qm", "feat(billing): add invoice csv")
+        return branch
+
+    def test_ready_passes_on_the_branch_of_the_work_with_a_commit_of_its_own_and_prints_nothing(self):
+        self.start_the_work_with_a_commit_of_its_own()
+        (self.work / "private.md").write_text("notes")
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (0, ""), result.stderr)
+
+    def test_ready_refuses_another_branch_and_names_the_one_it_expected(self):
+        branch = self.start_the_work_with_a_commit_of_its_own()
+        git(self.work, "switch", "-q", "develop")
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""))
+        self.assertIn("develop", result.stderr)
+        self.assertIn(branch, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
+    def test_ready_refuses_a_branch_without_commits_of_its_own(self):
+        run(self.work, "story", "ABC-1", SUMMARY)
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""))
+        self.assertIn("no commits", result.stderr.lower())
+
+    def test_ready_refuses_uncommitted_changes_in_files_with_tracking_and_names_them(self):
+        self.start_the_work_with_a_commit_of_its_own()
+        self.make_the_tracked_file_dirty()
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""))
+        self.assertIn("Uncommitted", result.stderr)
+        self.assertIn(" M a", result.stderr)
+        self.assertEqual((self.work / "a").read_text(), "changed")
+
+    def test_ready_refuses_a_branch_behind_origin_develop_and_counts_the_commits(self):
+        self.start_the_work_with_a_commit_of_its_own()
+        self.push_a_commit_to_develop_from_another_clone()
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout), (1, ""))
+        self.assertIn("behind", result.stderr.lower())
+        self.assertIn("1 commit", result.stderr)
+
+    def test_ready_refuses_without_origin_develop(self):
+        self.start_the_work_with_a_commit_of_its_own()
+        self.delete_develop_from_the_remote_only()
+        result = run(self.work, "--ready", "story", "ABC-1", SUMMARY)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("origin/develop", result.stderr)
+
+    def test_ready_needs_the_work_item_arguments(self):
+        for args in (("--ready",), ("--ready", "story", "ABC-1")):
+            with self.subTest(args=args):
+                result = run(self.work, *args)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("--ready", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

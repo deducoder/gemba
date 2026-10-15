@@ -3,6 +3,7 @@
 
 Usage: python3 branch.py <type> <KEY> '<Summary>'
        python3 branch.py --check [<type> <KEY> '<Summary>']   (from the project root)
+       python3 branch.py --ready <type> <KEY> '<Summary>'
 
 The branch is `<type>/<KEY>/<summary>`, with the Summary in lowercase kebab-case.
 It starts from origin/develop after fetching, so a develop that is behind does not
@@ -11,8 +12,11 @@ Prints the branch name. Both forms first refuse, touching nothing, when origin/d
 does not exist or when a file with tracking has uncommitted changes (untracked files do
 not count), unless the work is already on that branch: changes made on it are the
 same work and may continue. `--check` only does the check, with the branch of the work
-item when given. It never pushes: the push is a command of its own, visible to
-whoever gates it.
+item when given. `--ready` asks whether the work is ready to be reviewed and refuses,
+touching nothing, with the first reason that fails: it is not on the branch of the work
+item, it has uncommitted changes in files with tracking, origin/develop does not exist,
+it has no commits of its own or it is behind origin/develop. It never pushes: the push
+is a command of its own, visible to whoever gates it.
 """
 
 import re
@@ -45,6 +49,22 @@ def check(branch=None):
     return None
 
 
+def ready(branch):
+    """Returns the first reason the current branch is not ready to be reviewed, or None."""
+    current = git("branch", "--show-current").stdout.strip()
+    if current != branch:
+        return f"On {current or 'a detached HEAD'}, expected {branch}"
+    reason = check(None)
+    if reason:
+        return reason
+    behind, ahead = map(int, git("rev-list", "--left-right", "--count", f"{DEVELOP}...HEAD").stdout.split())
+    if not ahead:
+        return f"{branch} has no commits of its own on top of {DEVELOP}"
+    if behind:
+        return f"{branch} is behind {DEVELOP} by {behind} commit(s)"
+    return None
+
+
 def switch_to(branch):
     if has_ref(f"refs/heads/{branch}") or has_ref(f"refs/remotes/origin/{branch}"):
         git("switch", "-q", branch)
@@ -53,10 +73,10 @@ def switch_to(branch):
     print(branch)
 
 
-def guarded(branch, action):
-    """Runs the action once the project passes the check for the branch; returns the exit status."""
+def guarded(branch, action, verify=check):
+    """Runs the action once the project passes the verification for the branch; returns the exit status."""
     try:
-        reason = check(branch)
+        reason = verify(branch)
         if reason:
             print(reason, file=sys.stderr)
             return 1
@@ -68,19 +88,21 @@ def guarded(branch, action):
 
 
 def main(argv):
-    checking = argv[:1] == ["--check"]
-    args = argv[1:] if checking else argv
-    if checking and not args:
+    mode = argv[0] if argv[:1] in (["--check"], ["--ready"]) else None
+    args = argv[1:] if mode else argv
+    if mode == "--check" and not args:
         return guarded(None, lambda: None)
     if len(args) != 3:
-        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']", file=sys.stderr)
+        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'", file=sys.stderr)
         return 2
     kind, key, summary = args
     if not slug(summary):
         print("The Summary has no letters or digits to name the branch with", file=sys.stderr)
         return 2
     branch = f"{kind}/{key}/{slug(summary)}"
-    return guarded(branch, (lambda: None) if checking else (lambda: switch_to(branch)))
+    if mode == "--ready":
+        return guarded(branch, lambda: None, ready)
+    return guarded(branch, (lambda: None) if mode else (lambda: switch_to(branch)))
 
 
 if __name__ == "__main__":
