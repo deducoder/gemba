@@ -13,19 +13,19 @@ allowed-tools:
 CLAUDE.md:
 
 ```
-!`cat CLAUDE.md 2>/dev/null || echo "(missing)"`
+!`cat "${CLAUDE_PROJECT_DIR}/CLAUDE.md" 2>/dev/null || echo "(missing)"`
 ```
 
 .gemba/project/atlassian.json:
 
 ```
-!`cat .gemba/project/atlassian.json 2>/dev/null || echo "(missing)"`
+!`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
 ```
 
 .claude/settings.json:
 
 ```
-!`cat .claude/settings.json 2>/dev/null || echo "(missing)"`
+!`cat "${CLAUDE_PROJECT_DIR}/.claude/settings.json" 2>/dev/null || echo "(missing)"`
 ```
 
 Git:
