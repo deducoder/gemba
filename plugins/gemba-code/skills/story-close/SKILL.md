@@ -34,7 +34,7 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
 5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only after the push of step 4.
 
-   When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, delete no branch and say that `develop` was already pushed.
+   When no transition has Done as its destination, or `transitionJiraIssue` returns an error, stop right there: say so or relay Jira's reason, delete no branch and say that `develop` was already pushed.
 
 6. **Delete the branch,** once the story is marked: first locally with `git branch -d <branch>`, then on the remote with `git push origin --delete <branch>`, the second as a command of its own that the person approves.
 
