@@ -34,7 +34,7 @@ def main(argv):
         git("fetch", "-q", "origin")
         git("switch", "-q", "-c", branch, "--no-track", DEVELOP)
     except subprocess.CalledProcessError as error:
-        print(error.stderr.strip() or f"git {error.cmd[1]} failed", file=sys.stderr)
+        print(error.stderr.strip(), file=sys.stderr)
         return 1
     print(branch)
     return 0

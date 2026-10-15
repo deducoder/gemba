@@ -41,7 +41,9 @@ class Branch(unittest.TestCase):
         git(self.work, "push", "-q", "origin", "main")
         git(self.work, "switch", "-q", "-c", "develop")
         git(self.work, "push", "-q", "-u", "origin", "develop")
-        git(base, "clone", "-q", str(self.remote), str(self.other))
+
+    def push_a_commit_to_develop_from_another_clone(self):
+        git(self.other.parent, "clone", "-q", str(self.remote), str(self.other))
         git(self.other, "switch", "-q", "develop")
         (self.other / "b").write_text("b")
         git(self.other, "add", "b")
@@ -49,6 +51,7 @@ class Branch(unittest.TestCase):
         git(self.other, "push", "-q", "origin", "develop")
 
     def test_it_creates_the_branch_from_origin_develop_even_when_develop_is_behind(self):
+        self.push_a_commit_to_develop_from_another_clone()
         result = run(self.work, "story", "ABC-1", SUMMARY)
         self.assertEqual(result.returncode, 0, result.stderr)
         branch = "story/ABC-1/let-customers-download-their-invoices"
