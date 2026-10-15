@@ -81,6 +81,13 @@ class Branch(unittest.TestCase):
         result = run(self.work, "bug", "ABC-3", "Totals leave out the tax")
         self.assertEqual(result.stdout.strip(), "bug/ABC-3/totals-leave-out-the-tax", result.stderr)
 
+    def test_a_summary_without_letters_or_digits_creates_nothing(self):
+        result = run(self.work, "story", "ABC-4", "日本語")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("Summary", result.stderr)
+        self.assertEqual(git(self.work, "branch", "--list", "story/*"), "")
+
     def test_wrong_arguments_print_the_usage_and_create_nothing(self):
         result = run(self.work, "story", "ABC-1")
         self.assertNotEqual(result.returncode, 0)
