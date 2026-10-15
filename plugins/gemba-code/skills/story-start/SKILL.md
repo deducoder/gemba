@@ -29,18 +29,23 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built.
+2. **Read each work item key the request names** with `getJiraIssue`, before anything else.
+   - An Epic of the project in Backlog is the parent of the story.
+   - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
+   - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
 
-3. **Ask, in one message, only the decisions the request leaves open (scope, options) and you cannot deduce.** Ask nothing when nothing is missing.
+3. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built.
 
-4. **Draft the story** with the template, with 8 Done when criteria at most, each one a behavior someone can check from outside: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
+4. **Ask, in one message, only the decisions the request leaves open (scope, options) and you cannot deduce.** Ask nothing when nothing is missing.
+
+5. **Draft the story** with the template, with 8 Done when criteria at most, each one a behavior someone can check from outside: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
-   - Give each criterion, in the same order, its Evidence line: the command you ran in step 2 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
+   - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
    - Write in Out of scope what is excluded. Add `→ <KEY>` only when another work item already covers it; read that key first.
 
-5. **Give it a priority and an original estimate** with the rules above.
+6. **Give it a priority and an original estimate** with the rules above.
 
-6. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/story.py --site <site> <<'STORY'
@@ -50,6 +55,6 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
    When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories within the limit it names, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, and link them with `createIssueLink`: `Blocks` where one cannot start before another is done, `Relates` between the rest.
 
-7. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
+8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the epic of step 2 as `parent` when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
 
-8. **Reply** with the key and link of each story it created and the spikes or bugs it named instead, and nothing else.
+9. **Reply** with the key and link of each story it created, the spikes or bugs it named instead, and why an epic it named is not the parent, and nothing else.
