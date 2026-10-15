@@ -134,6 +134,27 @@ class Branch(unittest.TestCase):
                 self.assertEqual(git(self.work, "branch", "--list", "story/*"), "")
                 git(self.work, "checkout", "-q", "--", "a")
 
+    def test_changes_on_the_branch_of_the_same_work_do_not_stop_it(self):
+        branch = run(self.work, "story", "ABC-1", SUMMARY).stdout.strip()
+        self.make_the_tracked_file_dirty()
+        for args in (("--check", "story", "ABC-1", SUMMARY), ("story", "ABC-1", SUMMARY)):
+            with self.subTest(args=args):
+                result = run(self.work, *args)
+                self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), branch)
+        self.assertEqual((self.work / "a").read_text(), "changed")
+
+    def test_changes_stop_it_when_the_work_is_on_another_branch(self):
+        run(self.work, "story", "ABC-1", SUMMARY)
+        git(self.work, "switch", "-q", "develop")
+        self.make_the_tracked_file_dirty()
+        for args in (("--check", "story", "ABC-1", SUMMARY), ("story", "ABC-1", SUMMARY)):
+            with self.subTest(args=args):
+                result = run(self.work, *args)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Uncommitted", result.stderr)
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
     def test_a_tag_with_the_name_of_the_branch_does_not_stand_for_the_branch(self):
         branch = "story/ABC-1/let-customers-download-their-invoices"
         git(self.work, "tag", branch)
