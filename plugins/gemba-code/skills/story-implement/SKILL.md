@@ -34,9 +34,11 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 3. **Revalidate the Done when.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop.
 
-4. **Check the project is ready** with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check`. When it refuses, relay its reason and stop: the story keeps its status.
+4. **Check the project is ready** with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check`. When it refuses, relay its reason and stop.
 
-5. **Mark it Implement,** only when it is in Backlog. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase. When Jira refuses, relay its reason and stop: no branch is created.
+5. **Mark it Implement,** only when it is in Backlog: a story already in Implement is resumed, so skip this step and the push of step 6. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
+
+   When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, create no branch and run no more commands.
 
 6. **Create the branch,** or switch to it when it already exists, with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
@@ -44,7 +46,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py story <KEY> '<Summary>'
    ```
 
-   It prints the branch. When you marked the story in step 5, push the branch empty with `git push -u origin <branch>`, as a command of its own: the person approves it. A story that was already in Implement is resumed: no mark and no push.
+   It prints the branch. Only if you marked the story in step 5, push the branch empty with `git push -u origin <branch>`, as a command of its own: the person approves it.
 
 7. **Plan in plan mode.** Read the code the Done when touches before proposing anything. The plan says how each criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
@@ -62,4 +64,4 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 ## Leave a drift comment
 
-Add it to the story with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above: its headings and labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes. Then stop until the person decides.
+Add it to the story with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes.
