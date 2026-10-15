@@ -34,8 +34,8 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
 5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only after the push of step 4.
 
-   When no transition has Done as its destination, or `transitionJiraIssue` returns an error, stop right there: say so or relay Jira's reason, delete no branch and say that `develop` was already pushed.
+   When no transition has Done as its destination, or `transitionJiraIssue` returns an error, stop right there: say so or relay Jira's reason and say that `develop` was already pushed. Do not run step 6: both branches stay as they are.
 
-6. **Delete the branch,** once the story is marked: first locally with `git branch -d <branch>`, then on the remote with `git push origin --delete <branch>`, the second as a command of its own that the person approves.
+6. **Delete the branch,** only when step 5 marked the story Done: first locally with `git branch -d <branch>`, then on the remote with `git push origin --delete <branch>`, the second as a command of its own that the person approves.
 
 7. **Report** the merge commit, the status of the story and the branches deleted. The project is left on `develop`. This skill writes no worklog: `story-implement` and `story-review` already registered the time of their phases.
