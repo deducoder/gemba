@@ -42,15 +42,30 @@ def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True, check=True)
 
 
+def succeeds(*args):
+    return subprocess.run(["git", *args], capture_output=True).returncode == 0
+
+
 def has_ref(ref):
-    return subprocess.run(["git", "rev-parse", "--verify", "-q", ref], capture_output=True).returncode == 0
+    return succeeds("rev-parse", "--verify", "-q", ref)
+
+
+def is_ancestor(ancestor, descendant):
+    return succeeds("merge-base", "--is-ancestor", ancestor, descendant)
+
+
+def current_branch():
+    return git("branch", "--show-current").stdout.strip()
 
 
 def check(branch=None):
-    """Returns the reason the project cannot take a work item branch, or None."""
+    """Returns the reason the project cannot take a work item branch, or None.
+
+    Changes to files with tracking are refused unless the work is already on `branch`, so
+    `check(None)` refuses them on any branch."""
     git("fetch", "-q", "--prune", "origin")
     changes = git("status", "--porcelain", "--untracked-files=no").stdout.rstrip()
-    if changes and git("branch", "--show-current").stdout.strip() != branch:
+    if changes and current_branch() != branch:
         return f"Uncommitted changes in files with tracking:\n{changes}"
     if not has_ref(f"refs/remotes/{DEVELOP}"):
         return f"{DEVELOP} does not exist"
@@ -59,7 +74,7 @@ def check(branch=None):
 
 def ready(branch):
     """Returns the first reason the current branch is not ready to be reviewed, or None."""
-    current = git("branch", "--show-current").stdout.strip()
+    current = current_branch()
     if current != branch:
         return f"On {current or 'a detached HEAD'}, expected {branch}"
     reason = check(None)
@@ -81,10 +96,6 @@ def switch_to(branch):
     print(branch)
 
 
-class Refused(Exception):
-    """A refusal that is not a failed git command: it carries the reason to print."""
-
-
 def mergeable(branch):
     """Returns the first reason the branch cannot be merged into develop yet, or None."""
     reason = check(None)
@@ -96,13 +107,13 @@ def mergeable(branch):
         ahead = int(git("rev-list", "--count", f"origin/{branch}..{branch}").stdout)
         if ahead:
             return f"{branch} has {ahead} commit(s) that origin/{branch} does not have"
-    if has_ref("refs/heads/develop") and subprocess.run(["git", "merge-base", "--is-ancestor", "develop", DEVELOP]).returncode:
+    if has_ref("refs/heads/develop") and not is_ancestor("develop", DEVELOP):
         return f"develop does not fast-forward to {DEVELOP}"
     return None
 
 
 def merge_into_develop(branch):
-    current = git("branch", "--show-current").stdout.strip()
+    current = current_branch()
     git("switch", "-q", "develop")
     git("pull", "-q", "--ff-only")
     try:
@@ -114,23 +125,22 @@ def merge_into_develop(branch):
         git("merge", "--abort")
         if current:
             git("switch", "-q", current)
-        raise Refused(f"Merge conflicts in: {', '.join(conflicts)}") from None
+        return f"Merge conflicts in: {', '.join(conflicts)}"
     print(branch)
 
 
 def guarded(branch, action, verify=check):
-    """Runs the action once the project passes the verification for the branch; returns the exit status."""
+    """Runs the action once the project passes the verification for the branch; returns the exit status.
+
+    The verification and the action refuse by returning the reason; a failed git command refuses with its error.
+    """
     try:
-        reason = verify(branch)
+        reason = verify(branch) or action()
         if reason:
             print(reason, file=sys.stderr)
             return 1
-        action()
     except subprocess.CalledProcessError as error:
         print(error.stderr.strip(), file=sys.stderr)
-        return 1
-    except Refused as refusal:
-        print(refusal, file=sys.stderr)
         return 1
     return 0
 
