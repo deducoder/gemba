@@ -233,12 +233,13 @@ class Branch(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("origin/develop", result.stderr)
 
-    def test_ready_needs_the_work_item_arguments(self):
-        for args in (("--ready",), ("--ready", "story", "ABC-1")):
-            with self.subTest(args=args):
-                result = run(self.work, *args)
-                self.assertEqual(result.returncode, 2)
-                self.assertIn("--ready", result.stderr)
+    def test_ready_and_merge_need_the_work_item_arguments(self):
+        for flag in ("--ready", "--merge"):
+            for args in ((flag,), (flag, "story", "ABC-1")):
+                with self.subTest(args=args):
+                    result = run(self.work, *args)
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn(flag, result.stderr)
 
     def push_the_work_with_a_commit_of_its_own(self):
         branch = self.start_the_work_with_a_commit_of_its_own()
@@ -284,13 +285,6 @@ class Branch(unittest.TestCase):
         self.assertEqual(git(self.remote, "rev-parse", "develop"), before)
         self.assertEqual(git(self.work, "branch", "--list", branch), branch)
         self.assertIn(branch, git(self.remote, "branch", "--list"))
-
-    def test_merge_needs_the_work_item_arguments(self):
-        for args in (("--merge",), ("--merge", "story", "ABC-1")):
-            with self.subTest(args=args):
-                result = run(self.work, *args)
-                self.assertEqual(result.returncode, 2)
-                self.assertIn("--merge", result.stderr)
 
 
 if __name__ == "__main__":
