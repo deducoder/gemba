@@ -9,6 +9,10 @@
     {
       "name": "gemba",
       "source": "./plugins/gemba"
+    },
+    {
+      "name": "gemba-code",
+      "source": "./plugins/gemba-code"
     }
   ]
 }
