@@ -32,32 +32,11 @@ graders:
     after:
       tool: Bash
       input_match: 'git push(?! +origin +--delete)'
-  - name: done-after-the-push
-    type: tool_order
-    before:
-      tool: Bash
-      input_match: 'git push(?! +origin +--delete)'
-    after:
-      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
-  - name: done-by-destination
+  - name: not-done
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue[\s\S]*id\W+7'
-  - name: local-delete-after-done
-    type: tool_order
-    before:
-      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
-    after:
-      tool: Bash
-      input_match: 'git branch -d'
-  - name: remote-delete-after-local-delete
-    type: tool_order
-    before:
-      tool: Bash
-      input_match: 'git branch -d'
-    after:
-      tool: Bash
-      input_match: 'git push origin --delete'
+    pattern: 'transitionJiraIssue'
+    match: not_contains
   - name: no-worklog
     type: regex
     target: mock_calls
