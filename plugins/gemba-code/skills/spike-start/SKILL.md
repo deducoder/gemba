@@ -29,7 +29,7 @@ Template:
 
 The spike stays in Backlog: this skill answers nothing, changes no status, creates no branch and creates no work item other than a spike. The research belongs to the spike once it is implemented, so declaring it runs no experiment. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
-A request with two questions or more is one spike per question: from **Ask** on, each question goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question. Do not wait for an agreement to split them.
+A request with two questions or more is one spike per question. **Observe before drafting** decides each question on its own, so one can be answered or be a story while another becomes a spike; **Ask** is one message for all of them; from **Draft the spike** on, each question that is a spike goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question, and the epic of step 2 as the parent of each. Do not wait for an agreement to split them.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -39,7 +39,7 @@ A request with two questions or more is one spike per question: from **Ask** on,
    - A Spike stops the skill: create and edit nothing, and reply that it is already declared, with its key and its link.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link.
 
-3. **Observe before drafting.** Read the documentation, code and history of the project the question touches, only to check that they do not answer it already, and keep each file you read as a `read:` line with its path and line and each command you ran as a `ran:` line with its output. Do not answer the question: search outside the project, try the service or build a prototype only when the spike is implemented. Then decide whether the request is a spike at all; when it is not, create nothing and reply with what it is instead:
+3. **Observe before drafting.** Read the documentation, code and history of the project the question touches, only to check that they do not answer it already, and keep each file you read as a `read:` line with its path and line and each command you ran as a `ran:` line with its output. Do not answer the question: search outside the project, try the service or build a prototype only when the spike is implemented. Then decide whether the request is a spike at all; when it is not, create nothing for it and reply with what it is instead:
    - **Answered** when the documentation, the code or the history of the project already answer the question: the answer with its source, as a `read:` line with its path and line.
    - **A story** when it describes something to build, not a question: to declare with `/gemba-code:story-start`.
    - **A bug** when it describes a failure of something that already exists: to declare with `/gemba-code:bug-start`.
@@ -64,4 +64,4 @@ A request with two questions or more is one spike per question: from **Ask** on,
 
 8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as ADF.
 
-9. **Reply** with the key and link of each spike it created, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
+9. **Reply** with the key and link of each spike it created, the answer and its source for each question the project already answers, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
