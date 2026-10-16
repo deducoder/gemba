@@ -33,5 +33,5 @@ graders:
     max: 0
   - name: status
     type: regex
-    pattern: '\bdone\b'
+    pattern: '\bdone\b(?!\s+when)'
     flags: i
