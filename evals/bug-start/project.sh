@@ -17,6 +17,6 @@ git init -q --bare .remote/origin.git
 echo ".remote/" >> .git/info/exclude
 git remote add origin "$PWD/.remote/origin.git"
 git push -q origin main develop
-git switch -q -c story/ABC-9/print-the-invoices-as-csv main
+git switch -q -c story/ABC-9/show-the-customer-name main
 echo "# work in progress" >> invoices.py
 echo "notas" > notes.md

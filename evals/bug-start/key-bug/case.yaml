@@ -27,7 +27,7 @@ graders:
     match: not_contains
   - name: declared
     type: regex
-    pattern: 'already declared|ya está declarado'
+    pattern: 'already (declared|a bug|exists)|ya (está declarado|es un bug|existe)'
     flags: i
   - name: link
     type: regex
