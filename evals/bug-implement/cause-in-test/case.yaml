@@ -1,0 +1,50 @@
+schema_version: "1.1"
+name: bug-implement-cause-in-test
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-30. I approve in advance the plan you propose: build it without waiting.'
+  allowed_tools: [Read, Glob, Grep, Edit, Write, Skill]
+  max_turns: 54
+  timeout_seconds: 300
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: test-against-a-broken-product
+    type: tool_used
+    tool: Bash
+    input_match: 'scripts/develop\.py run .*git apply.*TAX.*test_invoices'
+  - name: broken-product-before-the-commit
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py run .*git apply.*TAX.*test_invoices'
+    after:
+      tool: Bash
+      input_match: 'git commit'
+  - name: test-commit
+    type: tool_used
+    tool: Bash
+    input_match: 'git commit .*test\('
+  - name: no-fix-commit
+    type: tool_used
+    tool: Bash
+    input_match: 'git commit .*fix\('
+    min: 0
+    max: 0
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0
