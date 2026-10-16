@@ -5,7 +5,8 @@ argument-hint: "[failure]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/bug.py *)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py open)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py close)
 ---
 
 # Bug start
@@ -42,11 +43,11 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py run '<command>'
    ```
 
-   Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are.
+   with an inner `'` written `'\''`. Each `run` asks the person's permission like any other command. Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are.
 
 2. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output.
 
-3. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path and line.
+3. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line.
 
 4. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
 
@@ -59,7 +60,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 6. **Ask, in one message, only the decisions the failure leaves open and you cannot deduce.** Ask nothing when nothing is missing.
 
 7. **Draft the bug** with the template: its headings, labels, table header and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
-   - The Reproduction holds the command and the output of step 2, literal; the Root cause of Evidence, the `ran:` and `read:` lines of step 3.
+   - The Reproduction holds the command of step 2 as you passed it to `run`, without `develop.py run`, and its output, literal; the Root cause of Evidence, the `ran:` and `read:` lines of step 3, with the commands written the same way.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it.
 
