@@ -9,7 +9,7 @@ Usage: python3 develop.py open    (from the project)
 
 `open` fetches origin first, as branch.py does, so a local develop that is behind
 does not matter, and prints the path of the worktree: in the temporary directory,
-one per repository, outside the project so that nothing the project holds
+one per repository and Claude Code session (`CLAUDE_CODE_SESSION_ID`), outside the project so that nothing the project holds
 (dependencies, settings) is found from it. It replaces one a stopped run left
 behind. When the fetch fails or origin/develop does not exist it prints the reason
 to stderr and exits 1.
@@ -33,8 +33,10 @@ from branch import DEVELOP, git, has_ref, succeeds  # noqa: E402
 
 
 def worktree():
+    """One per repository and Claude Code session, so two sessions never share it."""
     common = git("rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
-    return Path(tempfile.gettempdir()) / f"gemba-develop-{hashlib.sha1(common.encode()).hexdigest()[:12]}"
+    key = common + os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    return Path(tempfile.gettempdir()) / f"gemba-develop-{hashlib.sha1(key.encode()).hexdigest()[:12]}"
 
 
 def writable(function, path, _):
