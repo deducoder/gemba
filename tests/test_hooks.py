@@ -77,6 +77,12 @@ ASK = [
     "cd repo; git push",
     "GIT_TRACE=1 git push",
     "/usr/bin/git push",
+    "git status\ngit push origin develop",
+    "if true; then git push; fi",
+    "{ git push; }",
+    "`git push`",
+    "git status #\ngit push",
+    "echo 'unterminated git push",
 ]
 DENY = [
     "git push --force",
@@ -84,6 +90,8 @@ DENY = [
     "git push -uf origin main",
     "git push --force-with-lease",
     "git push origin +main",
+    "git status\ngit push --force origin main",
+    "git push --force origin 'main",
 ]
 NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx"]
 
@@ -120,6 +128,10 @@ class PushGate(unittest.TestCase):
         for command in DENY:
             with self.subTest(command=command):
                 self.assertEqual(gate(command), "deny")
+
+    def test_a_malformed_tool_input_gets_no_decision_and_does_not_fail(self):
+        result = subprocess.run([sys.executable, str(GATE)], input='{"tool_input": null}', capture_output=True, text=True, timeout=10)
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
 
     def test_anything_else_gets_no_decision(self):
         for command in NONE:
