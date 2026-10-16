@@ -5,8 +5,8 @@ argument-hint: "[failure]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/bug.py *)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py open)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py close)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
 ---
 
 # Bug start
@@ -41,13 +41,13 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 3. **Open develop** with this command, run alone and exactly in this form:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py open
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open
    ```
 
    It prints the path of a worktree of develop. Until **Close develop**, read every file under that path and run every command, alone, in this form, which runs it in the worktree:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py run '<command>'
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run '<command>'
    ```
 
    with an inner `'` written `'\''`. Each `run` asks the person's permission like any other command. Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are. Any stop from here on runs **Close develop** first and creates nothing.
@@ -63,7 +63,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 7. **Close develop** with this command, run alone and exactly in this form:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py close
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close
    ```
 
 8. **Ask, in one message, only the decisions the failure leaves open and you cannot deduce.** Ask nothing when nothing is missing.

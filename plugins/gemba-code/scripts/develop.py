@@ -28,7 +28,6 @@ import tempfile
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
 from branch import DEVELOP, git, has_ref, succeeds  # noqa: E402
 
