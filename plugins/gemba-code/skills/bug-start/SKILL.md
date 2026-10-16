@@ -36,7 +36,13 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py open
    ```
 
-   It prints the path of a worktree of develop. Read every file and run every command of steps 2 to 4 in that path, never in the project: the project may be on another branch, with changes of its own that must stay as they are.
+   It prints the path of a worktree of develop. In steps 2 to 4, read every file under that path and run every command, alone, in this form, which runs it in the worktree:
+
+   ```
+   python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py run '<command>'
+   ```
+
+   Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are.
 
 2. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output.
 
