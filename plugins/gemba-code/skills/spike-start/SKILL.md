@@ -39,7 +39,7 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
    - The question is closed: a single question that the research answers with a yes, a no or an inconclusive result.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - The Evidence holds the `ran:` and `read:` lines of **Observe before drafting**. It reaches Jira as a comment, not in the description.
-   - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it; read that key first.
+   - Write in Out of scope only what the Out of scope rules above allow. The decision that waits on the answer, and the work that follows it, are why the spike exists, not something it excludes. Add `→ <KEY>` only when another work item already covers it; read that key first.
 
 5. **Give it a priority and a time-box** with the Spike rules of the priority above and the time-box rules above.
 
