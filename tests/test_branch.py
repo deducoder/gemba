@@ -374,6 +374,15 @@ class Branch(unittest.TestCase):
         self.push_a_commit_to_develop_from_another_clone()
         self.refused_merge("develop", "feat(billing): add invoice export")
 
+    def test_merge_refuses_a_develop_whose_commit_of_its_own_is_not_the_merge_of_the_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        git(self.work, "switch", "-q", "develop")
+        git(self.work, "merge", "-q", "--ff-only", f"origin/{branch}")
+        (self.work / "e").write_text("e")
+        git(self.work, "add", "e")
+        git(self.work, "commit", "-qm", "feat(local): not reviewed")
+        self.refused_merge("develop", "fast-forward")
+
     def test_merge_still_refuses_a_develop_with_commits_besides_the_merge(self):
         self.merge_without_pushing()
         (self.work / "e").write_text("e")
