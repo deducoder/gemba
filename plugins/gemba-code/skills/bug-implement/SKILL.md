@@ -69,7 +69,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context. On a resumed bug whose branch already has that commit, go on to step 9.
 
-9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior.
+9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior. When a row changes and no Done when criterion asks for it, stop before committing the fix: name the row, its Current behavior and what it does now.
 
 10. **Commit the fix** apart from the test, as a `fix` commit whose description names the symptom that goes away. When the code contradicts a Done when criterion, leave a drift comment and stop.
 
