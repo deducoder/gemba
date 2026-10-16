@@ -20,6 +20,17 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'getJiraIssue.*ABC-62'
+  - name: merged
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --merge story ABC-62'
+  - name: checked-before-done
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'origin/develop\.\.develop'
+    after:
+      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: no-develop-push
     type: tool_used
     tool: Bash
