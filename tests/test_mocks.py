@@ -2,6 +2,8 @@
 each key of a mock's JSON exists, with the same type, in the real response of its tool. Mocks
 that instruct an agent (`type: agent`) or raise the tool's error (`error: true`) are left out."""
 
+import functools
+import importlib.util
 import json
 import re
 import unittest
@@ -10,16 +12,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MOCKS = sorted(ROOT.glob("evals/**/mocks/atlassian/*.md"))
 RESPONSES = ROOT / "tests/fixtures/atlassian-responses"
+SPEC = importlib.util.spec_from_file_location("save_response", ROOT / "evals/save_response.py")
+SAVE_RESPONSE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(SAVE_RESPONSE)
 
 
 def split(mock):
     """Returns the frontmatter and the body of a mock."""
     return re.match(r"^---\n(.*?)\n---\n(.*)$", mock.read_text(encoding="utf-8"), re.S).groups()
-
-
-def compared(mock):
-    frontmatter, _ = split(mock)
-    return not re.search(r"^(type: agent|error: true)$", frontmatter, re.M)
 
 
 def kind(value):
@@ -38,8 +38,13 @@ def paths(value, prefix=""):
     return found
 
 
-def saved(tool):
-    return json.loads((RESPONSES / f"{tool}.json").read_text(encoding="utf-8"))
+def response(tool):
+    return RESPONSES / f"{tool}.json"
+
+
+@functools.cache
+def real_paths(tool):
+    return paths(json.loads(response(tool).read_text(encoding="utf-8")))
 
 
 class Mocks(unittest.TestCase):
@@ -48,17 +53,18 @@ class Mocks(unittest.TestCase):
     def test_every_mocked_tool_has_a_saved_real_response(self):
         for tool in sorted({mock.stem for mock in MOCKS}):
             with self.subTest(tool=tool):
-                self.assertTrue((RESPONSES / f"{tool}.json").is_file(), f"no saved real response for {tool}")
+                self.assertTrue(response(tool).is_file(), f"no saved real response for {tool}")
 
     def test_every_key_of_a_mock_is_in_the_real_response_of_its_tool(self):
         """A tool without a saved response fails the test above, not each of its mocks."""
-        for mock in filter(compared, MOCKS):
-            if not (RESPONSES / f"{mock.stem}.json").is_file():
+        for mock in MOCKS:
+            frontmatter, body = split(mock)
+            if re.search(r"^(type: agent|error: true)$", frontmatter, re.M) or not response(mock.stem).is_file():
                 continue
             name = mock.relative_to(ROOT)
             with self.subTest(mock=str(name)):
-                real = paths(saved(mock.stem))
-                for path, type_ in paths(json.loads(split(mock)[1])).items():
+                real = real_paths(mock.stem)
+                for path, type_ in paths(json.loads(body)).items():
                     self.assertIn(path, real, f"{name}: {path} is not in the real response of {mock.stem}")
                     self.assertEqual(type_, real[path], f"{name}: {path} is a {type_} and in the real response of {mock.stem} a {real[path]}")
 
@@ -69,9 +75,9 @@ class Mocks(unittest.TestCase):
             with self.subTest(response=response.name):
                 text = response.read_text(encoding="utf-8")
                 self.assertNotRegex(text, r"[\w.+-]+@[\w-]+\.[\w.]+")
-                self.assertNotRegex(text, r'"(accountId|emailAddress|displayName|avatarUrls)"')
+                self.assertNotRegex(text, rf'"({"|".join(SAVE_RESPONSE.DROPPED)})"')
                 self.assertNotRegex(text, r"https?://\S*avatar")
-                self.assertEqual({key for key in re.findall(r"\b([A-Z][A-Z0-9]+)-\d+\b", text)} - {"ABC"}, set())
+                self.assertLessEqual(set(re.findall(r"\b([A-Z][A-Z0-9]+)-\d+\b", text)), {"ABC"})
 
 
 if __name__ == "__main__":
