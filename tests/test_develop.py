@@ -1,4 +1,4 @@
-"""Checks bug-start's develop.py: it opens origin/develop, after fetching, in a worktree
+"""Checks the develop.py of gemba-code: it opens origin/develop, after fetching, in a worktree
 to reproduce a failure and closes it, leaving the branch, the uncommitted changes and
 the untracked files of the project as they were."""
 
@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "plugins/gemba-code/skills/bug-start/scripts/develop.py"
+SCRIPT = ROOT / "plugins/gemba-code/scripts/develop.py"
 
 
 def git(cwd, *args):
