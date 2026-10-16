@@ -7,7 +7,7 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: 'Fix the bug ABC-50. I approve in advance the plan you propose: build it without waiting.'
+  prompt: 'Fix the bug ABC-30. I approve in advance the plan you propose: build it without waiting.'
   allowed_tools: [Read, Glob, Grep, Edit, Write, Skill]
   max_turns: 60
   timeout_seconds: 900
@@ -28,7 +28,7 @@ graders:
     type: tool_order
     before:
       tool: Bash
-      input_match: 'test_invoices|unittest'
+      input_match: 'python3 .*(test_invoices|unittest)'
     after:
       tool: Bash
       input_match: 'git commit.*fix\('
