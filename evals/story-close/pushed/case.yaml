@@ -24,6 +24,13 @@ graders:
     type: tool_used
     tool: Bash
     input_match: 'branch\.py --merge story ABC-62'
+  - name: merged-before-done
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'branch\.py --merge'
+    after:
+      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: no-git-log
     type: tool_used
     tool: Bash
