@@ -42,6 +42,7 @@ class DevelopWorktree(unittest.TestCase):
         (self.repo / "notes.md").write_text("untracked\n")
 
     def tearDown(self):
+        develop(self.repo, "close")
         self.tmp.cleanup()
 
     def open(self):
@@ -91,6 +92,26 @@ class DevelopWorktree(unittest.TestCase):
         result = develop(self.repo, "open")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 2)
+
+    def test_the_worktree_lives_outside_the_project(self):
+        path = self.open()
+        self.assertFalse(path.resolve().is_relative_to(self.repo.resolve()), path)
+
+    def test_close_removes_what_a_run_left_without_write_permission(self):
+        path = self.open()
+        develop(self.repo, "run", "mkdir -p ro/sub && touch ro/sub/f && chmod 555 ro/sub")
+        result = develop(self.repo, "close")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(path.exists())
+        self.open()
+
+    def test_open_stops_with_its_reason_when_the_fetch_fails(self):
+        git(self.repo, "remote", "set-url", "origin", str(self.repo / "nonexistent.git"))
+        result = develop(self.repo, "open")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("fetch", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_close_without_a_worktree_succeeds(self):
         result = develop(self.repo, "close")
