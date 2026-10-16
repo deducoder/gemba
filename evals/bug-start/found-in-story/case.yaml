@@ -1,0 +1,43 @@
+schema_version: "1.1"
+name: bug-start-found-in-story
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a bug found while building ABC-9: the totals that invoices.py prints leave out the tax.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-9'
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Bug'
+  - name: no-parent
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '"parent"'
+    min: 0
+    max: 0
+  - name: relates
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: 'Relates'
+  - name: linked-to-the-origin
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: 'ABC-50[\s\S]*ABC-9|ABC-9[\s\S]*ABC-50'
+  - name: reply
+    type: regex
+    pattern: 'https://example\.atlassian\.net/browse/ABC-50'

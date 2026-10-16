@@ -4,15 +4,19 @@
 # tax out of the totals, and the person on a story branch from before that change,
 # with a change not committed and a file not tracked, so the failure reproduces only
 # on develop and the working tree must stay as it is.
+# PLANT changes what develop gets: `clean` plants nothing, and a path plants what
+# that script commits instead of the missing tax.
 set -e
-. "$(dirname "${BASH_SOURCE[0]}")/../story-start/project.sh"
+here="$(dirname "${BASH_SOURCE[0]}")"
+plant="${PLANT:-$here/../story-start/plant-bug.sh}"
+. "$here/../story-start/project.sh"
 git branch -M main
 git switch -q -c develop
-. "$(dirname "${BASH_SOURCE[0]}")/../story-start/plant-bug.sh"
+[ "$plant" = clean ] || . "$plant"
 git init -q --bare .remote/origin.git
 echo ".remote/" >> .git/info/exclude
 git remote add origin "$PWD/.remote/origin.git"
 git push -q origin main develop
-git switch -q -c story/ABC-9/print-the-invoices-as-csv main
+git switch -q -c story/ABC-9/show-the-customer-name main
 echo "# work in progress" >> invoices.py
 echo "notas" > notes.md
