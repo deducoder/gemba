@@ -57,3 +57,8 @@ graders:
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-50'
+  - name: no-link
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0

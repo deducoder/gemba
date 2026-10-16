@@ -1,2 +1,2 @@
 #!/bin/bash
-. "$(dirname "$0")/../project.sh" "$(dirname "$0")/../plant-external-rate.sh"
+PLANT="$(dirname "$0")/../plant-external-rate.sh" . "$(dirname "$0")/../project.sh"

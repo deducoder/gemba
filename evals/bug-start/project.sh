@@ -4,11 +4,11 @@
 # tax out of the totals, and the person on a story branch from before that change,
 # with a change not committed and a file not tracked, so the failure reproduces only
 # on develop and the working tree must stay as it is.
-# Its argument changes what develop gets: `clean` plants nothing, and a path plants
-# what that script commits instead of the missing tax.
+# PLANT changes what develop gets: `clean` plants nothing, and a path plants what
+# that script commits instead of the missing tax.
 set -e
 here="$(dirname "${BASH_SOURCE[0]}")"
-plant="${1:-$here/../story-start/plant-bug.sh}"
+plant="${PLANT:-$here/../story-start/plant-bug.sh}"
 . "$here/../story-start/project.sh"
 git branch -M main
 git switch -q -c develop

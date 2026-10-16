@@ -1,2 +1,2 @@
 #!/bin/bash
-. "$(dirname "$0")/../project.sh" clean
+PLANT=clean . "$(dirname "$0")/../project.sh"

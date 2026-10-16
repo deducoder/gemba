@@ -1,0 +1,23 @@
+schema_version: "1.1"
+name: bug-start-key-as-context
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a bug: the totals that invoices.py prints leave out the tax, though the rounding that ABC-5 added still works.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Bug'
+  - name: no-link
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0

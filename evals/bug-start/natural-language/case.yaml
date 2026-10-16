@@ -20,3 +20,8 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'issueTypeName\W+Bug'
+  - name: no-link
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0
