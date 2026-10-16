@@ -38,4 +38,4 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
 6. **Delete the branch** once the result of `transitionJiraIssue` shows the story Done, so never alongside that call: first locally with `git branch -d <branch>`, then on the remote with `git push origin --delete <branch>`, the second as a command of its own that the person approves.
 
-7. **Report** the merge commit, the status of the story and the branches deleted. The project is left on `develop`. This skill writes no worklog: `story-implement` and `story-review` already registered the time of their phases.
+7. **Report** the merge commit when step 3 listed it, the status of the story and the branches deleted. The project is left on `develop`. This skill writes no worklog: `story-implement` and `story-review` already registered the time of their phases.
