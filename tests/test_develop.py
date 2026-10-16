@@ -40,14 +40,20 @@ class DevelopWorktree(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def open(self):
+        """Opens the worktree and returns its path, failing the test before any write when it does not open."""
+        result = develop(self.repo, "open")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        path = Path(result.stdout.strip())
+        self.assertTrue(path.is_absolute() and path.is_dir(), result.stdout)
+        return path
+
     def state(self):
         return git(self.repo, "branch", "--show-current"), git(self.repo, "status", "--porcelain", "--untracked-files=all")
 
     def test_open_prints_a_worktree_of_develop_and_leaves_the_project_as_it_was(self):
         before = self.state()
-        result = develop(self.repo, "open")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        path = Path(result.stdout.strip())
+        path = self.open()
         self.assertEqual((path / "app.py").read_text(), "print('develop')\n")
         self.assertEqual(git(path, "rev-parse", "HEAD"), git(self.repo, "rev-parse", "develop"))
         self.assertEqual(self.state(), before)
@@ -55,7 +61,7 @@ class DevelopWorktree(unittest.TestCase):
 
     def test_close_removes_the_worktree_and_leaves_the_project_as_it_was(self):
         before = self.state()
-        path = Path(develop(self.repo, "open").stdout.strip())
+        path = self.open()
         (path / "__pycache__").mkdir()
         (path / "output.txt").write_text("left by a run\n")
         result = develop(self.repo, "close")
