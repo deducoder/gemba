@@ -36,13 +36,16 @@ def evaluate(*case):
             "--allow-tools", "Bash(python3:*)", "Bash(git:*)", "Edit", "Write"]
 
 
-def git(*args):
-    return subprocess.run(["git", *args], capture_output=True, text=True, check=True).stdout
+def git(*args, cwd=None):
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout
 
 
-def changed_files():
-    base = git("merge-base", "origin/develop", "HEAD").strip()
-    return set(git("diff", "--name-only", base).split()) | set(git("ls-files", "--others", "--exclude-standard").split())
+def changed_files(root):
+    """Both sides of a move count, and paths come from the root whatever the current directory."""
+    base = git("merge-base", "origin/develop", "HEAD", cwd=root).strip()
+    diff = git("diff", "--name-only", "--no-renames", "-z", base, cwd=root)
+    untracked = git("ls-files", "--others", "--exclude-standard", "-z", cwd=root)
+    return {path for path in (diff + untracked).split("\0") if path}
 
 
 def loaders(root):
@@ -99,7 +102,7 @@ def picked_by(path, root, loaded_by):
 def commands(root):
     loaded_by = loaders(root)
     skills = set()
-    for path in sorted(changed_files()):
+    for path in sorted(changed_files(root)):
         picked = picked_by(path, root, loaded_by)
         if picked is None:
             return [evaluate()]
