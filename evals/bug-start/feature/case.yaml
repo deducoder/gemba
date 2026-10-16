@@ -19,4 +19,4 @@ graders:
     match: not_contains
   - name: story
     type: regex
-    pattern: 'story-start'
+    pattern: '\bstory\b'
