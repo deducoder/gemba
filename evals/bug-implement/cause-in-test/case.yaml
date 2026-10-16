@@ -23,12 +23,12 @@ graders:
   - name: test-against-a-broken-product
     type: tool_used
     tool: Bash
-    input_match: 'scripts/develop\.py run .*git apply.*TAX.*test_invoices'
+    input_match: 'scripts/develop\.py run .*(git apply|cp ).*TAX.*test_invoices'
   - name: broken-product-before-the-commit
     type: tool_order
     before:
       tool: Bash
-      input_match: 'scripts/develop\.py run .*git apply.*TAX.*test_invoices'
+      input_match: 'scripts/develop\.py run .*(git apply|cp ).*TAX.*test_invoices'
     after:
       tool: Bash
       input_match: 'git commit'
