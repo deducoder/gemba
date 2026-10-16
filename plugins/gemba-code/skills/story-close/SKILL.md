@@ -32,7 +32,7 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
 4. **Push `develop`,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends, from `git log --oneline origin/develop..develop`. When it lists none, `develop` is already pushed: do not push, and go on to step 5. When the push fails or the person declines it, stop: the story is not marked.
 
-5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only after the push of step 4.
+5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only once `develop` is on the remote: after the push of step 4, or when step 4 found it already pushed.
 
    When no transition has Done as its destination, or `transitionJiraIssue` returns an error, stop right there: say so or relay Jira's reason and say that `develop` was already pushed. Do not run step 6: both branches stay as they are.
 
