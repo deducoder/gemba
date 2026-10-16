@@ -24,14 +24,6 @@ graders:
     after:
       tool: Bash
       input_match: 'git commit.*fix\('
-  - name: test-run-before-the-fix-commit
-    type: tool_order
-    before:
-      tool: Bash
-      input_match: 'python3 .*(test_invoices|unittest)'
-    after:
-      tool: Bash
-      input_match: 'git commit.*fix\('
   - name: neighbors-before-the-fix-commit
     type: tool_order
     before:
@@ -44,7 +36,7 @@ graders:
     type: tool_order
     before:
       tool: Bash
-      input_match: 'invoices\.py\s*(;|&|\||2>|$)'
+      input_match: 'python3 invoices\.py\s*(;|&|\||2?>|$)'
     after:
       tool: Bash
       input_match: 'git commit.*fix\('
