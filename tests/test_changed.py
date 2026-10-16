@@ -18,9 +18,11 @@ ENV = {**os.environ, "GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@exampl
 FLAGS = ["--scaffold", "--runs", "1"]
 ALLOW = ["--allow-tools", "Bash(python3:*)", "Bash(git:*)", "Edit", "Write"]
 FAKE_CLAUDE = """#!/usr/bin/env python3
-import json, os, sys
+import json, os, signal, sys
 with open(os.environ["CLAUDE_CALLS"], "a", encoding="utf-8") as calls:
     calls.write(json.dumps(sys.argv[1:]) + "\\n")
+if os.environ.get("CLAUDE_KILLED"):
+    os.kill(os.getpid(), signal.SIGTERM)
 """
 
 
@@ -69,9 +71,12 @@ class Changed(unittest.TestCase):
             git(self.work, "add", path)
             git(self.work, "commit", "-qm", f"change {path}")
 
-    def run_script(self, *args):
-        return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=self.work, env=self.env,
+    def run_script(self, *args, cwd=None, env=None):
+        return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd or self.work, env={**self.env, **(env or {})},
                               capture_output=True, text=True)
+
+    def cases(self):
+        return {call[call.index("--case") + 1] for call in self.invocations()}
 
     def invocations(self):
         if not self.calls.exists():
@@ -99,15 +104,44 @@ class Changed(unittest.TestCase):
     def test_a_change_to_a_script_another_named_script_imports_runs_the_evals_of_both(self):
         self.touch("plugins/gemba-code/scripts/branch.py")
         self.run_script()
-        skills = {call[call.index("--case") + 1] for call in self.invocations()}
-        self.assertEqual(skills, {"bug-implement-*", "story-close-*", "story-implement-*", "story-review-*", "bug-start-*"})
+        self.assertEqual(self.cases(), {"bug-implement-*", "story-close-*", "story-implement-*", "story-review-*", "bug-start-*"})
 
     def test_a_change_to_an_eval_file_other_skills_load_runs_their_evals_too(self):
         self.touch("evals/story-start/project.sh")
         self.run_script()
-        skills = {call[call.index("--case") + 1] for call in self.invocations()}
-        self.assertLessEqual({"story-start-*", "story-implement-*", "bug-start-*", "story-close-*"}, skills)
-        self.assertNotIn("read-work-item", skills)
+        self.assertEqual(self.cases(), {"story-start-*", "story-implement-*", "bug-start-*", "bug-implement-*",
+                                        "story-review-*", "story-close-*"})
+
+    def test_a_moved_file_picks_the_evals_of_its_old_place_too(self):
+        git(self.work, "mv", "evals/story-start/plant-bug.sh", "evals/bug-start/plant-bug.sh")
+        git(self.work, "commit", "-qm", "move plant-bug.sh")
+        self.run_script()
+        self.assertIn("story-start-*", self.cases())
+
+    def test_it_reads_the_whole_change_from_a_subdirectory(self):
+        self.touch("plugins/gemba-code/skills/story-close/references/new.md")
+        self.run_script(cwd=self.work / "evals")
+        self.assertEqual(self.invocations(), [for_skill("story-close")])
+
+    def test_a_plugin_file_no_rule_knows_runs_every_eval(self):
+        self.touch("plugins/gemba-code/.mcp.json")
+        self.run_script()
+        self.assertEqual(self.invocations(), [["plugin", "eval", ".", *FLAGS, *ALLOW]])
+
+    def test_a_script_a_hook_runs_runs_every_eval_even_when_a_skill_names_it(self):
+        skill = self.work / "plugins/gemba-code/skills/story-close/SKILL.md"
+        skill.write_text(skill.read_text(encoding="utf-8") + "scripts/push_gate.py\n", encoding="utf-8")
+        git(self.work, "commit", "-qam", "name push_gate.py")
+        git(self.work, "push", "-q", "origin", "HEAD:develop")
+        git(self.work, "fetch", "-q")
+        self.touch("plugins/gemba-code/scripts/push_gate.py")
+        self.run_script()
+        self.assertEqual(self.invocations(), [["plugin", "eval", ".", *FLAGS, *ALLOW]])
+
+    def test_a_run_killed_by_a_signal_fails_the_script(self):
+        self.touch("plugins/gemba-code/skills/story-close/SKILL.md")
+        result = self.run_script(env={"CLAUDE_KILLED": "1"})
+        self.assertNotEqual(result.returncode, 0)
 
     def test_a_change_to_what_every_case_shares_runs_every_eval_once(self):
         for path in ("evals/mocks/atlassian/getJiraIssue.json", "tests/fixtures/atlassian-stub/README.md",
