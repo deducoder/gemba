@@ -29,6 +29,8 @@ Template:
 
 The spike stays in Backlog: this skill answers nothing, changes no status, creates no branch and creates no work item other than a spike. The research belongs to the spike once it is implemented, so declaring it runs no experiment. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
+A request with two questions or more is one spike per question: from **Ask** on, each question goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question. Do not wait for an agreement to split them.
+
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
@@ -41,8 +43,6 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
    - **Answered** when the documentation, the code or the history of the project already answer the question: the answer with its source, as a `read:` line with its path and line.
    - **A story** when it describes something to build, not a question: to declare with `/gemba-code:story-start`.
    - **A bug** when it describes a failure of something that already exists: to declare with `/gemba-code:bug-start`.
-
-A request with two questions or more is one spike per question: from step 4 on, each question goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question. Do not wait for an agreement to split them.
 
 4. **Ask, in one message, only what the question leaves open and you cannot deduce,** such as the decision that waits on its answer. Ask nothing when nothing is missing.
 
