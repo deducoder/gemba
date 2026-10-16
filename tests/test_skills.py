@@ -67,15 +67,10 @@ class SkillStructure(unittest.TestCase):
 
     def test_referenced_files_exist(self):
         for path in SKILLS:
-            for ref in REFERENCE.findall(read(path)[1]):
-                with self.subTest(skill=path.parent.name, ref=ref):
-                    self.assertTrue((path.parent / ref).exists())
-
-    def test_plugin_files_a_skill_names_exist(self):
-        for path in SKILLS:
-            for ref in PLUGIN_FILE.findall(read(path)[1]):
-                with self.subTest(skill=path.parent.name, ref=ref):
-                    self.assertTrue((path.parents[2] / ref).exists())
+            for pattern, base in ((REFERENCE, path.parent), (PLUGIN_FILE, path.parents[2])):
+                for ref in pattern.findall(read(path)[1]):
+                    with self.subTest(skill=path.parent.name, ref=ref):
+                        self.assertTrue((base / ref).exists())
 
     def test_injected_commands_have_no_command_substitution(self):
         for path in SKILLS:

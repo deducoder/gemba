@@ -1,18 +1,61 @@
-"""What the draft scripts of every work item type share: the checks of the Summary,
-the == marks and the Out of scope arrows, and the conversion of their lines to ADF
-for Jira. `code` becomes a code mark, a Done when criterion wrapped in `==` turns
-orange, and a work item key after `→` becomes a link to the issue on the site."""
+"""What the draft scripts of every work item type share: splitting the draft into its
+sections, the checks of the Summary, the bullets, the == marks, the evidence lines
+and the Out of scope arrows, and the conversion of their lines to ADF for Jira.
+`code` becomes a code mark, a Done when criterion wrapped in `==` turns orange, and
+a work item key after `→` becomes a link to the issue on the site."""
 
 import re
 
 ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
 KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 CODE = re.compile(r"`([^`]+)`")
+HEADING = re.compile(r"^(#{3,4}) (.+?)\s*$")
+FENCE = re.compile(r"^(`{3,}|~{3,})")
+
+
+def split(text):
+    """Returns the Summary, the lines before the first `###` section, the lines of each
+    section, the lines of each `####` subsection keyed by (section, subsection) and the
+    headings written twice. A heading inside a fenced block is part of the block."""
+    lines = text.strip("\n").splitlines()
+    summary = lines[0].strip() if lines else ""
+    intro, sections, subsections, repeated = [], {}, {}, []
+    target, current, fence = intro, None, None
+    for line in lines[1:]:
+        heading = HEADING.match(line) if fence is None else None
+        if heading and len(heading.group(1)) == 3:
+            current = heading.group(2)
+            if current in sections:
+                repeated.append(current)
+            target = sections.setdefault(current, [])
+            continue
+        if heading and current is not None:
+            key = (current, heading.group(2))
+            if key in subsections:
+                repeated.append(" ".join(key))
+            target = subsections.setdefault(key, [])
+            continue
+        opener = FENCE.match(line)
+        if fence is None and opener:
+            fence = opener.group(1)
+        elif fence is not None and line.strip() == fence:
+            fence = None
+        target.append(line)
+    return summary, intro, sections, subsections, repeated
+
+
+def filled(lines):
+    return [line for line in lines if line.strip()]
 
 
 def prose(line):
     """Returns a line without its `code`, where == and → are literal."""
     return CODE.sub("", line)
+
+
+def wrapped(line):
+    """Tells whether a Done when criterion is wrapped in == as deduced."""
+    return line.startswith("==") and line.endswith("==") and len(line) > 4
 
 
 def check_summary(summary, found):
@@ -22,19 +65,50 @@ def check_summary(summary, found):
         found.append("Summary: sentence case, with no final period")
 
 
+def check_sections(sections, expected, repeated, found):
+    """Reports the headings written twice; returns whether the sections are the expected ones, in order."""
+    for name in repeated:
+        found.append(f"{name}: write the section once")
+    if list(sections) != expected:
+        found.append(f"sections: expected {', '.join(expected)}, in that order; found {', '.join(sections) or 'none'}")
+        return False
+    return True
+
+
+def items(name, lines, found):
+    """Returns the bullets of a section and reports the lines that are not bullets."""
+    lines = filled(lines)
+    if not lines:
+        found.append(f"{name}: write at least one item")
+    bullets = []
+    for line in lines:
+        if line.strip() == "*":
+            found.append(f"{name}: remove the empty bullet")
+        elif line.startswith("* "):
+            bullets.append(line[2:].strip())
+        else:
+            found.append(f"{name}: write each item as a '* ' bullet on one line: {line.strip()}")
+    return bullets
+
+
 def check_unmarked(name, text, found):
     """Reports == in a text that only Done when criteria may carry."""
     if "==" in prose(text):
-        found.append(f"{name}: only Done when criteria are wrapped in ==")
+        found.append(f"{name}: only Done when criteria are wrapped in ==: {text}")
+
+
+def check_trail(name, lines, found):
+    for line in lines:
+        if not line.startswith(("ran:", "read:")):
+            found.append(f"{name}: start each line with 'ran:' or 'read:': {line}")
 
 
 def check_criteria(criteria, found):
     for line in criteria:
-        wrapped = line.startswith("==") and line.endswith("==") and len(line) > 4
-        inner = line[2:-2] if wrapped else line
+        inner = line[2:-2] if wrapped(line) else line
         if "==" in prose(inner):
             found.append(f"Done when: wrap the whole criterion in ==, or none of it: {line}")
-        elif wrapped and not prose(inner).strip():
+        elif wrapped(line) and not prose(inner).strip():
             found.append(f"Done when: a deduced criterion needs words outside `code` to show in orange: {line}")
 
 
@@ -58,9 +132,7 @@ def inline(text, marks=()):
 
 
 def criterion(line):
-    if line.startswith("==") and line.endswith("==") and len(line) > 4:
-        return inline(line[2:-2], [ORANGE])
-    return inline(line)
+    return inline(line[2:-2], [ORANGE]) if wrapped(line) else inline(line)
 
 
 def excluded(line, site):

@@ -14,8 +14,7 @@ failure, then the sections of the template in order:
   and its output, then `#### Root cause`, one `* ran:` or `* read:` bullet per line.
 - `### Out of scope`: one `* ` bullet per line.
 
-`code` becomes a code mark, a Done when criterion wrapped in `==` turns orange,
-and a work item key after `→` in Out of scope becomes a link to the issue.
+Lines are written and converted as the plugin's scripts/draft.py says.
 
 When the draft follows the template, prints {"summary": ..., "description":
 <ADF>, "comment": <ADF>} as JSON: the description holds the failure, Root cause,
@@ -34,72 +33,15 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
 from draft import (  # noqa: E402
-    CODE, bullets, check_criteria, check_scope, check_summary, check_unmarked, criterion, doc, excluded, heading, inline,
-    section,
+    CODE, FENCE, bullets, check_criteria, check_scope, check_sections, check_summary, check_trail, check_unmarked,
+    criterion, doc, excluded, filled, heading, inline, items, section, split,
 )
 
 SECTIONS = ["Root cause", "Neighboring inputs", "Done when", "Evidence", "Out of scope"]
-EVIDENCE = ["Reproduction", "Root cause"]
+EVIDENCE = [("Evidence", "Reproduction"), ("Evidence", "Root cause")]
 HEADER = ["Input", "Current behavior"]
-FENCE = re.compile(r"^(`{3,}|~{3,})")
+TABLE = f"| {' | '.join(HEADER)} |"
 SEPARATOR = re.compile(r"^\|(\s*:?-+:?\s*\|)+$")
-
-
-def parse(text):
-    """Returns the Summary, the lines before the first section, the lines of each
-    section, the lines of each Evidence subsection and the headings written twice.
-    A heading inside a fenced block is part of the block."""
-    lines = text.strip("\n").splitlines()
-    summary = lines[0].strip() if lines else ""
-    intro, sections, evidence, repeated = [], {}, {}, []
-    current, sub, fence = None, None, None
-    for line in lines[1:]:
-        if fence is None:
-            level3 = re.match(r"^### (.+?)\s*$", line)
-            level4 = re.match(r"^#### (.+?)\s*$", line)
-            if level3:
-                current, sub = level3.group(1), None
-                if current in sections:
-                    repeated.append(current)
-                sections.setdefault(current, [])
-                continue
-            if level4 and current == "Evidence":
-                sub = level4.group(1)
-                if sub in evidence:
-                    repeated.append(f"Evidence {sub}")
-                evidence.setdefault(sub, [])
-                continue
-        opener = FENCE.match(line)
-        if opener and fence is None:
-            fence = opener.group(1)
-        elif fence is not None and line.strip() == fence:
-            fence = None
-        if current is None:
-            intro.append(line)
-        elif current == "Evidence" and sub is not None:
-            evidence[sub].append(line)
-        else:
-            sections[current].append(line)
-    return summary, intro, sections, evidence, repeated
-
-
-def filled(lines):
-    return [line for line in lines if line.strip()]
-
-
-def items(name, lines, found):
-    """Returns the bullets of a section and reports the lines that are not bullets."""
-    found_items = []
-    for line in filled(lines):
-        if line.startswith("* "):
-            found_items.append(line[2:].strip())
-        elif line.strip() == "*":
-            found.append(f"{name}: remove the empty bullet")
-        else:
-            found.append(f"{name}: write each item as a '* ' bullet on one line: {line.strip()}")
-    if not filled(lines):
-        found.append(f"{name}: write at least one item")
-    return found_items
 
 
 def cells(row):
@@ -111,30 +53,28 @@ def cells(row):
 
 def check_table(lines, found):
     """Returns the rows of Neighboring inputs, without the header, split into cells."""
-    rows = filled(lines)
-    if not rows or not all(row.strip().startswith("|") and row.strip().endswith("|") for row in rows):
-        found.append(f"Neighboring inputs: write a table headed | {' | '.join(HEADER)} |")
+    rows = [line.strip() for line in filled(lines)]
+    if not rows or not all(row.startswith("|") and row.endswith("|") for row in rows):
+        found.append(f"Neighboring inputs: write a table headed {TABLE}")
         return []
-    rows = [row.strip() for row in rows]
     if cells(rows[0]) != HEADER or len(rows) < 2 or not SEPARATOR.match(rows[1]):
-        found.append(f"Neighboring inputs: head the table with | {' | '.join(HEADER)} | and its separator row")
+        found.append(f"Neighboring inputs: head the table with {TABLE} and its separator row")
         return []
     body = [cells(row) for row in rows[2:]]
     if not body:
         found.append("Neighboring inputs: add one row per neighboring input")
     for row in body:
-        if len(row) != 2 or not all(row):
+        if len(row) != len(HEADER) or not all(row):
             found.append(f"Neighboring inputs: give each row an input and its current behavior: | {' | '.join(row)} |")
     return body
 
 
 def check_reproduction(lines, found):
     """Returns the literal text of the Reproduction block, or None."""
-    lines = list(lines)
     while lines and not lines[0].strip():
-        lines.pop(0)
+        lines = lines[1:]
     while lines and not lines[-1].strip():
-        lines.pop()
+        lines = lines[:-1]
     opener = FENCE.match(lines[0]) if lines else None
     if not opener or len(lines) < 2 or lines[-1].strip() != opener.group(1):
         found.append("Evidence: write the Reproduction as one fenced block with the literal command and its output")
@@ -146,7 +86,7 @@ def check_reproduction(lines, found):
     return body
 
 
-def problems(summary, intro, sections, evidence, repeated):
+def problems(summary, intro, sections, subsections, repeated):
     """Returns what doesn't follow the template, and the parsed content when it does."""
     found = []
     check_summary(summary, found)
@@ -155,13 +95,10 @@ def problems(summary, intro, sections, evidence, repeated):
         found.append("failure: write one paragraph that says what fails, when or where, and who it affects")
     for name, text in (("Summary", summary), ("failure", " ".join(paragraph))):
         check_unmarked(name, text, found)
-    for name in repeated:
-        found.append(f"{name}: write the section once")
-    if list(sections) != SECTIONS:
-        found.append(f"sections: expected {', '.join(SECTIONS)}, in that order; found {', '.join(sections) or 'none'}")
+    if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    if list(evidence) != EVIDENCE or filled(sections["Evidence"]):
-        found.append(f"Evidence: write the subsections {', '.join('#### ' + name for name in EVIDENCE)}, in that order, and nothing else")
+    if list(subsections) != EVIDENCE or filled(sections["Evidence"]):
+        found.append("Evidence: write the subsections #### Reproduction and #### Root cause, in that order, and nothing else")
         return found, None
 
     cause = filled(sections["Root cause"])
@@ -170,20 +107,19 @@ def problems(summary, intro, sections, evidence, repeated):
     rows = check_table(sections["Neighboring inputs"], found)
     criteria = items("Done when", sections["Done when"], found)
     check_criteria(criteria, found)
-    reproduction = check_reproduction(evidence["Reproduction"], found)
-    trail = items("Evidence Root cause", evidence["Root cause"], found)
-    for line in trail:
-        if not line.startswith(("ran:", "read:")):
-            found.append(f"Evidence: start each Root cause line with 'ran:' or 'read:': {line}")
+    reproduction = check_reproduction(subsections[EVIDENCE[0]], found)
+    trail = items("Evidence Root cause", subsections[EVIDENCE[1]], found)
+    check_trail("Evidence Root cause", trail, found)
     scope = items("Out of scope", sections["Out of scope"], found)
     check_scope(scope, found)
     for name, lines in (("Root cause", cause), ("Neighboring inputs", [cell for row in rows for cell in row]),
                         ("Evidence", trail), ("Out of scope", scope)):
         for line in lines:
             check_unmarked(name, line, found)
-    content = {"intro": paragraph[0].strip() if paragraph else "", "cause": cause[0].strip() if cause else "",
-               "rows": rows, "criteria": criteria, "reproduction": reproduction, "trail": trail, "scope": scope}
-    return found, content
+    if found:
+        return found, None
+    return found, {"summary": summary, "intro": paragraph[0].strip(), "cause": cause[0].strip(), "rows": rows,
+                   "criteria": criteria, "reproduction": reproduction, "trail": trail, "scope": scope}
 
 
 def table(rows):
@@ -223,12 +159,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--site", required=True, help="the Atlassian site, e.g. example.atlassian.net")
     site = parser.parse_args().site
-    parsed = parse(sys.stdin.read())
-    found, content = problems(*parsed)
+    found, content = problems(*split(sys.stdin.read()))
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    bug = {"summary": parsed[0], "description": description(content, site), "comment": comment(content)}
+    bug = {"summary": content["summary"], "description": description(content, site), "comment": comment(content)}
     print(json.dumps(bug, ensure_ascii=False))
     return 0
 
