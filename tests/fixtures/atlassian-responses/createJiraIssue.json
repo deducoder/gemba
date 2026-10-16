@@ -1,0 +1,67 @@
+{
+  "issues": {
+    "nodes": [
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12069",
+        "key": "ABC-35",
+        "fields": {
+          "summary": "Read the invoices from a file",
+          "issuetype": {
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "project": {
+            "id": "10510",
+            "key": "ABC",
+            "name": "ABC",
+            "projectTypeKey": "software",
+            "simplified": false
+          },
+          "description": "Como persona que factura, quiero leer las facturas de un archivo, para no escribirlas en el código.",
+          "assignee": {
+            "active": true,
+            "timeZone": "America/Mexico_City",
+            "accountType": "atlassian"
+          },
+          "status": {
+            "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+            "name": "Backlog",
+            "id": "10074",
+            "statusCategory": {
+              "id": 2,
+              "key": "new",
+              "colorName": "blue-gray",
+              "name": "To Do"
+            }
+          }
+        },
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-35"
+      }
+    ]
+  },
+  "context": {
+    "cloudId": "60bceecb-ff67-4e42-ad74-e1b4da07354e",
+    "toolsExposure": "primary",
+    "clientName": "claude.ai",
+    "mcpClientName": "unknown",
+    "toolName": "createJiraIssue",
+    "endpoint": "v1-authv2:streamable-http",
+    "sessionId": "r11-f3d8c075-6b41-4ada-9a77-b29a62334f4b",
+    "invocationId": "ad41418b-993d-406d-a541-bf100870d94c",
+    "env": "prod",
+    "featureFlags": {
+      "mcp-app-v2-primary": false,
+      "mcp-jira-instrumentation-phase-1": true,
+      "ken-4811-4724-jira-mcp-status-assignee-fields": true,
+      "mcp-ui-local-cache": true,
+      "jira-mcp-app-loading-skeleton-and-error-case": false,
+      "jira-mcp-app-shared-row-components": true,
+      "claude_mcp_ui_theme_fix_jac-99665": true
+    }
+  }
+}
