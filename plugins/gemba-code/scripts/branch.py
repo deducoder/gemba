@@ -26,7 +26,8 @@ develop); `merged, not pushed` when develop's only commit of its own is that mer
 merges nothing again, and refuses naming the commits when origin/develop has any develop
 lacks); otherwise `merged`: it updates develop (`git pull --ff-only`) and merges
 origin/<branch> with `--no-ff` and the message `Merge branch '<branch>' into develop`.
-On conflicts it aborts the merge, goes back to the branch it came from and names
+After `merged` and `merged, not pushed` it lists the commits the push of develop sends,
+one per line. On conflicts it aborts the merge, goes back to the branch it came from and names
 the files. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
@@ -124,6 +125,11 @@ def merged_locally(branch):
     return own == [git("rev-parse", "develop").stdout.strip()]
 
 
+def unpushed():
+    """The commits the push of develop sends, one `<hash> <subject>` per line."""
+    return git("log", "--oneline", f"{DEVELOP}..develop").stdout.rstrip()
+
+
 def merge_into_develop(branch):
     if is_ancestor(f"origin/{branch}", DEVELOP):
         git("switch", "-q", "develop")
@@ -135,7 +141,7 @@ def merge_into_develop(branch):
         if missing:
             return f"develop has the merge of {branch} unpushed and {DEVELOP} has commits it lacks:\n{missing}"
         git("switch", "-q", "develop")
-        print(branch, "merged, not pushed", sep="\n")
+        print(branch, "merged, not pushed", unpushed(), sep="\n")
         return None
     current = current_branch()
     try:
@@ -151,7 +157,7 @@ def merge_into_develop(branch):
         if conflicts:
             return f"Merge conflicts in: {', '.join(conflicts)}"
         raise
-    print(branch, "merged", sep="\n")
+    print(branch, "merged", unpushed(), sep="\n")
 
 
 def guarded(branch, action, verify=check):
