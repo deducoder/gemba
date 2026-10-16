@@ -54,6 +54,14 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
    Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture. When it passes or fails for another reason, leave a drift comment.
 
+   When every `read:` line of the Root cause points to a test of the project, the cause is in the tests: the `test` commit is the whole fix, it passes without any other commit, and there is no `fix` commit. Then, instead of the `run` above, run the fixed test against the change to the product its Done when names:
+
+   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <the change to the product> && <command that runs only the fixed test>'
+   ```
+
+   and show that it fails because of that change. When it passes, the test does not detect the defect: leave a drift comment.
+
 6. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`. When a path is missing, leave a drift comment.
 
 7. **Simplify the branch.** Invoke `/simplify origin/develop...HEAD` with the Skill tool, from the bug branch. Commit its fixes in the commit format of the Gemba Code context, split by what was done.
