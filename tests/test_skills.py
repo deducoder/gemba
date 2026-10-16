@@ -17,6 +17,7 @@ SIDE_EFFECTS = ["setup", "session-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 PLUGIN_SCRIPT = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/(scripts/[\w./-]+)")
+PLUGIN_FILE = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([\w./-]+)")
 RUN_SCRIPT = re.compile(r"python3 (\$\{CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)\}/[\w./-]+)")
 INJECTED = re.compile(r"!`([^`]*)`")
 PROJECT_FILE = re.compile(r"(?<![\w}\"]/)(?<!\w)(?:\.gemba/|\.claude/|CLAUDE\.md)")
@@ -69,6 +70,12 @@ class SkillStructure(unittest.TestCase):
             for ref in REFERENCE.findall(read(path)[1]):
                 with self.subTest(skill=path.parent.name, ref=ref):
                     self.assertTrue((path.parent / ref).exists())
+
+    def test_plugin_files_a_skill_names_exist(self):
+        for path in SKILLS:
+            for ref in PLUGIN_FILE.findall(read(path)[1]):
+                with self.subTest(skill=path.parent.name, ref=ref):
+                    self.assertTrue((path.parents[2] / ref).exists())
 
     def test_injected_commands_have_no_command_substitution(self):
         for path in SKILLS:
