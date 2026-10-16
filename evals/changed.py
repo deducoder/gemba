@@ -6,9 +6,10 @@ Usage: python3 evals/changed.py [--dry-run]    (from the repository)
 
 The change is every file that differs from where the branch left origin/develop,
 committed or not, plus the untracked ones. Each file picks evals by its path:
-- what every case shares (evals/mocks/, tests/fixtures/atlassian-stub/, the context/,
-  hooks/ and references/ of a plugin, and a plugin script no SKILL.md names) picks them all;
-- a plugin script picks the skills whose SKILL.md names it;
+- what every case shares (the manifests, evals/mocks/, tests/fixtures/atlassian-stub/, the
+  context/, hooks/ and references/ of a plugin, and a plugin script no SKILL.md names)
+  picks them all;
+- a plugin script picks the skills whose SKILL.md names it or a script that imports it;
 - plugins/<plugin>/skills/<skill>/ picks that skill;
 - evals/<skill>/ picks that skill and, through the scripts that load the file from
   other folders of evals/, theirs.
@@ -24,8 +25,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SHARED = ("evals/mocks/", "tests/fixtures/atlassian-stub/")
-SHARED_IN_PLUGIN = ("context", "hooks", "references")
+SHARED = (".claude-plugin/", "evals/mocks/", "tests/fixtures/atlassian-stub/")
+SHARED_IN_PLUGIN = (".claude-plugin", "context", "hooks", "references")
 LOADED = re.compile(r"\.\./([a-z-]+)/([\w-]+\.sh)")
 
 
@@ -56,6 +57,19 @@ def loaders(root):
     return loaded_by
 
 
+def importers(folder, name):
+    """Returns the script `name` and the scripts of its folder that import it, directly or
+    through another."""
+    scripts, pending = {name}, [name]
+    while pending:
+        module = Path(pending.pop()).stem
+        for other in folder.glob("*.py"):
+            if other.name not in scripts and re.search(rf"^(from|import) {module}\b", other.read_text(encoding="utf-8"), re.M):
+                scripts.add(other.name)
+                pending.append(other.name)
+    return scripts
+
+
 def picked_by(path, root, loaded_by):
     """Returns the skills a changed file picks, or None when it picks them all."""
     parts = path.split("/")
@@ -65,8 +79,9 @@ def picked_by(path, root, loaded_by):
         if parts[2] in SHARED_IN_PLUGIN:
             return None
         if parts[2] == "scripts":
+            scripts = importers(root / "plugins" / parts[1] / "scripts", parts[3])
             naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
-                      if f"scripts/{parts[3]}" in skill.read_text(encoding="utf-8")}
+                      if any(f"scripts/{script}" in skill.read_text(encoding="utf-8") for script in scripts)}
             return naming or None
         if parts[2] == "skills" and len(parts) > 4:
             return {parts[3]}
