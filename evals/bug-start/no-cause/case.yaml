@@ -27,4 +27,4 @@ graders:
     input_match: 'scripts/develop\.py close'
   - name: shows-what-it-ran
     type: regex
-    pattern: 'librates|rate\(\)'
+    pattern: 'invoice-rates|rates service|servicio'
