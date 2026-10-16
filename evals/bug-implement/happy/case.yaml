@@ -55,10 +55,12 @@ graders:
     after:
       tool: Bash
       input_match: 'scripts/branch\.py bug ABC-30'
-  - name: push
+  - name: no-push
     type: tool_used
     tool: Bash
-    input_match: 'git push -u origin bug/ABC-30/invoice-totals-omit-the-tax'
+    input_match: 'git push'
+    min: 0
+    max: 0
   - name: no-worklog-yet
     type: regex
     target: mock_calls

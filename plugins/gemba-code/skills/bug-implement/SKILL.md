@@ -53,7 +53,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    Uncommitted changes on the branch of this same bug do not stop it: they are the work to continue. When it refuses, relay its reason and stop.
 
-5. **Mark it Implement,** only when it is in Backlog: a bug already in Implement is resumed, so skip this step and the push of step 6. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
+5. **Mark it Implement,** only when it is in Backlog: a bug already in Implement is resumed, so skip this step. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, create no branch and run no more commands.
 
@@ -63,7 +63,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py bug <KEY> '<Summary>'
    ```
 
-   It prints the branch. Only if you marked the bug in step 5, push it empty with `git push -u origin <branch>`, as a command of its own: the person approves it.
+   It prints the branch, which stays local: this skill never pushes it.
 
 7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
