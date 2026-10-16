@@ -1,6 +1,6 @@
 ---
 name: story-close
-description: Closes a reviewed story from Jira. Merges its branch into develop with --no-ff, pushes develop, marks the story Done and deletes the branch locally and on the remote. It writes no worklog: each phase already did. It resumes a close whose develop is already pushed. Use when the user asks to close, merge or finish a story, or gives a story key whose review is done and whose branch is pushed.
+description: Closes a reviewed story from Jira. Merges its branch into develop with --no-ff, pushes develop, marks the story Done and deletes the branch locally and on the remote. It writes no worklog: each phase already did. It resumes a close that stopped before or after pushing develop. Use when the user asks to close, merge or finish a story, or gives a story key whose review is done and whose branch is pushed.
 argument-hint: "[story key]"
 allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
@@ -28,11 +28,11 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --merge story <KEY> '<Summary>'
    ```
 
-   It updates `develop` with `git pull --ff-only`, merges `origin/<branch>` into it with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on `develop` and prints the branch. Keep that branch name for step 6. It refuses, touching nothing, when files with tracking have uncommitted changes, `origin/<branch>` does not exist, the local branch has commits `origin/<branch>` lacks (they were not reviewed) or `develop` does not fast-forward; and when the merge has conflicts it aborts it, goes back to the branch it came from and names the files. When it refuses, relay its reason and stop: nothing is pushed or marked.
+   It stays on `develop` and prints the branch, then on a second line what it found: `merged` when it updated `develop` with `git pull --ff-only` and merged `origin/<branch>` into it with `--no-ff` and the message `Merge branch '<branch>' into develop`; `merged, not pushed` when an earlier close already merged it and `develop` was not pushed; `already pushed` when `origin/develop` already has it. After `merged` and `merged, not pushed` it lists the commits the push of `develop` sends. Keep that branch name for step 6. It refuses, touching nothing, when files with tracking have uncommitted changes, `origin/<branch>` does not exist, the local branch has commits `origin/<branch>` lacks (they were not reviewed), `develop` does not fast-forward, or `develop` has the merge unpushed and `origin/develop` has commits it lacks, which it names; and when the merge has conflicts it aborts it, goes back to the branch it came from and names the files. When it refuses, relay its reason and stop: nothing is pushed or marked.
 
-4. **Push `develop`,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends, from `git log --oneline origin/develop..develop`. When it lists none, `develop` is already pushed: do not push, and go on to step 5. When the push fails or the person declines it, stop: the story is not marked.
+4. **Push `develop`** when the second line is `merged` or `merged, not pushed`, with `git push` as a command of its own: the person approves it. Before it, say the branch and the commits it sends, as step 3 listed them. When the second line is `already pushed`, do not push, and go on to step 5. When the push fails or the person declines it, stop: the story is not marked.
 
-5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only once `develop` is on the remote: after the push of step 4, or when step 4 found it already pushed.
+5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only once `develop` is on the remote: after the push of step 4, or when step 3 found it already pushed.
 
    When no transition has Done as its destination, or `transitionJiraIssue` returns an error, stop right there: say so or relay Jira's reason and say that `develop` was already pushed. Do not run step 6: both branches stay as they are.
 
