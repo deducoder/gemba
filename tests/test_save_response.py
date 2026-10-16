@@ -16,7 +16,7 @@ RESPONSE = {
         "id": "10", "key": "XYZ-7", "self": "https://api.atlassian.com/ex/jira/1/rest/api/3/issue/10",
         "fields": {
             "summary": "Mention XYZ-6 and the XYZ board",
-            "project": {"key": "XYZ", "avatarUrls": {"48x48": "https://example.com/avatar/1"}},
+            "project": {"key": "XYZ", "name": "Team Board", "avatarUrls": {"48x48": "https://example.com/avatar/1"}},
             "assignee": {"accountId": "712020:abc", "emailAddress": "someone@example.com",
                          "displayName": "Someone", "avatarUrls": {"16x16": "https://example.com/avatar/2"}},
             "status": {"name": "Backlog", "iconUrl": "https://example.com/avatar/3"},
@@ -57,7 +57,7 @@ class SaveResponse(unittest.TestCase):
     def test_names_the_project_abc(self):
         node = self.save(RESPONSE)["issues"]["nodes"][0]
         self.assertEqual(node["key"], "ABC-7")
-        self.assertEqual(node["fields"]["project"], {"key": "ABC"})
+        self.assertEqual(node["fields"]["project"], {"key": "ABC", "name": "ABC"})
         self.assertEqual(node["fields"]["summary"], "Mention ABC-6 and the ABC board")
         self.assertEqual(node["webUrl"], "https://example.atlassian.net/browse/ABC-7")
 
