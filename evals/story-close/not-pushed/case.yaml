@@ -1,0 +1,50 @@
+schema_version: "1.1"
+name: story-close-not-pushed
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Close the story ABC-76.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 11
+  timeout_seconds: 90
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: story-close
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-76'
+  - name: merged
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --merge story ABC-76'
+  - name: pushed-after-the-merge
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'branch\.py --merge'
+    after:
+      tool: Bash
+      input_match: 'git push(?! +origin +--delete)'
+  - name: no-git-log
+    type: tool_used
+    tool: Bash
+    input_match: 'git log'
+    min: 0
+    max: 0
+  - name: not-done
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+    match: not_contains
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue'
+    match: not_contains
