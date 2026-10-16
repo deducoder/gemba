@@ -4,35 +4,58 @@
       {
         "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
         "id": "12069",
+        "self": "",
         "key": "ABC-35",
         "fields": {
           "summary": "Read the invoices from a file",
           "issuetype": {
+            "self": "",
             "id": "10009",
             "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
             "name": "Story",
             "subtask": false,
             "avatarId": 10315,
             "hierarchyLevel": 0
           },
           "project": {
+            "self": "",
             "id": "10510",
             "key": "ABC",
             "name": "ABC",
             "projectTypeKey": "software",
-            "simplified": false
+            "simplified": false,
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            }
           },
           "description": "Como persona que factura, quiero leer las facturas de un archivo, para no escribirlas en el código.",
           "assignee": {
+            "self": "",
+            "accountId": "",
+            "emailAddress": "",
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            },
+            "displayName": "",
             "active": true,
             "timeZone": "America/Mexico_City",
             "accountType": "atlassian"
           },
           "status": {
+            "self": "",
             "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+            "iconUrl": "",
             "name": "Backlog",
             "id": "10074",
             "statusCategory": {
+              "self": "",
               "id": 2,
               "key": "new",
               "colorName": "blue-gray",
@@ -45,6 +68,7 @@
     ]
   },
   "context": {
+    "atlassianAccountId": "",
     "cloudId": "60bceecb-ff67-4e42-ad74-e1b4da07354e",
     "toolsExposure": "primary",
     "clientName": "claude.ai",

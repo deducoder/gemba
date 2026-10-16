@@ -1,10 +1,31 @@
 {
+  "self": "",
   "author": {
+    "self": "",
+    "accountId": "",
+    "emailAddress": "",
+    "avatarUrls": {
+      "48x48": "",
+      "24x24": "",
+      "16x16": "",
+      "32x32": ""
+    },
+    "displayName": "",
     "active": true,
     "timeZone": "America/Mexico_City",
     "accountType": "atlassian"
   },
   "updateAuthor": {
+    "self": "",
+    "accountId": "",
+    "emailAddress": "",
+    "avatarUrls": {
+      "48x48": "",
+      "24x24": "",
+      "16x16": "",
+      "32x32": ""
+    },
+    "displayName": "",
     "active": true,
     "timeZone": "America/Mexico_City",
     "accountType": "atlassian"

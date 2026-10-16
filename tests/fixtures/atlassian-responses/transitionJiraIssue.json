@@ -4,35 +4,58 @@
       {
         "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
         "id": "12068",
+        "self": "",
         "key": "ABC-34",
         "fields": {
           "summary": "Print the invoices as csv",
           "issuetype": {
+            "self": "",
             "id": "10009",
             "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
             "name": "Story",
             "subtask": false,
             "avatarId": 10315,
             "hierarchyLevel": 0
           },
           "project": {
+            "self": "",
             "id": "10510",
             "key": "ABC",
             "name": "ABC",
             "projectTypeKey": "software",
-            "simplified": false
+            "simplified": false,
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            }
           },
           "description": "Como persona que factura, quiero imprimir las facturas como csv, para abrirlas en una hoja de cálculo.\n\n### Done when\n\n* `python3 invoices.py acme --csv` imprime una factura por línea, separada por comas.\n\n",
           "assignee": {
+            "self": "",
+            "accountId": "",
+            "emailAddress": "",
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            },
+            "displayName": "",
             "active": true,
             "timeZone": "America/Mexico_City",
             "accountType": "atlassian"
           },
           "status": {
+            "self": "",
             "description": "Implementación en curso, tarea por tarea con las verificaciones en verde; en un epic, sus stories en curso. Sale cuando todas las tareas están hechas.",
+            "iconUrl": "",
             "name": "Implement",
             "id": "10076",
             "statusCategory": {
+              "self": "",
               "id": 4,
               "key": "indeterminate",
               "colorName": "yellow",
@@ -45,6 +68,7 @@
     ]
   },
   "context": {
+    "atlassianAccountId": "",
     "cloudId": "60bceecb-ff67-4e42-ad74-e1b4da07354e",
     "toolsExposure": "primary",
     "clientName": "claude.ai",
