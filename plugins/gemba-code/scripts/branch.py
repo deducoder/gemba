@@ -112,20 +112,25 @@ def mergeable(branch):
         ahead = int(git("rev-list", "--count", f"origin/{branch}..{branch}").stdout)
         if ahead:
             return f"{branch} has {ahead} commit(s) that origin/{branch} does not have"
-    if has_ref("refs/heads/develop") and not is_ancestor("develop", DEVELOP):
-        if not merged_locally(branch):
-            return f"develop does not fast-forward to {DEVELOP}"
+    if resumed(branch) == "merged, not pushed":
         missing = commits(f"develop..{DEVELOP}")
         if missing:
             return f"develop has the merge of {branch} unpushed and {DEVELOP} has commits it lacks:\n{missing}"
+    elif has_ref("refs/heads/develop") and not is_ancestor("develop", DEVELOP):
+        return f"develop does not fast-forward to {DEVELOP}"
     return None
 
 
-def merged_locally(branch):
-    """Whether develop's only commit of its own is the merge of origin/<branch>, not yet on origin/develop."""
-    if is_ancestor(f"origin/{branch}", DEVELOP) or not is_ancestor(f"origin/{branch}", "develop"):
-        return False
-    return len(git("rev-list", "develop", f"^{DEVELOP}", f"^origin/{branch}").stdout.split()) == 1
+def resumed(branch):
+    """What an earlier close left of origin/<branch>: `already pushed` when origin/develop holds it,
+    `merged, not pushed` when develop's only commit of its own is its merge, else None."""
+    if is_ancestor(f"origin/{branch}", DEVELOP):
+        return "already pushed"
+    if has_ref("refs/heads/develop") and has_ref("develop^2"):
+        own = git("rev-list", "develop", f"^{DEVELOP}", f"^origin/{branch}").stdout.split()
+        if len(own) == 1 and git("rev-parse", "develop^2").stdout == git("rev-parse", f"origin/{branch}").stdout:
+            return "merged, not pushed"
+    return None
 
 
 def commits(revisions):
@@ -134,18 +139,13 @@ def commits(revisions):
 
 
 def merge_into_develop(branch):
-    """Brings origin/<branch> into develop once mergeable() let it through, so a develop
-    that already holds it holds only its merge."""
+    state = resumed(branch)
     current = current_branch()
     try:
         git("switch", "-q", "develop")
-        if is_ancestor(f"origin/{branch}", DEVELOP):
+        if state != "merged, not pushed":
             git("pull", "-q", "--ff-only")
-            state = "already pushed"
-        elif is_ancestor(f"origin/{branch}", "develop"):
-            state = "merged, not pushed"
-        else:
-            git("pull", "-q", "--ff-only")
+        if not state:
             git("merge", "-q", "--no-ff", "-m", f"Merge branch '{branch}' into develop", f"origin/{branch}")
             state = "merged"
     except subprocess.CalledProcessError:
