@@ -20,9 +20,13 @@ it has no commits of its own or it is behind origin/develop. `--merge` brings th
 work done into develop. It refuses, touching nothing, with the first reason that fails:
 uncommitted changes in files with tracking (also on the work branch), origin/<branch> does
 not exist, local commits origin/<branch> lacks, or a develop that does not fast-forward.
-Otherwise it updates develop (`git pull --ff-only`), merges origin/<branch> with `--no-ff`
-and the message `Merge branch '<branch>' into develop`, stays on develop and prints the
-branch; on conflicts it aborts the merge, goes back to the branch it came from and names
+It prints the branch and, on a second line, what it found and did, staying on develop:
+`already pushed` when origin/develop already holds origin/<branch> (it only updates
+develop); `merged, not pushed` when develop's only commit of its own is that merge (it
+merges nothing again, and refuses naming the commits when origin/develop has any develop
+lacks); otherwise `merged`: it updates develop (`git pull --ff-only`) and merges
+origin/<branch> with `--no-ff` and the message `Merge branch '<branch>' into develop`.
+On conflicts it aborts the merge, goes back to the branch it came from and names
 the files. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
@@ -107,12 +111,32 @@ def mergeable(branch):
         ahead = int(git("rev-list", "--count", f"origin/{branch}..{branch}").stdout)
         if ahead:
             return f"{branch} has {ahead} commit(s) that origin/{branch} does not have"
-    if has_ref("refs/heads/develop") and not is_ancestor("develop", DEVELOP):
+    if has_ref("refs/heads/develop") and not is_ancestor("develop", DEVELOP) and not merged_locally(branch):
         return f"develop does not fast-forward to {DEVELOP}"
     return None
 
 
+def merged_locally(branch):
+    """Whether develop holds origin/<branch> and its only commit of its own is the merge at its tip."""
+    if not has_ref("refs/heads/develop") or not is_ancestor(f"origin/{branch}", "develop"):
+        return False
+    own = git("rev-list", "develop", f"^{DEVELOP}", f"^origin/{branch}").stdout.split()
+    return own == [git("rev-parse", "develop").stdout.strip()]
+
+
 def merge_into_develop(branch):
+    if is_ancestor(f"origin/{branch}", DEVELOP):
+        git("switch", "-q", "develop")
+        git("pull", "-q", "--ff-only")
+        print(branch, "already pushed", sep="\n")
+        return None
+    if merged_locally(branch):
+        missing = git("log", "--oneline", f"develop..{DEVELOP}").stdout.rstrip()
+        if missing:
+            return f"develop has the merge of {branch} unpushed and {DEVELOP} has commits it lacks:\n{missing}"
+        git("switch", "-q", "develop")
+        print(branch, "merged, not pushed", sep="\n")
+        return None
     current = current_branch()
     try:
         git("switch", "-q", "develop")
@@ -127,7 +151,7 @@ def merge_into_develop(branch):
         if conflicts:
             return f"Merge conflicts in: {', '.join(conflicts)}"
         raise
-    print(branch)
+    print(branch, "merged", sep="\n")
 
 
 def guarded(branch, action, verify=check):
