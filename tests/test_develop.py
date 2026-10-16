@@ -2,6 +2,7 @@
 to reproduce a failure and closes it, leaving the branch, the uncommitted changes and
 the untracked files of the project as they were."""
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -16,8 +17,12 @@ def git(cwd, *args):
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
 
 
-def develop(cwd, *args):
-    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True)
+def develop(cwd, *args, session=None):
+    """Runs develop.py as the Claude Code session with that id, or outside any session."""
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
+    if session:
+        env["CLAUDE_CODE_SESSION_ID"] = session
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True, env=env)
 
 
 class DevelopWorktree(unittest.TestCase):
@@ -42,12 +47,13 @@ class DevelopWorktree(unittest.TestCase):
         (self.repo / "notes.md").write_text("untracked\n")
 
     def tearDown(self):
-        develop(self.repo, "close")
+        for session in (None, "A", "B"):
+            develop(self.repo, "close", session=session)
         self.tmp.cleanup()
 
-    def open(self):
+    def open(self, session=None):
         """Opens the worktree and returns its path, failing the test before any write when it does not open."""
-        result = develop(self.repo, "open")
+        result = develop(self.repo, "open", session=session)
         self.assertEqual(result.returncode, 0, result.stderr)
         path = Path(result.stdout.strip())
         self.assertTrue(path.is_absolute() and path.is_dir(), result.stdout)
@@ -130,6 +136,16 @@ class DevelopWorktree(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("develop", result.stderr)
         self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 1)
+
+    def test_two_sessions_on_one_repository_keep_their_own_worktree(self):
+        a = self.open(session="A")
+        develop(self.repo, "run", "touch a-was-here", session="A")
+        b = self.open(session="B")
+        self.assertNotEqual(a, b)
+        self.assertEqual(develop(self.repo, "run", "ls a-was-here", session="A").returncode, 0)
+        self.assertEqual(develop(self.repo, "close", session="B").returncode, 0)
+        self.assertFalse(b.exists())
+        self.assertEqual(develop(self.repo, "run", "ls a-was-here", session="A").returncode, 0)
 
 
 if __name__ == "__main__":
