@@ -47,10 +47,12 @@ graders:
     after:
       tool: Bash
       input_match: 'scripts/branch\.py story ABC-30'
-  - name: push
+  - name: no-push
     type: tool_used
     tool: Bash
-    input_match: 'git push -u origin story/ABC-30/print-the-invoices-as-csv'
+    input_match: 'git push'
+    min: 0
+    max: 0
   - name: no-worklog-yet
     type: regex
     target: mock_calls
