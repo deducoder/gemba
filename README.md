@@ -57,7 +57,7 @@ The evals need `--scaffold`, which builds each case's project, and `--allow-tool
 
 `evals/changed.py` runs, with those flags and one run per case, only the evals of the skills that the files changed since `origin/develop` touch, committed or not; a change to what every case shares, such as `evals/mocks/` or a plugin's `context/`, runs them all. Add `--dry-run` to print the commands without running them.
 
-The tests compare each Jira mock of the evals with the real response of its tool saved in `tests/fixtures/atlassian-responses/`, and fail when a mock has a key the real response lacks. To save a tool's real response again, call the tool from a Claude Code session on a test project, write its result as is to a file and run `evals/save_response.py` with the tool, the project key and that file: it drops emails, account IDs, names and avatar URLs and names the project `ABC`, as the mocks do.
+The tests compare each Jira mock of the evals with the real response of its tool saved in `tests/fixtures/atlassian-responses/`, and fail when a mock has a key the real response lacks; mocks that raise the tool's error (`error: true`) or instruct an agent (`type: agent`) are left out. To save a tool's real response again, call the tool from a Claude Code session on a test project, write its result as is to a file and run `evals/save_response.py` with the tool, the project key and that file: it empties emails, account IDs, names and avatar URLs, keeping their keys, and names the project `ABC`, as the mocks do.
 
 ## License
 
