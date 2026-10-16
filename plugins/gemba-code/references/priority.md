@@ -10,3 +10,12 @@ What happens if it is not built?
 - **High:** the central flow of its epic or the purpose of the project is not met.
 - **Medium:** it changes what the user can do.
 - **Low:** it changes only how something looks or feels.
+
+## Bug
+
+What happens if it is not fixed?
+
+- **Highest:** data is lost, corrupted or exposed.
+- **High:** it fails with no alternative in a flow the project exists for.
+- **Medium:** it fails, but an alternative exists.
+- **Low:** it does not affect results.
