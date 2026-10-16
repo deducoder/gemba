@@ -1,0 +1,43 @@
+schema_version: "1.1"
+name: bug-review-resume
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the bug ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 48
+  timeout_seconds: 360
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: checked
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --ready bug ABC-30'
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+    match: not_contains
+  - name: test-without-the-fix
+    type: tool_used
+    tool: Bash
+    input_match: 'scripts/develop\.py run .*checkout.*test_the_totals_of_acme_include_the_tax'
+  - name: simplify
+    type: tool_used
+    tool: Skill
+    input_match: 'simplify.*origin/develop\.\.\.HEAD'
+  - name: push-with-upstream
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin bug/ABC-30/invoice-totals-omit-the-tax'
