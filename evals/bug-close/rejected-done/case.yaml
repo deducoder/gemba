@@ -1,0 +1,51 @@
+schema_version: "1.1"
+name: bug-close-rejected-done
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Close the bug ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 15
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-close
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: no-develop-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push(?! +origin +--delete)'
+    min: 0
+    max: 0
+  - name: tried
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+  - name: no-local-delete
+    type: tool_used
+    tool: Bash
+    input_match: 'git branch -d'
+    min: 0
+    max: 0
+  - name: no-remote-delete
+    type: tool_used
+    tool: Bash
+    input_match: 'git push origin --delete'
+    min: 0
+    max: 0
+  - name: says-develop-is-on-the-remote
+    type: llm
+    criteria: The final message says that develop, with the merge of the bug branch, is already on the remote, in any wording.
+  - name: reason
+    type: regex
+    pattern: 'not valid|refus|reject'
+    flags: i
