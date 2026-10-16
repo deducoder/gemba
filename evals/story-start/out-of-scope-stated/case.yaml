@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: story-start-out-of-scope-stated
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:story-start add a --csv option to invoices.py that prints the customer''s invoices as CSV. Excel export is out of scope.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+  - name: stated-exclusion
+    type: regex
+    target: mock_calls
+    pattern: 'Out of scope\W+type\W+bulletList\W+content\W+type\W+listItem\W+content\W+type\W+paragraph\W+content\W+type\W+text\W+text\W+[^"]*Excel'

@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -64,6 +65,78 @@ class Hooks(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(0 < len(result.stdout) <= 10000)
+
+
+GATE = ROOT / "plugins/gemba-code/scripts/push_gate.py"
+
+ASK = [
+    "git push origin develop",
+    "git -C . push",
+    "git -c push.default=current push origin main",
+    "git status && git push",
+    "cd repo; git push",
+    "GIT_TRACE=1 git push",
+    "/usr/bin/git push",
+    "git status\ngit push origin develop",
+    "if true; then git push; fi",
+    "{ git push; }",
+    "`git push`",
+    "git status #\ngit push",
+    "echo 'unterminated git push",
+]
+DENY = [
+    "git push --force",
+    "git push -f origin main",
+    "git push -uf origin main",
+    "git push --force-with-lease",
+    "git push origin +main",
+    "git status\ngit push --force origin main",
+    "git push --force origin 'main",
+]
+NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx"]
+
+
+def gate(command):
+    """Runs the push gate as Claude Code does and returns its decision, or None."""
+    result = subprocess.run(
+        [sys.executable, str(GATE)],
+        input=json.dumps({"tool_name": "Bash", "tool_input": {"command": command}}),
+        capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    if not result.stdout.strip():
+        return None
+    output = json.loads(result.stdout)["hookSpecificOutput"]
+    assert output["hookEventName"] == "PreToolUse"
+    assert output["permissionDecisionReason"]
+    return output["permissionDecision"]
+
+
+class PushGate(unittest.TestCase):
+    def test_gemba_code_registers_the_gate_on_bash_before_the_tool_runs(self):
+        plugin = ROOT / "plugins/gemba-code"
+        groups = HOOKS[plugin]["PreToolUse"]
+        self.assertEqual([group["matcher"] for group in groups], ["Bash"])
+        self.assertEqual(argv(plugin, groups[0]["hooks"][0]), ["python3", str(GATE)])
+
+    def test_a_push_asks(self):
+        for command in ASK:
+            with self.subTest(command=command):
+                self.assertEqual(gate(command), "ask")
+
+    def test_a_forced_push_is_denied(self):
+        for command in DENY:
+            with self.subTest(command=command):
+                self.assertEqual(gate(command), "deny")
+
+    def test_a_malformed_tool_input_gets_no_decision_and_does_not_fail(self):
+        result = subprocess.run([sys.executable, str(GATE)], input='{"tool_input": null}', capture_output=True, text=True, timeout=10)
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+    def test_anything_else_gets_no_decision(self):
+        for command in NONE:
+            with self.subTest(command=command):
+                self.assertIsNone(gate(command))
 
 
 if __name__ == "__main__":

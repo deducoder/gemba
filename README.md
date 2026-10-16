@@ -30,7 +30,7 @@ In a code project, install `gemba-code` to add the work item, branch and commit 
 claude plugin install gemba-code@gemba --scope project
 ```
 
-For a project without commits, first create an empty remote repository, such as one on GitHub. Then open Claude Code in the project and run `/gemba:setup` to declare Gemba and the project's languages in `CLAUDE.md`, and the Atlassian site, Jira space and Confluence space in `.gemba/project/atlassian.json`, and to turn off commit and PR attribution in `.claude/settings.json`. Without commits, setup ends by creating the history: `initial commit` on `main` with everything not ignored, `origin`, and, once you approve the push, `develop`. With commits, it only reports what the history lacks and the files it left uncommitted, so commit `.claude/settings.json`, `CLAUDE.md` and `.gemba/project/atlassian.json` yourself.
+For a project without commits, first create an empty remote repository, such as one on GitHub. Then open Claude Code in the project and run `/gemba:setup` to declare Gemba and the project's languages in `CLAUDE.md`, the Atlassian site, Jira space and Confluence space in `.gemba/project/atlassian.json`, and how finished work reaches `develop` (`merge` or `pull-request`) in `.gemba/project/git.json`, and to turn off commit and PR attribution in `.claude/settings.json`. Without commits, setup ends by creating the history: `initial commit` on `main` with everything not ignored, `origin`, and, once you approve the push, `develop`. With commits, it only reports what the history lacks and the files it left uncommitted, so commit `.claude/settings.json`, `CLAUDE.md`, `.gemba/project/atlassian.json` and `.gemba/project/git.json` yourself.
 
 To pause a block of work, run `/gemba:session-close`: it leaves a handoff in `.gemba/sessions/`, kept out of git. After `/clear` or in a new session, run `/gemba:session-start` to resume from it.
 
@@ -43,9 +43,12 @@ claude --plugin-dir ./plugins/gemba               # load the plugin in a session
 claude plugin validate . --strict                 # validate the marketplace
 claude plugin validate plugins/gemba --strict     # validate the plugin
 python3 -m unittest discover tests                # run the tests
+claude plugin eval . --scaffold --allow-tools 'Bash(python3:*)' 'Bash(git:*)'  # run the evals
 ```
 
 Inside the session, `/reload-plugins` applies changes without restarting.
+
+The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash for `python3` and `git`, the commands the skills' scripts use; the grant covers any `python3` or `git` command, not only those scripts. Both run bash as you, so use them only on cases you trust. Add `--case <name>` to run one case.
 
 ## License
 

@@ -1,6 +1,7 @@
 schema_version: "1.1"
 name: story-review-happy
 plugins:
+  - ../../../plugins/gemba
   - ../../../plugins/gemba-code
   - ../../../tests/fixtures/atlassian-stub
 context:

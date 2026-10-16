@@ -1,5 +1,5 @@
 {
-  "description": "Injects Gemba Code's work item, branch and commit rules into every session.",
+  "description": "Injects Gemba Code's work item, branch and commit rules into every session and gates every git push.",
   "hooks": {
     "SessionStart": [
       {
@@ -8,6 +8,19 @@
             "type": "command",
             "command": "cat",
             "args": ["${CLAUDE_PLUGIN_ROOT}/context/gemba-code.md"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/push_gate.py"],
             "timeout": 10
           }
         ]
