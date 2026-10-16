@@ -1,0 +1,50 @@
+schema_version: "1.1"
+name: bug-implement-build
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-50. I approve in advance the plan you propose: build it without waiting.'
+  allowed_tools: [Read, Glob, Grep, Edit, Write, Skill]
+  max_turns: 60
+  timeout_seconds: 900
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: regression-test-first
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'git commit.*test\('
+    after:
+      tool: Bash
+      input_match: 'git commit.*fix\('
+  - name: test-run-before-the-fix-commit
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'test_invoices|unittest'
+    after:
+      tool: Bash
+      input_match: 'git commit.*fix\('
+  - name: neighbors-before-the-fix-commit
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'invoices\.py nadie'
+    after:
+      tool: Bash
+      input_match: 'git commit.*fix\('
+  - name: second-neighbor-before-the-fix-commit
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'invoices\.py\s*(;|&|\||2>|$)'
+    after:
+      tool: Bash
+      input_match: 'git commit.*fix\('

@@ -1,0 +1,66 @@
+schema_version: "1.1"
+name: bug-implement-happy
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-50.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-50'
+  - name: open-before-close
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py open'
+    after:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
+  - name: reproduced-before-the-mark
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py run .*invoices\.py acme'
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: checked-before-the-mark
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/branch\.py --check bug ABC-50'
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: mark-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+31'
+  - name: only-reads-before-the-mark
+    type: regex
+    target: mock_calls
+    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
+    match: not_contains
+  - name: mark-before-branch
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    after:
+      tool: Bash
+      input_match: 'scripts/branch\.py bug ABC-50'
+  - name: push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin bug/ABC-50/invoice-totals-omit-the-tax'
+  - name: no-worklog-yet
+    type: regex
+    target: mock_calls
+    pattern: addWorklogToJiraIssue
+    match: not_contains
