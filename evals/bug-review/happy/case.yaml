@@ -39,7 +39,7 @@ graders:
     type: tool_order
     before:
       tool: Bash
-      input_match: 'scripts/develop\.py run .*test_invoices'
+      input_match: 'scripts/develop\.py run .*checkout.*test_invoices'
     after:
       tool: Bash
       input_match: 'scripts/develop\.py close'
