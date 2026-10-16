@@ -18,7 +18,7 @@ RESPONSE = {
             "summary": "Mention XYZ-6 and the XYZ board",
             "project": {"key": "XYZ", "name": "Team Board", "avatarUrls": {"48x48": "https://example.com/avatar/1"}},
             "assignee": {"accountId": "712020:abc", "emailAddress": "someone@example.com",
-                         "displayName": "Someone", "avatarUrls": {"16x16": "https://example.com/avatar/2"}},
+                         "displayName": "Someone", "timeZone": "UTC", "avatarUrls": {"16x16": "https://example.com/avatar/2"}},
             "status": {"name": "Backlog", "iconUrl": "https://example.com/avatar/3"},
             "comment": {"comments": [{"id": "1", "author": {"accountId": "712020:abc"}}]},
         },
@@ -43,14 +43,14 @@ class SaveResponse(unittest.TestCase):
 
     def test_leaves_out_personal_data_at_any_depth(self):
         saved = json.dumps(self.save(RESPONSE))
-        for key in ("accountId", "atlassianAccountId", "emailAddress", "avatarUrls", "iconUrl", "self"):
+        for key in ("accountId", "atlassianAccountId", "emailAddress", "displayName", "avatarUrls", "iconUrl", "self"):
             with self.subTest(key=key):
                 self.assertNotIn(f'"{key}"', saved)
         self.assertNotIn("avatar", saved)
 
     def test_keeps_the_other_keys(self):
         node = self.save(RESPONSE)["issues"]["nodes"][0]
-        self.assertEqual(node["fields"]["assignee"], {"displayName": "Someone"})
+        self.assertEqual(node["fields"]["assignee"], {"timeZone": "UTC"})
         self.assertEqual(node["fields"]["status"], {"name": "Backlog"})
         self.assertEqual(node["fields"]["comment"]["comments"], [{"id": "1", "author": {}}])
 

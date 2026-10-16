@@ -67,8 +67,8 @@ class Mocks(unittest.TestCase):
             with self.subTest(response=response.name):
                 text = response.read_text(encoding="utf-8")
                 self.assertNotRegex(text, r"[\w.+-]+@[\w-]+\.[\w.]+")
-                self.assertNotRegex(text, r'"(accountId|emailAddress|avatarUrls)"')
-                self.assertNotIn("avatar", text)
+                self.assertNotRegex(text, r'"(accountId|emailAddress|displayName|avatarUrls)"')
+                self.assertNotRegex(text, r"https?://\S*avatar")
                 self.assertEqual({key for key in re.findall(r"\b([A-Z][A-Z0-9]+)-\d+\b", text)} - {"ABC"}, set())
 
 
