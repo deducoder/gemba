@@ -19,12 +19,15 @@ import sys
 # Global options of git that take their value as the next word.
 WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix", "--config-env"}
 SEPARATORS = set("&;|()<>")
+# Words of the shell that can come before a command.
+KEYWORDS = {"if", "then", "elif", "else", "while", "until", "do", "time", "!", "{"}
 
 
 def segments(command):
     """Splits a command line into the word lists of its simple commands."""
-    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer = shlex.shlex(command.replace("\n", ";").replace("`", ";"), posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
+    lexer.commenters = ""
     current = []
     for word in lexer:
         if set(word) <= SEPARATORS:
@@ -38,7 +41,7 @@ def segments(command):
 def push_arguments(words):
     """Returns the arguments after `push` when the words are a git push, else None."""
     words = list(words)
-    while words and re.fullmatch(r"[A-Za-z_]\w*=.*", words[0]):
+    while words and (words[0] in KEYWORDS or re.fullmatch(r"[A-Za-z_]\w*=.*", words[0])):
         words.pop(0)
     if not words or os.path.basename(words[0]) != "git":
         return None
@@ -61,9 +64,9 @@ def decide(command):
     """Returns ("ask" | "deny", reason) for a command that pushes, else None."""
     try:
         pushes = [a for a in map(push_arguments, segments(command)) if a is not None]
-    except ValueError:  # unbalanced quotes: guess from the words
-        words = re.findall(r"\w+", command)
-        pushes = [[]] if "git" in words and "push" in words else []
+    except ValueError:  # unbalanced quotes: read the words as they are written
+        words = command.split()
+        pushes = [words[words.index("push") + 1:]] if "git" in map(os.path.basename, words) and "push" in words else []
     if not pushes:
         return None
     if any(forced(arguments) for arguments in pushes):
@@ -72,7 +75,7 @@ def decide(command):
 
 
 def main():
-    command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
+    command = (json.load(sys.stdin).get("tool_input") or {}).get("command", "")
     decision = decide(command) if isinstance(command, str) else None
     if decision:
         verdict, reason = decision
