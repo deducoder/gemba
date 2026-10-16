@@ -28,25 +28,17 @@ Until the Implement mark this skill only reads, and it creates or edits no work 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read the bug.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype`, `status`, `issuelinks`, `description` and `comment`. Its description holds the Root cause, the Neighboring inputs and the Done when; its Evidence comment, the Reproduction and the `ran:` and `read:` lines of the Root cause.
+2. **Read the bug.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `description` and `comment`. Its description holds the Root cause, the Neighboring inputs and the Done when; its Evidence comment, the Reproduction and the `ran:` and `read:` lines of the Root cause.
 
-3. **Run the Reproduction on develop.** Open develop with this command, run alone and exactly in this form:
+3. **Run the Reproduction on develop,** never in the project itself: it may be on another branch, with changes of its own that must stay as they are. Run each of these commands alone and exactly in this form, in this order, with an inner `'` written `'\''`, and close develop also before any stop:
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open
-   ```
-
-   It prints the path of a worktree of develop. Run the command of the Reproduction there, alone, in this form, with an inner `'` written `'\''`:
-
-   ```
-   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run '<command>'
-   ```
-
-   Keep its literal output. Never run it in the project itself: it may be on another branch, with changes of its own that must stay as they are. Then close develop with this command, run alone and exactly in this form, also before any stop:
-
-   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run '<command of the Reproduction>'
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close
    ```
+
+   `open` prints the path of a worktree of develop and `run` runs the command there; keep its literal output.
 
 4. **Check the project is ready** with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
