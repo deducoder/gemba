@@ -96,6 +96,12 @@ class Changed(unittest.TestCase):
         self.run_script()
         self.assertCountEqual(self.invocations(), [for_skill("bug-start"), for_skill("bug-implement")])
 
+    def test_a_change_to_a_script_another_named_script_imports_runs_the_evals_of_both(self):
+        self.touch("plugins/gemba-code/scripts/branch.py")
+        self.run_script()
+        skills = {call[call.index("--case") + 1] for call in self.invocations()}
+        self.assertEqual(skills, {"bug-implement-*", "story-close-*", "story-implement-*", "story-review-*", "bug-start-*"})
+
     def test_a_change_to_an_eval_file_other_skills_load_runs_their_evals_too(self):
         self.touch("evals/story-start/project.sh")
         self.run_script()
@@ -106,7 +112,8 @@ class Changed(unittest.TestCase):
     def test_a_change_to_what_every_case_shares_runs_every_eval_once(self):
         for path in ("evals/mocks/atlassian/getJiraIssue.json", "tests/fixtures/atlassian-stub/README.md",
                      "plugins/gemba/context/gemba.md", "plugins/gemba-code/hooks/hooks.json",
-                     "plugins/gemba-code/references/priority.md", "plugins/gemba-code/scripts/draft.py"):
+                     "plugins/gemba-code/references/priority.md", "plugins/gemba-code/scripts/draft.py",
+                     ".claude-plugin/marketplace.json", "plugins/gemba-code/.claude-plugin/plugin.json"):
             with self.subTest(path=path):
                 git(self.work, "checkout", "-q", "--", ".")
                 git(self.work, "clean", "-qfd")
