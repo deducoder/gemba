@@ -8,35 +8,48 @@ Usage: python3 develop.py open    (from the project)
        python3 develop.py close
 
 `open` fetches origin first, as branch.py does, so a local develop that is behind
-does not matter, and prints the path of the worktree: inside the repository's git
-directory, so that `git status` never shows it. It replaces one a stopped run left
-behind. Without origin/develop it prints the reason to stderr and exits 1.
+does not matter, and prints the path of the worktree: in the temporary directory,
+one per repository, outside the project so that nothing the project holds
+(dependencies, settings) is found from it. It replaces one a stopped run left
+behind. When the fetch fails or origin/develop does not exist it prints the reason
+to stderr and exits 1.
 `run` runs the command with the shell inside the open worktree and passes on its
 output and exit status; without an open worktree it exits 1.
-`close` removes the worktree with everything a run left in it, and succeeds when
-there is none.
+`close` removes the worktree with everything a run left in it, even without write
+permission, and succeeds when there is none; when it cannot, it says why and exits 1.
 """
 
+import hashlib
+import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from branch import DEVELOP, git, has_ref  # noqa: E402
-
-NAME = "gemba-develop"
+from branch import DEVELOP, git, has_ref, succeeds  # noqa: E402
 
 
 def worktree():
-    return Path(git("rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()) / NAME
+    common = git("rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
+    return Path(tempfile.gettempdir()) / f"gemba-develop-{hashlib.sha1(common.encode()).hexdigest()[:12]}"
+
+
+def writable(function, path, _):
+    """Lets rmtree remove what a run left without write permission."""
+    os.chmod(os.path.dirname(path), 0o700)
+    function(path)
 
 
 def close(path):
-    if path.exists():
-        subprocess.run(["git", "worktree", "remove", "--force", str(path)], capture_output=True)
+    """Removes the worktree; returns the reason when it cannot, or None."""
+    if path.exists() and not succeeds("worktree", "remove", "--force", str(path)):
+        shutil.rmtree(path, onerror=writable)
     git("worktree", "prune")
+    return f"develop.py: could not remove {path}" if path.exists() else None
 
 
 def main(argv):
@@ -49,10 +62,15 @@ def main(argv):
             print("develop.py: no worktree is open; run `develop.py open` first", file=sys.stderr)
             return 1
         return subprocess.run(argv[1], shell=True, cwd=path).returncode
-    close(path)
+    reason = close(path)
+    if reason:
+        print(reason, file=sys.stderr)
+        return 1
     if argv == ["close"]:
         return 0
-    subprocess.run(["git", "fetch", "-q", "--prune", "origin"], capture_output=True)
+    if not succeeds("fetch", "-q", "--prune", "origin"):
+        print("develop.py: git fetch origin failed, so develop could be behind; fix the remote and run it again", file=sys.stderr)
+        return 1
     if not has_ref(f"refs/remotes/{DEVELOP}"):
         print(f"develop.py: {DEVELOP} does not exist, so there is no develop to reproduce the failure on", file=sys.stderr)
         return 1
