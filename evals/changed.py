@@ -16,7 +16,7 @@ committed or not, plus the untracked ones. Each file picks evals by its path:
 Each picked skill with evals is one `claude plugin eval` with `--case '<skill>-*'`; when
 everything is picked, it is a single one without `--case`. Each command is printed and run
 from the repository; `--dry-run` only prints them. With nothing picked it says so. The exit
-status is the worst of the runs.
+status is the worst of the runs, a run killed by a signal counting as the shell does (128 + n).
 """
 
 import re
@@ -130,7 +130,8 @@ def main():
     for command in runs:
         print(shlex.join(command), flush=True)
         if not dry_run:
-            status = max(status, subprocess.run(command, cwd=root).returncode)
+            code = subprocess.run(command, cwd=root).returncode
+            status = max(status, code if code >= 0 else 128 - code)
     return status
 
 
