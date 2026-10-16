@@ -28,13 +28,13 @@ This skill creates or edits no work item: the Root cause and the Done when stay 
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open
-   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <command that runs the regression test>'
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <command that runs only the regression test>'
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close
    ```
 
-   Show that the test fails with the symptom of the Reproduction, not with an import error or a missing fixture.
+   Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture.
 
-5. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause.
+5. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`.
 
 6. **Simplify the branch.** Invoke `/simplify origin/develop...HEAD` with the Skill tool, from the bug branch. Commit its fixes in the commit format of the Gemba Code context, split by what was done.
 
