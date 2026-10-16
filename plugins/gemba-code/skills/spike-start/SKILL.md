@@ -37,7 +37,10 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
    - A Spike stops the skill: create and edit nothing, and reply that it is already declared, with its key and its link.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link.
 
-3. **Observe before drafting.** Read the documentation, code and history of the project the question touches, only to check that they do not answer it already, and keep each file you read as a `read:` line with its path and line and each command you ran as a `ran:` line with its output. Do not answer the question: search outside the project, try the service or build a prototype only when the spike is implemented.
+3. **Observe before drafting.** Read the documentation, code and history of the project the question touches, only to check that they do not answer it already, and keep each file you read as a `read:` line with its path and line and each command you ran as a `ran:` line with its output. Do not answer the question: search outside the project, try the service or build a prototype only when the spike is implemented. Then decide whether the request is a spike at all; when it is not, create nothing and reply with what it is instead:
+   - **Answered** when the documentation, the code or the history of the project already answer the question: the answer with its source, as a `read:` line with its path and line.
+   - **A story** when it describes something to build, not a question: to declare with `/gemba-code:story-start`.
+   - **A bug** when it describes a failure of something that already exists: to declare with `/gemba-code:bug-start`.
 
 4. **Ask, in one message, only what the question leaves open and you cannot deduce,** such as the decision that waits on its answer. Ask nothing when nothing is missing.
 
