@@ -30,7 +30,7 @@ Until the push this skill only reads and merges locally: it writes nothing in Ji
 
    It updates `develop` with `git pull --ff-only`, merges `origin/<branch>` into it with `--no-ff` and the message `Merge branch '<branch>' into develop`, stays on `develop` and prints the branch. Keep that branch name for step 6. It refuses, touching nothing, when files with tracking have uncommitted changes, `origin/<branch>` does not exist, the local branch has commits `origin/<branch>` lacks (they were not reviewed) or `develop` does not fast-forward; and when the merge has conflicts it aborts it, goes back to the branch it came from and names the files. When it refuses, relay its reason and stop: nothing is pushed or marked.
 
-4. **Push `develop`,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends, from `git log --oneline origin/develop..develop`. When it lists none, the merge is already on the remote from a close that stopped after its push: do not push, and go on to step 5. When the push fails or the person declines it, stop: the story is not marked.
+4. **Push `develop`,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends, from `git log --oneline origin/develop..develop`. When it lists none, `develop` is already pushed: do not push, and go on to step 5. When the push fails or the person declines it, stop: the story is not marked.
 
 5. **Mark it Done.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id. Only after the push of step 4.
 
