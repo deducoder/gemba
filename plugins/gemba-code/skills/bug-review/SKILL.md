@@ -1,8 +1,9 @@
 ---
 name: bug-review
-description: Reviews a fixed bug from Jira on its own branch. Marks it in Review, proves that its regression test fails without the fix and that the fix changes the files of its Root cause, simplifies and reviews the branch against origin/develop, runs its Reproduction and its neighboring inputs again on the final branch, checks each Done when criterion, pushes the branch and registers the time of the phase. Use when the user asks to review a bug or its fix, or gives a bug key whose branch is fixed and ready to be closed. It never merges.
+description: Reviews a fixed bug from Jira on its own branch. Marks it in Review, proves that its regression test fails without the fix and that the fix changes the files of its Root cause, simplifies and reviews the branch against origin/develop, runs its Reproduction and its neighboring inputs again on the final branch, checks each Done when criterion, pushes the branch and registers the time of the phase. It stops, writing nothing, when the bug or its branch is not ready, resumes one already in Review and leaves a drift comment when the test, the fix or a criterion does not hold. Use when the user asks to review a bug or its fix, or gives a bug key whose branch is fixed and ready to be closed. It never merges.
 argument-hint: "[bug key]"
 allowed-tools:
+  - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
@@ -15,6 +16,12 @@ allowed-tools:
 
 ```
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
+```
+
+Drift comment template:
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
 Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. It creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
@@ -45,15 +52,15 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close
    ```
 
-   Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture.
+   Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture. When the subject of the first commit does not start with `test(`, or the test passes or fails for another reason, leave a drift comment and stop: do not push and do not register the time.
 
-6. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`.
+6. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`. When a path is missing, leave a drift comment and stop: do not push and do not register the time.
 
 7. **Simplify the branch.** Invoke `/simplify origin/develop...HEAD` with the Skill tool, from the bug branch. Commit its fixes in the commit format of the Gemba Code context, split by what was done.
 
 8. **Review the branch.** Invoke `/code-review origin/develop...HEAD` with the Skill tool. Fix each finding and commit it, or report why it stays.
 
-9. **Check each criterion on the final state of the branch.** Run the regression test, the command of the Reproduction and the input of each row of Neighboring inputs, and compare each row with its Current behavior. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met.
+9. **Check each criterion on the final state of the branch.** Run the regression test, the command of the Reproduction, the command each Done when criterion names and the input of each row of Neighboring inputs, and compare each row with its Current behavior. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met. When a criterion is not met or a row changes, leave a drift comment and stop until the person decides: do not push and do not register the time.
 
 10. **Push the branch** with `git push -u origin <branch>`, the current branch, as a command of its own: the person approves it. The first time it creates the branch on the remote; after that it sends the new commits. Say the branch and the commits it sends.
 
@@ -64,3 +71,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
     ```
 
     It prints `timeSpent` and `started`. Propose them to the person as an estimate and wait for the confirmation or for another time. With it, write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment.
+
+## Leave a drift comment
+
+Add it to the bug with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes; for the regression test the Criterion is the Reproduction, and for a path the fix does not touch, that `read:` line. When develop is open, close it before the comment.
