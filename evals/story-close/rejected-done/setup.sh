@@ -1,4 +1,3 @@
 #!/bin/bash
-# Reviewed story ABC-75: its branch with the commit, pushed.
-. "$(dirname "$0")/../../story-review/work.sh" ABC-75 commit
-git push -q -u origin HEAD
+# Reviewed story ABC-75 whose close stopped after pushing develop with its merge.
+. "$(dirname "$0")/../pushed.sh" ABC-75
