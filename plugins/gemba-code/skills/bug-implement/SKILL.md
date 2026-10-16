@@ -62,7 +62,7 @@ Until the Implement mark this skill only reads, and it creates or edits no work 
 
 7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
-8. **Commit the regression test first.** The first commit of the branch is a `test` commit, in the commit format of the Gemba Code context, holding a test that fails for the reason the Root cause names: its failure shows the symptom of the Reproduction, not an import error or a missing fixture. Run it and show that failure.
+8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context.
 
 9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior.
 
