@@ -6,11 +6,11 @@ Usage: python3 evals/changed.py [--dry-run]    (from the repository)
 
 The change is every file that differs from where the branch left origin/develop,
 committed or not, plus the untracked ones. Each file picks evals by its path:
-- what every case shares (the manifests, evals/mocks/, tests/fixtures/atlassian-stub/, the
-  context/, hooks/ and references/ of a plugin, and a plugin script no SKILL.md names)
-  picks them all;
-- a plugin script picks the skills whose SKILL.md names it or a script that imports it;
 - plugins/<plugin>/skills/<skill>/ picks that skill;
+- a plugin script picks the skills whose SKILL.md names it or a script that imports it,
+  and all of them when no SKILL.md does or a hook runs it;
+- any other file of a plugin (manifest, context/, hooks/, references/), the marketplace
+  manifest, evals/mocks/ and tests/fixtures/atlassian-stub/ pick them all;
 - evals/<skill>/ picks that skill and, through the scripts that load the file from
   other folders of evals/, theirs.
 Each picked skill with evals is one `claude plugin eval` with `--case '<skill>-*'`; when
@@ -26,7 +26,6 @@ import sys
 from pathlib import Path
 
 SHARED = (".claude-plugin/", "evals/mocks/", "tests/fixtures/atlassian-stub/")
-SHARED_IN_PLUGIN = (".claude-plugin", "context", "hooks", "references")
 LOADED = re.compile(r"\.\./([a-z-]+)/([\w-]+\.sh)")
 
 
@@ -78,16 +77,19 @@ def picked_by(path, root, loaded_by):
     parts = path.split("/")
     if path.startswith(SHARED):
         return None
-    if parts[0] == "plugins" and len(parts) > 3:
-        if parts[2] in SHARED_IN_PLUGIN:
-            return None
-        if parts[2] == "scripts":
-            scripts = importers(root / "plugins" / parts[1] / "scripts", parts[3])
-            naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
-                      if any(f"scripts/{script}" in skill.read_text(encoding="utf-8") for script in scripts)}
-            return naming or None
+    if parts[0] == "plugins" and len(parts) > 2:
+        plugin = root / "plugins" / parts[1]
         if parts[2] == "skills" and len(parts) > 4:
             return {parts[3]}
+        if parts[2] != "scripts" or len(parts) != 4:
+            return None
+        scripts = importers(plugin / "scripts", parts[3])
+        hooks = plugin / "hooks/hooks.json"
+        if hooks.exists() and any(f"scripts/{script}" in hooks.read_text(encoding="utf-8") for script in scripts):
+            return None
+        naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
+                  if any(f"scripts/{script}" in skill.read_text(encoding="utf-8") for script in scripts)}
+        return naming or None
     if parts[0] == "evals" and len(parts) > 2:
         seen, pending = set(), [path]
         while pending:
