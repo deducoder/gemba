@@ -74,6 +74,18 @@ class DevelopWorktree(unittest.TestCase):
         self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 1)
         self.assertEqual(self.state(), before)
 
+    def test_run_runs_a_command_in_the_worktree_and_passes_on_its_output_and_exit_status(self):
+        self.open()
+        result = develop(self.repo, "run", "python3 app.py; exit 3")
+        self.assertEqual(result.returncode, 3)
+        self.assertEqual(result.stdout, "develop\n")
+        self.assertEqual((self.repo / "app.py").read_text(), "print('work in progress')\n")
+
+    def test_run_without_an_open_worktree_exits_1(self):
+        result = develop(self.repo, "run", "python3 app.py")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("open", result.stderr)
+
     def test_open_twice_replaces_the_worktree_left_by_a_stopped_run(self):
         develop(self.repo, "open")
         result = develop(self.repo, "open")
