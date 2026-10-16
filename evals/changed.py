@@ -24,12 +24,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-ALL = None
 SHARED = ("evals/mocks/", "tests/fixtures/atlassian-stub/")
 SHARED_IN_PLUGIN = ("context", "hooks", "references")
 LOADED = re.compile(r"\.\./([a-z-]+)/([\w-]+\.sh)")
-FLAGS = ["--scaffold", "--runs", "1"]
-ALLOW = ["--allow-tools", "Bash(python3:*)", "Bash(git:*)", "Edit", "Write"]
+
+
+def evaluate(*case):
+    """The `claude plugin eval` command of the README with one run per case, for `case`."""
+    return ["claude", "plugin", "eval", ".", "--scaffold", "--runs", "1", *case,
+            "--allow-tools", "Bash(python3:*)", "Bash(git:*)", "Edit", "Write"]
 
 
 def git(*args):
@@ -45,24 +48,28 @@ def loaders(root):
     """Maps each file of evals/ that another one loads through `../<folder>/<name>.sh` to the
     files that load it."""
     loaded_by = {}
-    for path in (root / "evals").glob("*/**/*"):
-        if path.is_file() and path.suffix in (".sh", ".yaml") and "results" not in path.parts:
-            for folder, name in LOADED.findall(path.read_text(encoding="utf-8")):
-                loaded_by.setdefault(f"evals/{folder}/{name}", set()).add(path.relative_to(root).as_posix())
+    for folder in (root / "evals").iterdir():
+        if folder.is_dir() and folder.name != "results":
+            for path in [*folder.glob("**/*.sh"), *folder.glob("**/*.yaml")]:
+                for loaded, name in LOADED.findall(path.read_text(encoding="utf-8")):
+                    loaded_by.setdefault(f"evals/{loaded}/{name}", set()).add(path.relative_to(root).as_posix())
     return loaded_by
 
 
 def picked_by(path, root, loaded_by):
-    """Returns the skills a changed file picks, or ALL."""
+    """Returns the skills a changed file picks, or None when it picks them all."""
     parts = path.split("/")
-    if path.startswith(SHARED) or (parts[0] == "plugins" and len(parts) > 2 and parts[2] in SHARED_IN_PLUGIN):
-        return ALL
-    if parts[0] == "plugins" and len(parts) > 3 and parts[2] == "scripts":
-        naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
-                  if f"scripts/{parts[3]}" in skill.read_text(encoding="utf-8")}
-        return naming or ALL
-    if parts[0] == "plugins" and len(parts) > 4 and parts[2] == "skills":
-        return {parts[3]}
+    if path.startswith(SHARED):
+        return None
+    if parts[0] == "plugins" and len(parts) > 3:
+        if parts[2] in SHARED_IN_PLUGIN:
+            return None
+        if parts[2] == "scripts":
+            naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
+                      if f"scripts/{parts[3]}" in skill.read_text(encoding="utf-8")}
+            return naming or None
+        if parts[2] == "skills" and len(parts) > 4:
+            return {parts[3]}
     if parts[0] == "evals" and len(parts) > 2:
         seen, pending = set(), [path]
         while pending:
@@ -79,16 +86,16 @@ def commands(root):
     skills = set()
     for path in sorted(changed_files()):
         picked = picked_by(path, root, loaded_by)
-        if picked is ALL:
-            return [["claude", "plugin", "eval", ".", *FLAGS, *ALLOW]]
+        if picked is None:
+            return [evaluate()]
         skills |= picked
     runs = []
     for skill in sorted(skills):
         folder = root / "evals" / skill
         if any(folder.glob("*/case.yaml")) or any(folder.glob("*/prompt.md")):
-            runs.append(["claude", "plugin", "eval", ".", *FLAGS, "--case", f"{skill}-*", *ALLOW])
+            runs.append(evaluate("--case", f"{skill}-*"))
         elif (folder / "case.yaml").exists() or (folder / "prompt.md").exists():
-            runs.append(["claude", "plugin", "eval", ".", *FLAGS, "--case", skill, *ALLOW])
+            runs.append(evaluate("--case", skill))
     return runs
 
 
