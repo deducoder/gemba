@@ -27,7 +27,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*invoices\.py'
+    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*(?<!test_)invoices\.py:15'
   - name: no-simplify
     type: tool_used
     tool: Skill
