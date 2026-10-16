@@ -43,6 +43,8 @@ def saved(tool):
 
 
 class Mocks(unittest.TestCase):
+    longMessage = False
+
     def test_every_mocked_tool_has_a_saved_real_response(self):
         for tool in sorted({mock.stem for mock in MOCKS}):
             with self.subTest(tool=tool):
