@@ -341,7 +341,7 @@ class Branch(unittest.TestCase):
 
     def merge_without_pushing(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
-        run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.merged_as(branch, "merged")
         return branch
 
     def test_merge_resumes_a_merge_not_pushed_without_merging_again(self):
@@ -363,12 +363,11 @@ class Branch(unittest.TestCase):
 
     def test_merge_lists_after_its_second_line_the_commits_the_push_of_develop_sends(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
-        for state in ("merged", "merged, not pushed"):
-            with self.subTest(state=state):
-                git(self.work, "switch", "-q", branch)
-                lines = self.merged_as(branch, state)
-                self.assertEqual(lines[2:], git(self.work, "log", "--oneline", "origin/develop..develop").splitlines())
-                self.assertEqual(len(lines), 4)
+        sent = self.merged_as(branch, "merged")[2:]
+        self.assertEqual(sent, git(self.work, "log", "--oneline", "origin/develop..develop").splitlines())
+        self.assertEqual(len(sent), 2)
+        git(self.work, "switch", "-q", branch)
+        self.assertEqual(self.merged_as(branch, "merged, not pushed")[2:], sent)
 
     def test_merge_refuses_a_merge_not_pushed_once_origin_develop_moved_and_names_its_commits(self):
         self.merge_without_pushing()
