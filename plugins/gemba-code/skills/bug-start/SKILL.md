@@ -51,9 +51,11 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 
    with an inner `'` written `'\''`. Each `run` asks the person's permission like any other command. Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are.
 
-4. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output.
+4. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output. Stop, closing develop first as step 7 says and creating nothing, when:
+   - what the request asks for does not exist yet in develop, so it is something new to build: reply that it is a story, to declare with `/gemba-code:story-start`;
+   - the failure does not happen: show the command and its output.
 
-5. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line.
+5. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. When the cause cannot be named with evidence, for example because the code that produces the output is not in the repository, close develop as step 7 says, create nothing and show what you ran and read. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line.
 
 6. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
 
