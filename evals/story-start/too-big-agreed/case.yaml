@@ -10,8 +10,8 @@ context:
 execution:
   prompt: 'Yes, go ahead with that split. Use a JSON file next to the script, SMTP with the host and credentials from environment variables, and fpdf2 for the PDF.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 60
-  timeout_seconds: 900
+  max_turns: 39
+  timeout_seconds: 300
 graders:
   - name: stories
     type: tool_used

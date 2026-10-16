@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Implement the story ABC-30.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 21
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used

@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'The totals that invoices.py prints no longer include the tax.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 23
+  timeout_seconds: 240
 graders:
   - name: skill
     type: tool_used

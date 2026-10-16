@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Declare a story under the epic ABC-7: add a --csv option to invoices.py that prints the customer''s invoices as CSV.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 18
+  timeout_seconds: 180
 graders:
   - name: read-epic
     type: regex

@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Make invoices.py accept --csv to print the customer''s invoices as CSV.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 26
+  timeout_seconds: 180
 graders:
   - name: no-bug-start
     type: tool_used
