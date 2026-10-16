@@ -43,7 +43,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    `open` prints the path of a worktree of develop and `run` runs the command there; keep its literal output. When it no longer shows the failure, stop without marking the bug or creating its branch: show the command and its output.
 
-   Before closing develop, check the Root cause there: run each of its `ran:` commands with `develop.py run` and read each of its `read:` sources in the worktree, and check that they still give what the Evidence noted. When one no longer does, leave a drift comment and stop.
+   Before closing develop, check the Root cause there: run each of its `ran:` commands with `develop.py run` and read each of its `read:` sources in the worktree, and check that they still give what the Evidence noted. When one no longer does, leave a drift comment and stop. Run only commands that read; when one would write, stop and ask.
 
 4. **Check the project is ready** with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
