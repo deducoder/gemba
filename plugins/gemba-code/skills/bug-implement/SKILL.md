@@ -51,23 +51,23 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --check bug <KEY> '<Summary>'
    ```
 
-   When it refuses, relay its reason and stop.
+   Uncommitted changes on the branch of this same bug do not stop it: they are the work to continue. When it refuses, relay its reason and stop.
 
-5. **Mark it Implement.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
+5. **Mark it Implement,** only when it is in Backlog: a bug already in Implement is resumed, so skip this step and the push of step 6. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason, create no branch and run no more commands.
 
-6. **Create the branch** with the same arguments and without `--check`:
+6. **Create the branch,** or switch to it when it already exists, with the same arguments and without `--check`:
 
    ```
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py bug <KEY> '<Summary>'
    ```
 
-   It prints the branch. Push it empty with `git push -u origin <branch>`, as a command of its own: the person approves it.
+   It prints the branch. Only if you marked the bug in step 5, push it empty with `git push -u origin <branch>`, as a command of its own: the person approves it.
 
 7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
-8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context.
+8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context. On a resumed bug whose branch already has that commit, go on to step 9.
 
 9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior.
 
