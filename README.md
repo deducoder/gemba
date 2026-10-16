@@ -42,11 +42,14 @@ Auto-update is off by default for third-party marketplaces. To receive new versi
 claude --plugin-dir ./plugins/gemba               # load the plugin in a session
 claude plugin validate . --strict                 # validate the marketplace
 claude plugin validate plugins/gemba --strict     # validate the plugin
+claude plugin validate plugins/gemba-code --strict  # validate the code plugin
 python3 -m unittest discover tests                # run the tests
 claude plugin eval . --scaffold --allow-tools 'Bash(python3:*)' 'Bash(git:*)' Edit Write  # run the evals
 ```
 
 Inside the session, `/reload-plugins` applies changes without restarting.
+
+GitHub Actions runs the tests and the three validations on every push to any branch, with no credentials; a failure leaves the commit's check red.
 
 The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash for `python3` and `git`, the commands the skills' scripts use, and Edit and Write, which the cases that build a fix use to change files; the grant covers any `python3` or `git` command, not only those scripts. Both run bash as you, so use them only on cases you trust. Add `--case <glob>` to run the cases whose `name` in `case.yaml` matches, such as `bug-implement-*`; given twice, only the last one counts.
 
