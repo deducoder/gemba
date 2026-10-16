@@ -1,6 +1,7 @@
 schema_version: "1.1"
 name: story-implement-epic-not-in-implement
 plugins:
+  - ../../../plugins/gemba
   - ../../../plugins/gemba-code
   - ../../../tests/fixtures/atlassian-stub
 context:
