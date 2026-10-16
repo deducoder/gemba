@@ -33,3 +33,7 @@ graders:
     type: tool_used
     tool: Skill
     input_match: 'simplify.*origin/develop\.\.\.HEAD'
+  - name: push-with-upstream
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin story/ABC-56/print-the-invoices-as-csv'

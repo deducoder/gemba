@@ -59,6 +59,10 @@ graders:
     after:
       tool: Bash
       input_match: 'git push'
+  - name: push-with-upstream
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin story/ABC-31/print-the-invoices-as-csv'
   - name: no-worklog-yet
     type: regex
     target: mock_calls

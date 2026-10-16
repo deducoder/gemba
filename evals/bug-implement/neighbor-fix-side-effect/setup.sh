@@ -20,7 +20,6 @@ if __name__ == "__main__":
 PY
 git add test_acme_totals.py
 git commit -qm "test(invoices): show the totals of acme with the tax"
-git push -q -u origin bug/ABC-30/invoice-totals-omit-the-tax
 git restore --source=main invoices.py
 sed -i 's/return 2/return 1/' invoices.py
 if git diff --quiet main -- invoices.py; then
