@@ -11,21 +11,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "plugins/gemba-code/scripts/branch.py"
 SUMMARY = "Let customers download their invoices"
-IDENTITY = {"GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.com",
-            "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.com"}
+ENV = {**os.environ, "GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.com",
+       "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.com"}
 
 
 def git(cwd, *args):
-    result = subprocess.run(
-        ["git", "-c", "user.name=test", "-c", "user.email=test@example.com", *args],
-        cwd=cwd, capture_output=True, text=True, check=True,
-    )
+    result = subprocess.run(["git", *args], cwd=cwd, env=ENV, capture_output=True, text=True, check=True)
     return result.stdout.strip()
 
 
 def run(cwd, *args):
-    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, env={**os.environ, **IDENTITY},
-                          capture_output=True, text=True)
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, env=ENV, capture_output=True, text=True)
 
 
 class Branch(unittest.TestCase):
