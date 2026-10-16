@@ -4,8 +4,8 @@ the personal data of whoever captured it and with its project named ABC, as the 
 Usage: python3 evals/save_response.py <tool> <PROJECT> < response.json
 
 It drops every `emailAddress`, `accountId`, `atlassianAccountId`, `avatarUrls`, `iconUrl` and
-`self` key, at any depth, replaces each word <PROJECT> with ABC and writes the result to
-tests/fixtures/atlassian-responses/<tool>.json.
+`self` key, at any depth, names ABC each project and each word <PROJECT> and writes the result
+to tests/fixtures/atlassian-responses/<tool>.json.
 """
 
 import json
@@ -19,7 +19,10 @@ DROPPED = {"emailAddress", "accountId", "atlassianAccountId", "avatarUrls", "ico
 
 def without_personal_data(value):
     if isinstance(value, dict):
-        return {k: without_personal_data(v) for k, v in value.items() if k not in DROPPED}
+        kept = {k: without_personal_data(v) for k, v in value.items() if k not in DROPPED}
+        if isinstance(kept.get("project"), dict) and "name" in kept["project"]:
+            kept["project"]["name"] = "ABC"
+        return kept
     if isinstance(value, list):
         return [without_personal_data(v) for v in value]
     return value
