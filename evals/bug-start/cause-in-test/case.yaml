@@ -27,7 +27,7 @@ graders:
   - name: product-change-criterion
     type: regex
     target: mock_calls
-    pattern: 'createJiraIssue[\s\S]*Done when[\s\S]*(sin (el )?impuesto|without (the )?tax|quit\w* el impuesto|drop\w* the tax)[\s\S]*Out of scope'
+    pattern: 'createJiraIssue[\s\S]*Done when[\s\S]*"(With|Con) [\s\S]{0,300}invoices\.py[\s\S]{0,300}test_invoices\.py[\s\S]{0,60}(fails|falla)[\s\S]*Out of scope'
   - name: close-before-create
     type: tool_order
     before:
