@@ -1,6 +1,6 @@
 ---
 name: bug-implement
-description: Implements a declared bug from Jira on its own branch. Runs its Reproduction on develop without touching the working tree, marks it in Implement, creates its branch from develop, plans in plan mode, commits a failing regression test before the fix, runs its neighboring inputs again before committing the fix, reports the evidence of each criterion and registers the time of the phase. Use when the user asks to fix, implement or work on a declared bug, or gives a bug key to start fixing. It edits no code until the plan is approved, and never merges.
+description: Implements a declared bug from Jira on its own branch. Runs its Reproduction on develop without touching the working tree, marks it in Implement, creates its branch from develop, plans in plan mode, commits a failing regression test before the fix, runs its neighboring inputs again before committing the fix, reports the evidence of each criterion and registers the time of the phase. It stops, writing nothing, when the bug cannot be built yet, and resumes one already in Implement. Use when the user asks to fix, implement or work on a declared bug, or gives a bug key to start fixing. It edits no code until the plan is approved, and never merges.
 argument-hint: "[bug key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -28,7 +28,10 @@ Until the Implement mark this skill only reads, and it creates or edits no work 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read the bug.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `description` and `comment`. Its description holds the Root cause, the Neighboring inputs and the Done when; its Evidence comment, the Reproduction and the `ran:` and `read:` lines of the Root cause.
+2. **Read the bug.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `description`, `issuetype`, `status`, `issuelinks` and `comment`. Its description holds the Root cause, the Neighboring inputs and the Done when; its Evidence comment, the Reproduction and the `ran:` and `read:` lines of the Root cause. Stop, writing nothing and naming it, when:
+   - it is not a Bug: say its type;
+   - its status is not Backlog or Implement: say its status;
+   - something linked as "is blocked by" is not Done or Cancelled: say which work item.
 
 3. **Run the Reproduction on develop,** never in the project itself: it may be on another branch, with changes of its own that must stay as they are. Run each of these commands alone and exactly in this form, in this order, with an inner `'` written `'\''`, and close develop also before any stop:
 
