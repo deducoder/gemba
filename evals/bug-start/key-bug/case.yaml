@@ -27,7 +27,7 @@ graders:
     match: not_contains
   - name: declared
     type: regex
-    pattern: 'already (declared|filed|a bug|exists|in Jira)|ya (está declarado|es un bug|existe)'
+    pattern: '\balready\b|\bya (está|es|existe)'
     flags: i
   - name: link
     type: regex
