@@ -44,7 +44,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 
 4. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path and line.
 
-5. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles, each with what it does today.
+5. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
 
 6. **Close develop** with this command, run alone and exactly in this form:
 
