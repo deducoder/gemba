@@ -1,0 +1,43 @@
+schema_version: "1.1"
+name: bug-review-cause-in-test
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the bug ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 48
+  timeout_seconds: 360
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: test-against-a-broken-product
+    type: tool_used
+    tool: Bash
+    input_match: 'scripts/develop\.py run .*checkout.*TAX.*test_invoices'
+  - name: worktree-closed
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py run .*checkout.*TAX.*test_invoices'
+    after:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
+  - name: no-drift
+    type: regex
+    target: mock_calls
+    pattern: addCommentToJiraIssue
+    match: not_contains
+  - name: push-with-upstream
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin bug/ABC-30/the-total-test-expects-160-00-instead-of-116-00'

@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Review the story ABC-53.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 15
-  timeout_seconds: 300
+  max_turns: 11
+  timeout_seconds: 60
 graders:
   - name: skill
     type: tool_used

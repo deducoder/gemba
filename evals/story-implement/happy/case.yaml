@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Implement the story ABC-30.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 21
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used
@@ -47,10 +47,12 @@ graders:
     after:
       tool: Bash
       input_match: 'scripts/branch\.py story ABC-30'
-  - name: push
+  - name: no-push
     type: tool_used
     tool: Bash
-    input_match: 'git push -u origin story/ABC-30/print-the-invoices-as-csv'
+    input_match: 'git push'
+    min: 0
+    max: 0
   - name: no-worklog-yet
     type: regex
     target: mock_calls

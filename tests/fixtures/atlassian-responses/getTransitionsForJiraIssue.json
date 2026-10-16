@@ -1,0 +1,53 @@
+{
+  "expand": "transitions",
+  "transitions": [
+    {
+      "id": "14",
+      "name": "Cancelled",
+      "to": {
+        "self": "",
+        "description": "Abandonado sin entregar. No sale.",
+        "iconUrl": "",
+        "name": "Cancelled",
+        "id": "10079",
+        "statusCategory": {
+          "self": "",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "hasScreen": false,
+      "isGlobal": true,
+      "isInitial": false,
+      "isAvailable": true,
+      "isConditional": false,
+      "isLooped": false
+    },
+    {
+      "id": "2",
+      "name": "to Implement",
+      "to": {
+        "self": "",
+        "description": "Implementación en curso, tarea por tarea con las verificaciones en verde; en un epic, sus stories en curso. Sale cuando todas las tareas están hechas.",
+        "iconUrl": "",
+        "name": "Implement",
+        "id": "10076",
+        "statusCategory": {
+          "self": "",
+          "id": 4,
+          "key": "indeterminate",
+          "colorName": "yellow",
+          "name": "In Progress"
+        }
+      },
+      "hasScreen": false,
+      "isGlobal": false,
+      "isInitial": false,
+      "isAvailable": true,
+      "isConditional": false,
+      "isLooped": false
+    }
+  ]
+}

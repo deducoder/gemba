@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Review the story ABC-31.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 900
+  max_turns: 42
+  timeout_seconds: 300
 graders:
   - name: skill
     type: tool_used
@@ -59,6 +59,10 @@ graders:
     after:
       tool: Bash
       input_match: 'git push'
+  - name: push-with-upstream
+    type: tool_used
+    tool: Bash
+    input_match: 'git push -u origin story/ABC-31/print-the-invoices-as-csv'
   - name: no-worklog-yet
     type: regex
     target: mock_calls

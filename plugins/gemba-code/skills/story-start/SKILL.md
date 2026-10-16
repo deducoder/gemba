@@ -21,11 +21,11 @@ Template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/story.md`
 ```
 
-!`cat ${CLAUDE_SKILL_DIR}/references/priority.md`
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/priority.md`
 
 !`cat ${CLAUDE_SKILL_DIR}/references/estimate.md`
 
-!`cat ${CLAUDE_SKILL_DIR}/references/out-of-scope.md`
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
 The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
@@ -47,7 +47,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
    - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it; read that key first, unless step 2 already did.
 
-6. **Give it a priority and an original estimate** with the rules above.
+6. **Give it a priority and an original estimate** with the Story rules of the priority above and the estimate rules above.
 
 7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 

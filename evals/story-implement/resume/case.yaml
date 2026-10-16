@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Implement ABC-39.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 15
-  timeout_seconds: 300
+  max_turns: 17
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used

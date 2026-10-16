@@ -1,0 +1,34 @@
+schema_version: "1.1"
+name: bug-start-key-bug
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare the bug ABC-12.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 8
+  timeout_seconds: 60
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-12'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'createJiraIssue|editJiraIssue|addCommentToJiraIssue|createIssueLink|transitionJiraIssue'
+    match: not_contains
+  - name: declared
+    type: regex
+    pattern: '\balready\b|\bya (está|es|existe)'
+    flags: i
+  - name: link
+    type: regex
+    pattern: 'https://example\.atlassian\.net/browse/ABC-12'

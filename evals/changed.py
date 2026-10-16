@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""Runs the evals of the skills a change touches, with one run per case, instead of the
+whole set.
+
+Usage: python3 evals/changed.py [--dry-run]    (from the repository)
+
+The change is every file that differs from where the branch left origin/develop,
+committed or not, plus the untracked ones. Each file picks evals by its path:
+- plugins/<plugin>/skills/<skill>/ picks that skill;
+- a plugin script picks the skills whose SKILL.md names it or a script that imports it,
+  and all of them when no SKILL.md does or a hook runs it;
+- any other file of a plugin (manifest, context/, hooks/, references/), the marketplace
+  manifest, evals/mocks/ and tests/fixtures/atlassian-stub/ pick them all;
+- evals/<skill>/ picks that skill and, through the scripts that load the file from
+  other folders of evals/, theirs.
+Each picked skill with evals is one `claude plugin eval` with `--case '<skill>-*'`; when
+everything is picked, it is a single one without `--case`. Each command is printed and run
+from the repository; `--dry-run` only prints them. With nothing picked it says so. The exit
+status is the worst of the runs, a run killed by a signal counting as the shell does (128 + n).
+"""
+
+import re
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+SHARED = (".claude-plugin/", "evals/mocks/", "tests/fixtures/atlassian-stub/")
+LOADED = re.compile(r"\.\./([a-z-]+)/([\w-]+\.sh)")
+
+
+def evaluate(*case):
+    """The `claude plugin eval` command of the README with one run per case, for `case`."""
+    return ["claude", "plugin", "eval", ".", "--scaffold", "--runs", "1", *case,
+            "--allow-tools", "Bash(python3:*)", "Bash(git:*)", "Edit", "Write"]
+
+
+def git(*args, cwd=None):
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout
+
+
+def changed_files(root):
+    """Both sides of a move count, and paths come from the root whatever the current directory."""
+    base = git("merge-base", "origin/develop", "HEAD", cwd=root).strip()
+    diff = git("diff", "--name-only", "--no-renames", "-z", base, cwd=root)
+    untracked = git("ls-files", "--others", "--exclude-standard", "-z", cwd=root)
+    return {path for path in (diff + untracked).split("\0") if path}
+
+
+def loaders(root):
+    """Maps each file of evals/ that another one loads through `../<folder>/<name>.sh` to the
+    files that load it."""
+    loaded_by = {}
+    for folder in (root / "evals").iterdir():
+        if folder.is_dir() and folder.name != "results":
+            for path in [*folder.glob("**/*.sh"), *folder.glob("**/*.yaml")]:
+                for loaded, name in LOADED.findall(path.read_text(encoding="utf-8")):
+                    loaded_by.setdefault(f"evals/{loaded}/{name}", set()).add(path.relative_to(root).as_posix())
+    return loaded_by
+
+
+def importers(folder, name):
+    """Returns the script `name` and the scripts of its folder that import it, directly or
+    through another."""
+    scripts, pending = {name}, [name]
+    while pending:
+        module = Path(pending.pop()).stem
+        for other in folder.glob("*.py"):
+            if other.name not in scripts and re.search(rf"^(from|import) {module}\b", other.read_text(encoding="utf-8"), re.M):
+                scripts.add(other.name)
+                pending.append(other.name)
+    return scripts
+
+
+def picked_by(path, root, loaded_by):
+    """Returns the skills a changed file picks, or None when it picks them all."""
+    parts = path.split("/")
+    if path.startswith(SHARED):
+        return None
+    if parts[0] == "plugins" and len(parts) > 2:
+        plugin = root / "plugins" / parts[1]
+        if parts[2] == "skills" and len(parts) > 4:
+            return {parts[3]}
+        if parts[2] != "scripts" or len(parts) != 4:
+            return None
+        scripts = importers(plugin / "scripts", parts[3])
+        hooks = plugin / "hooks/hooks.json"
+        if hooks.exists() and any(f"scripts/{script}" in hooks.read_text(encoding="utf-8") for script in scripts):
+            return None
+        naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
+                  if any(f"scripts/{script}" in skill.read_text(encoding="utf-8") for script in scripts)}
+        return naming or None
+    if parts[0] == "evals" and len(parts) > 2:
+        seen, pending = set(), [path]
+        while pending:
+            current = pending.pop()
+            if current not in seen:
+                seen.add(current)
+                pending += loaded_by.get(current, ())
+        return {file.split("/")[1] for file in seen}
+    return set()
+
+
+def commands(root):
+    loaded_by = loaders(root)
+    skills = set()
+    for path in sorted(changed_files(root)):
+        picked = picked_by(path, root, loaded_by)
+        if picked is None:
+            return [evaluate()]
+        skills |= picked
+    runs = []
+    for skill in sorted(skills):
+        folder = root / "evals" / skill
+        if any(folder.glob("*/case.yaml")) or any(folder.glob("*/prompt.md")):
+            runs.append(evaluate("--case", f"{skill}-*"))
+        elif (folder / "case.yaml").exists() or (folder / "prompt.md").exists():
+            runs.append(evaluate("--case", skill))
+    return runs
+
+
+def main():
+    dry_run = "--dry-run" in sys.argv[1:]
+    root = Path(git("rev-parse", "--show-toplevel").strip())
+    runs = commands(root)
+    if not runs:
+        print("No evals cover the changed files.")
+        return 0
+    status = 0
+    for command in runs:
+        print(shlex.join(command), flush=True)
+        if not dry_run:
+            code = subprocess.run(command, cwd=root).returncode
+            status = max(status, code if code >= 0 else 128 - code)
+    return status
+
+
+if __name__ == "__main__":
+    sys.exit(main())

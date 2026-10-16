@@ -1,0 +1,64 @@
+schema_version: "1.1"
+name: bug-start-failure
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a bug: the totals that invoices.py prints leave out the tax.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 33
+  timeout_seconds: 240
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Bug'
+  - name: sections
+    type: regex
+    target: mock_calls
+    pattern: 'Root cause.*Neighboring inputs.*Done when.*Out of scope'
+  - name: evidence-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue.*Reproduction.*Root cause.*(ran|read): '
+  - name: reproduced-on-develop
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue.*F-001\s+100\.00'
+  - name: priority
+    type: regex
+    target: mock_calls
+    pattern: 'priority\W+name\W+(Highest|High|Medium|Low)'
+  - name: estimate
+    type: regex
+    target: mock_calls
+    pattern: 'timetracking\W*\{\W*originalEstimate\W+\d+[mhd]'
+  - name: open-before-close
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py open'
+    after:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
+  - name: close-before-create
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
+    after: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+  - name: reply
+    type: regex
+    pattern: 'https://example\.atlassian\.net/browse/ABC-50'
+  - name: no-link
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0

@@ -48,7 +48,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
 7. **Check each criterion on the final state of the branch.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met. When something no longer holds, leave a drift comment and stop until the person decides: do not push and do not register the time.
 
-8. **Push the branch,** with `git push` as a command of its own: the person approves it. Say the branch and the commits it sends.
+8. **Push the branch** with `git push -u origin <branch>`, the current branch, as a command of its own: the person approves it. The first time it creates the branch on the remote; after that it sends the new commits. Say the branch and the commits it sends.
 
 9. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the last change into Review. Run:
 

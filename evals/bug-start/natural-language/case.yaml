@@ -1,0 +1,27 @@
+schema_version: "1.1"
+name: bug-start-natural-language
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'The totals that invoices.py prints no longer include the tax.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 23
+  timeout_seconds: 240
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Bug'
+  - name: no-link
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0

@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Close the story ABC-75.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 30
-  timeout_seconds: 600
+  max_turns: 15
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used
@@ -20,6 +20,12 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'getJiraIssue.*ABC-75'
+  - name: no-develop-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push(?! +origin +--delete)'
+    min: 0
+    max: 0
   - name: tried
     type: regex
     target: mock_calls
@@ -36,9 +42,9 @@ graders:
     input_match: 'git push origin --delete'
     min: 0
     max: 0
-  - name: says-develop-was-pushed
+  - name: says-develop-is-on-the-remote
     type: regex
-    pattern: 'pushed'
+    pattern: 'already (been )?pushed|nothing (left )?to push|already (on|in) (the remote|origin)'
     flags: i
   - name: reason
     type: regex

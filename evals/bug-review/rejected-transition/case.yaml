@@ -1,0 +1,53 @@
+schema_version: "1.1"
+name: bug-review-rejected-transition
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the bug ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 15
+  timeout_seconds: 60
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: tried
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+  - name: no-develop
+    type: tool_used
+    tool: Bash
+    input_match: 'develop\.py'
+    min: 0
+    max: 0
+  - name: no-simplify
+    type: tool_used
+    tool: Skill
+    input_match: simplify
+    min: 0
+    max: 0
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue'
+    match: not_contains
+  - name: reason
+    type: regex
+    pattern: 'not valid|refus|reject'
+    flags: i

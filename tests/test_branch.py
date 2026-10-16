@@ -1,6 +1,7 @@
 """Checks the branch script of the work item skills: the branch it creates, where
 it starts from and what it prints."""
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -10,18 +11,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "plugins/gemba-code/scripts/branch.py"
 SUMMARY = "Let customers download their invoices"
+ENV = {**os.environ, "GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.com",
+       "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.com"}
 
 
 def git(cwd, *args):
-    result = subprocess.run(
-        ["git", "-c", "user.name=test", "-c", "user.email=test@example.com", *args],
-        cwd=cwd, capture_output=True, text=True, check=True,
-    )
+    result = subprocess.run(["git", *args], cwd=cwd, env=ENV, capture_output=True, text=True, check=True)
     return result.stdout.strip()
 
 
 def run(cwd, *args):
-    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True)
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, env=ENV, capture_output=True, text=True)
 
 
 class Branch(unittest.TestCase):
@@ -246,10 +246,15 @@ class Branch(unittest.TestCase):
         git(self.work, "push", "-q", "-u", "origin", branch)
         return branch
 
+    def merged_as(self, branch, state):
+        """Runs --merge and checks it succeeded, printing the branch and the state on its first two lines."""
+        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
+        self.assertEqual((result.returncode, result.stdout.splitlines()[:2]), (0, [branch, state]), result.stderr)
+        return result.stdout.splitlines()
+
     def test_merge_puts_the_remote_branch_in_develop_with_a_merge_commit_that_names_it(self):
         branch = self.push_the_work_with_a_commit_of_its_own()
-        result = run(self.work, "--merge", "story", "ABC-1", SUMMARY)
-        self.assertEqual((result.returncode, result.stdout.strip()), (0, branch), result.stderr)
+        self.merged_as(branch, "merged")
         self.assertEqual(git(self.work, "log", "-1", "--format=%s", "develop"), f"Merge branch '{branch}' into develop")
         self.assertEqual(len(git(self.work, "log", "-1", "--format=%P", "develop").split()), 2)
         self.assertEqual((self.work / "c").read_text(), "c")
@@ -333,6 +338,57 @@ class Branch(unittest.TestCase):
         self.assertEqual(git(self.remote, "rev-parse", "develop"), before)
         self.assertEqual(git(self.work, "branch", "--list", branch), branch)
         self.assertIn(branch, git(self.remote, "branch", "--list"))
+
+    def merge_without_pushing(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        self.merged_as(branch, "merged")
+        return branch
+
+    def test_merge_resumes_a_merge_not_pushed_without_merging_again(self):
+        branch = self.merge_without_pushing()
+        merged = git(self.work, "rev-parse", "develop")
+        git(self.work, "switch", "-q", branch)
+        self.merged_as(branch, "merged, not pushed")
+        self.assertEqual(git(self.work, "rev-parse", "develop"), merged)
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
+    def test_merge_resumes_a_close_already_pushed_without_merging(self):
+        branch = self.merge_without_pushing()
+        git(self.work, "push", "-q", "origin", "develop")
+        pushed = git(self.remote, "rev-parse", "develop")
+        git(self.work, "switch", "-q", branch)
+        self.assertEqual(self.merged_as(branch, "already pushed"), [branch, "already pushed"])
+        self.assertEqual((git(self.work, "rev-parse", "develop"), git(self.remote, "rev-parse", "develop")), (pushed, pushed))
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
+    def test_merge_lists_after_its_second_line_the_commits_the_push_of_develop_sends(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        sent = self.merged_as(branch, "merged")[2:]
+        self.assertEqual(sent, git(self.work, "log", "--oneline", "origin/develop..develop").splitlines())
+        self.assertEqual(len(sent), 2)
+        git(self.work, "switch", "-q", branch)
+        self.assertEqual(self.merged_as(branch, "merged, not pushed")[2:], sent)
+
+    def test_merge_refuses_a_merge_not_pushed_once_origin_develop_moved_and_names_its_commits(self):
+        self.merge_without_pushing()
+        self.push_a_commit_to_develop_from_another_clone()
+        self.refused_merge("develop", "feat(billing): add invoice export")
+
+    def test_merge_refuses_a_develop_whose_commit_of_its_own_is_not_the_merge_of_the_branch(self):
+        branch = self.push_the_work_with_a_commit_of_its_own()
+        git(self.work, "switch", "-q", "develop")
+        git(self.work, "merge", "-q", "--ff-only", f"origin/{branch}")
+        (self.work / "e").write_text("e")
+        git(self.work, "add", "e")
+        git(self.work, "commit", "-qm", "feat(local): not reviewed")
+        self.refused_merge("develop", "fast-forward")
+
+    def test_merge_still_refuses_a_develop_with_commits_besides_the_merge(self):
+        self.merge_without_pushing()
+        (self.work / "e").write_text("e")
+        git(self.work, "add", "e")
+        git(self.work, "commit", "-qm", "feat(local): only here")
+        self.refused_merge("develop", "fast-forward")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,187 @@
+{
+  "issues": {
+    "nodes": [
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12068",
+        "self": "",
+        "key": "ABC-34",
+        "fields": {
+          "summary": "Print the invoices as csv",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "parent": {
+            "id": "12067",
+            "key": "ABC-33",
+            "self": "",
+            "fields": {
+              "summary": "Capture real responses for the mock tests",
+              "status": {
+                "self": "",
+                "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+                "iconUrl": "",
+                "name": "Backlog",
+                "id": "10074",
+                "statusCategory": {
+                  "self": "",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "priority": {
+                "self": "",
+                "iconUrl": "",
+                "name": "Medium",
+                "id": "3"
+              },
+              "issuetype": {
+                "self": "",
+                "id": "10000",
+                "description": "Fase o iniciativa mayor que agrupa entregables relacionados a largo plazo.",
+                "iconUrl": "",
+                "name": "Epic",
+                "subtask": false,
+                "hierarchyLevel": 1
+              }
+            }
+          },
+          "project": {
+            "self": "",
+            "id": "10510",
+            "key": "ABC",
+            "name": "ABC",
+            "projectTypeKey": "software",
+            "simplified": false,
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            }
+          },
+          "description": "Como persona que factura, quiero imprimir las facturas como csv, para abrirlas en una hoja de cálculo.\n\n### Done when\n\n* `python3 invoices.py acme --csv` imprime una factura por línea, separada por comas.\n\n",
+          "comment": {
+            "comments": [
+              {
+                "id": "10241",
+                "author": {
+                  "accountId": "",
+                  "displayName": ""
+                },
+                "body": "### Evidence\n\n* ran: `python3 invoices.py acme` → F-001 y F-002 en columnas\n\n",
+                "created": "2026-10-16T10:09:06.161-0600",
+                "updated": "2026-10-16T10:09:06.161-0600",
+                "updateAuthor": {
+                  "accountId": "",
+                  "displayName": ""
+                }
+              }
+            ],
+            "self": "",
+            "maxResults": 1,
+            "total": 1,
+            "startAt": 0
+          },
+          "issuelinks": [
+            {
+              "id": "10438",
+              "self": "",
+              "type": {
+                "id": "10000",
+                "name": "Blocks",
+                "inward": "is blocked by",
+                "outward": "blocks",
+                "self": ""
+              },
+              "inwardIssue": {
+                "id": "12069",
+                "key": "ABC-35",
+                "self": "",
+                "fields": {
+                  "summary": "Read the invoices from a file",
+                  "status": {
+                    "self": "",
+                    "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+                    "iconUrl": "",
+                    "name": "Backlog",
+                    "id": "10074",
+                    "statusCategory": {
+                      "self": "",
+                      "id": 2,
+                      "key": "new",
+                      "colorName": "blue-gray",
+                      "name": "To Do"
+                    }
+                  },
+                  "priority": {
+                    "self": "",
+                    "iconUrl": "",
+                    "name": "Medium",
+                    "id": "3"
+                  },
+                  "issuetype": {
+                    "self": "",
+                    "id": "10009",
+                    "description": "Entregable de valor solicitado por el cliente o el negocio.",
+                    "iconUrl": "",
+                    "name": "Story",
+                    "subtask": false,
+                    "avatarId": 10315,
+                    "hierarchyLevel": 0
+                  }
+                }
+              }
+            }
+          ],
+          "status": {
+            "self": "",
+            "description": "Implementación en curso, tarea por tarea con las verificaciones en verde; en un epic, sus stories en curso. Sale cuando todas las tareas están hechas.",
+            "iconUrl": "",
+            "name": "Implement",
+            "id": "10076",
+            "statusCategory": {
+              "self": "",
+              "id": 4,
+              "key": "indeterminate",
+              "colorName": "yellow",
+              "name": "In Progress"
+            }
+          }
+        },
+        "descriptionEditable": true,
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-34"
+      }
+    ]
+  },
+  "context": {
+    "atlassianAccountId": "",
+    "cloudId": "60bceecb-ff67-4e42-ad74-e1b4da07354e",
+    "toolsExposure": "primary",
+    "clientName": "claude.ai",
+    "mcpClientName": "unknown",
+    "toolName": "getJiraIssue",
+    "endpoint": "v1-authv2:streamable-http",
+    "sessionId": "r11-f3d8c075-6b41-4ada-9a77-b29a62334f4b",
+    "invocationId": "9c92cb67-900d-4d88-8fea-662ea386066b",
+    "env": "prod",
+    "featureFlags": {
+      "mcp-app-v2-primary": false,
+      "mcp-jira-instrumentation-phase-1": true,
+      "ken-4811-4724-jira-mcp-status-assignee-fields": true,
+      "mcp-ui-local-cache": true,
+      "jira-mcp-app-loading-skeleton-and-error-case": false,
+      "jira-mcp-app-shared-row-components": true,
+      "claude_mcp_ui_theme_fix_jac-99665": true
+    }
+  }
+}

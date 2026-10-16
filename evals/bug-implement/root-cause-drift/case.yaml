@@ -1,0 +1,45 @@
+schema_version: "1.1"
+name: bug-implement-root-cause-drift
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-35.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 23
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-35'
+  - name: ran-on-develop
+    type: tool_used
+    tool: Bash
+    input_match: 'develop\.py run .*invoices\.py globex'
+  - name: closed
+    type: tool_used
+    tool: Bash
+    input_match: 'develop\.py close'
+  - name: drift-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(globex|75\.00|80\.00)'
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+    match: not_contains
+  - name: no-branch
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py'
+    min: 0
+    max: 0

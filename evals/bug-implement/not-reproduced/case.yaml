@@ -1,0 +1,40 @@
+schema_version: "1.1"
+name: bug-implement-not-reproduced
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: reproduced
+    type: tool_used
+    tool: Bash
+    input_match: 'develop\.py run .*invoices\.py acme'
+  - name: closed
+    type: tool_used
+    tool: Bash
+    input_match: 'develop\.py close'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue'
+    match: not_contains
+  - name: no-branch
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py'
+    min: 0
+    max: 0
+  - name: output
+    type: regex
+    pattern: '116\.00'
