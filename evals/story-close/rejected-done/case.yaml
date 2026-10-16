@@ -1,6 +1,7 @@
 schema_version: "1.1"
 name: story-close-rejected-done
 plugins:
+  - ../../../plugins/gemba
   - ../../../plugins/gemba-code
   - ../../../tests/fixtures/atlassian-stub
 context:
