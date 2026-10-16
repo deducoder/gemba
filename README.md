@@ -48,7 +48,7 @@ claude plugin eval . --scaffold --allow-tools 'Bash(python3:*)' 'Bash(git:*)' Ed
 
 Inside the session, `/reload-plugins` applies changes without restarting.
 
-The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash for `python3` and `git`, the commands the skills' scripts use, and Edit and Write, which the cases that build a fix use to change files; the grant covers any `python3` or `git` command, not only those scripts. Both run bash as you, so use them only on cases you trust. Add `--case <glob>` to run the cases whose name matches; given twice, only the last one counts.
+The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash for `python3` and `git`, the commands the skills' scripts use, and Edit and Write, which the cases that build a fix use to change files; the grant covers any `python3` or `git` command, not only those scripts. Both run bash as you, so use them only on cases you trust. Add `--case <glob>` to run the cases whose `name` in `case.yaml` matches, such as `bug-implement-*`; given twice, only the last one counts.
 
 ## License
 
