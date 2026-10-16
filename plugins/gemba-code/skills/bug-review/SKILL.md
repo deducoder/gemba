@@ -1,6 +1,6 @@
 ---
 name: bug-review
-description: Reviews a fixed bug from Jira on its own branch. Marks it in Review, proves that its regression test fails without the fix and that the fix changes the files of its Root cause, simplifies and reviews the branch against origin/develop, runs its Reproduction and its neighboring inputs again on the final branch, checks each Done when criterion, pushes the branch and registers the time of the phase. It stops, writing nothing, when the bug or its branch is not ready, resumes one already in Review and leaves a drift comment when the test, the fix or a criterion does not hold. Use when the user asks to review a bug or its fix, or gives a bug key whose branch is fixed and ready to be closed. It never merges.
+description: Reviews a fixed bug from Jira on its own branch. Marks it in Review, proves that its regression test detects the defect and that the fix changes the files of its Root cause, simplifies and reviews the branch against origin/develop, runs its Reproduction and its neighboring inputs again on the final branch, checks each Done when criterion, pushes the branch and registers the time of the phase. It stops, writing nothing, when the bug or its branch is not ready, resumes one already in Review and leaves a drift comment when the test, the fix or a criterion does not hold. Use when the user asks to review a bug or its fix, or gives a bug key whose branch is fixed and ready to be closed. It never merges.
 argument-hint: "[bug key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -23,6 +23,8 @@ Drift comment template:
 ```markdown
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
 
 Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. It creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
@@ -53,6 +55,14 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
    ```
 
    Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture. When it passes or fails for another reason, leave a drift comment.
+
+   When the cause is in the tests, as the reference above defines it, the branch holds only the `test` commit: when it holds another, leave a drift comment, because the product must not change. Otherwise, instead of the `run` above, run the fixed test against the change to the product its Done when names:
+
+   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <the change to the product> && git diff --stat && <command that runs only the fixed test>'
+   ```
+
+   and show that it fails as the reference above asks. When it passes, the test does not detect the defect: leave a drift comment.
 
 6. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`. When a path is missing, leave a drift comment.
 

@@ -24,6 +24,8 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
+
 Until the Implement mark this skill only reads, apart from a drift comment, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
@@ -65,9 +67,17 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    It prints the branch. This skill never pushes it.
 
-7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
+7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. When the cause is in the tests, as the reference above defines it, the plan names the fixed test and the change to the product its Done when says it detects, and no fix of the product. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
-8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context. A resumed bug does not repeat what its branch already holds: with that commit, go on to step 9; with the `fix` commit too, go on to step 11.
+8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context. A resumed bug does not repeat what its branch already holds: with that commit, go on to step 9, or to step 11 when the cause is in the tests; with the `fix` commit too, go on to step 11.
+
+   When the cause is in the tests, show instead that the fixed test detects the change to the product its Done when names. Before committing it, open develop as in step 3 and run, alone, with an inner `'` written `'\''`:
+
+   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'cp <project root>/<path of each file of the fixed test> <its path> && <the change to the product> && git diff --stat && <command that runs only the fixed test>'
+   ```
+
+   Show that it fails as the reference above asks, then close develop; a test that passes there is rewritten, not committed. Run the fixed test in the project, where it passes, and each row of Neighboring inputs, and compare each row with its Current behavior. Commit the test as the only commit of the branch, a `test` commit, and go on to step 11.
 
 9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior. When a row changes and no Done when criterion asks for it, name the row, its Current behavior and what it does now, and find why before committing the fix:
    - **The cause of the bug:** the row's Current behavior comes from the defect the Root cause names, so it belonged in Done when. Leave a drift comment on the Neighboring inputs criterion, with that row as what was found, and stop.
