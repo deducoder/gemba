@@ -42,6 +42,8 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
    - **A story** when it describes something to build, not a question: to declare with `/gemba-code:story-start`.
    - **A bug** when it describes a failure of something that already exists: to declare with `/gemba-code:bug-start`.
 
+A request with two questions or more is one spike per question: from step 4 on, each question goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question. Do not wait for an agreement to split them.
+
 4. **Ask, in one message, only what the question leaves open and you cannot deduce,** such as the decision that waits on its answer. Ask nothing when nothing is missing.
 
 5. **Draft the spike** with the template: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
@@ -62,4 +64,4 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
 
 8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as ADF.
 
-9. **Reply** with the key and link of the spike it created, and why an epic it named is not the parent, and nothing else.
+9. **Reply** with the key and link of each spike it created, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
