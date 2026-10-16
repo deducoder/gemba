@@ -52,7 +52,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py story <KEY> '<Summary>'
    ```
 
-   It prints the branch, which stays local until `story-review` pushes it.
+   It prints the branch. This skill never pushes it: `story-review` does.
 
 7. **Plan in plan mode.** Read the code the Done when touches before proposing anything. The plan says how each criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
