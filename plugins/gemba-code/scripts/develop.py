@@ -12,8 +12,8 @@ does not matter, and prints the path of the worktree: in the temporary directory
 one per repository and Claude Code session (`CLAUDE_CODE_SESSION_ID`), so two
 sessions never share it, and outside the project so that nothing the project holds
 (dependencies, settings) is found from it. It replaces one a stopped run of the
-same session left behind. When the fetch fails or origin/develop does not exist it prints the reason
-to stderr and exits 1.
+same session left behind. When the fetch fails or origin/develop does not exist it
+prints the reason to stderr and exits 1.
 `run` runs the command with the shell inside the open worktree and passes on its
 output and exit status; without an open worktree it exits 1.
 `close` removes the worktree with everything a run left in it, even without write
@@ -35,7 +35,8 @@ from branch import DEVELOP, git, has_ref, succeeds  # noqa: E402
 
 def worktree():
     common = git("rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
-    key = common + os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    session = os.environ.get("CLAUDE_CODE_SESSION_ID")
+    key = f"{common}\0{session}" if session else common
     return Path(tempfile.gettempdir()) / f"gemba-develop-{hashlib.sha1(key.encode()).hexdigest()[:12]}"
 
 
