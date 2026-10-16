@@ -43,9 +43,12 @@ claude --plugin-dir ./plugins/gemba               # load the plugin in a session
 claude plugin validate . --strict                 # validate the marketplace
 claude plugin validate plugins/gemba --strict     # validate the plugin
 python3 -m unittest discover tests                # run the tests
+claude plugin eval . --scaffold --allow-tools 'Bash(python3:*)' 'Bash(git:*)'  # run the evals
 ```
 
 Inside the session, `/reload-plugins` applies changes without restarting.
+
+The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash to the skills' scripts. Both run bash as you, so use them only on cases you trust. Add `--case <name>` to run one case.
 
 ## License
 
