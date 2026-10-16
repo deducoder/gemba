@@ -1,6 +1,6 @@
-"""Checks bug-start's develop.py: it opens develop in a worktree to reproduce a failure
-and closes it, leaving the branch, the uncommitted changes and the untracked files of
-the project as they were."""
+"""Checks bug-start's develop.py: it opens origin/develop, after fetching, in a worktree
+to reproduce a failure and closes it, leaving the branch, the uncommitted changes and
+the untracked files of the project as they were."""
 
 import subprocess
 import sys
@@ -33,6 +33,10 @@ class DevelopWorktree(unittest.TestCase):
         git(self.repo, "switch", "-qc", "develop")
         (self.repo / "app.py").write_text("print('develop')\n")
         git(self.repo, "commit", "-qam", "change the app on develop")
+        git(self.repo, "init", "-q", "--bare", ".remote/origin.git")
+        (self.repo / ".git/info/exclude").write_text(".remote/\n")
+        git(self.repo, "remote", "add", "origin", str(self.repo / ".remote/origin.git"))
+        git(self.repo, "push", "-q", "origin", "main", "develop")
         git(self.repo, "switch", "-qc", "story/ABC-1/work", "main")
         (self.repo / "app.py").write_text("print('work in progress')\n")
         (self.repo / "notes.md").write_text("untracked\n")
@@ -55,7 +59,7 @@ class DevelopWorktree(unittest.TestCase):
         before = self.state()
         path = self.open()
         self.assertEqual((path / "app.py").read_text(), "print('develop')\n")
-        self.assertEqual(git(path, "rev-parse", "HEAD"), git(self.repo, "rev-parse", "develop"))
+        self.assertEqual(git(path, "rev-parse", "HEAD"), git(self.repo, "rev-parse", "origin/develop"))
         self.assertEqual(self.state(), before)
         self.assertEqual((self.repo / "app.py").read_text(), "print('work in progress')\n")
 
@@ -80,8 +84,14 @@ class DevelopWorktree(unittest.TestCase):
         result = develop(self.repo, "close")
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_open_without_develop_exits_1_and_creates_nothing(self):
-        git(self.repo, "branch", "-D", "develop")
+    def test_open_takes_origin_develop_even_when_the_local_develop_is_behind(self):
+        git(self.repo, "branch", "-f", "develop", "main")
+        path = self.open()
+        self.assertEqual(git(path, "rev-parse", "HEAD"), git(self.repo, "rev-parse", "origin/develop"))
+        self.assertEqual((path / "app.py").read_text(), "print('develop')\n")
+
+    def test_open_without_origin_develop_exits_1_and_creates_nothing(self):
+        git(self.repo, "push", "-q", "origin", "--delete", "develop")
         result = develop(self.repo, "open")
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
