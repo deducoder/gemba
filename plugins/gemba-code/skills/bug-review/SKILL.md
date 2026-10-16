@@ -33,7 +33,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
    It refuses when the current branch is not the one of the bug, when the branch has no commits of its own, when files with tracking have uncommitted changes or when the branch is behind `origin/develop`. When it refuses, relay its reason and stop: the bug keeps its status.
 
-4. **Mark it Review.** Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
+4. **Mark it Review,** only when it is in Implement: a bug already in Review is resumed, so skip this step and go on from step 5. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason and run no more commands.
 
