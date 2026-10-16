@@ -19,4 +19,4 @@ graders:
   - name: no-invented-exclusion
     type: regex
     target: mock_calls
-    pattern: 'Out of scope[\s\S]*(Ninguno|None)\.'
+    pattern: 'Out of scope\W+type\W+bulletList\W+content\W+type\W+listItem\W+content\W+type\W+paragraph\W+content\W+type\W+text\W+text\W+(Ninguno|None)\.'
