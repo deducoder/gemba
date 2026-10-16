@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Fix the bug ABC-30.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 20
-  timeout_seconds: 400
+  max_turns: 23
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used

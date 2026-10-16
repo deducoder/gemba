@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Fix the bug ABC-30. I approve in advance the plan you propose: build it without waiting.'
   allowed_tools: [Read, Glob, Grep, Edit, Write, Skill]
-  max_turns: 60
-  timeout_seconds: 900
+  max_turns: 50
+  timeout_seconds: 180
 graders:
   - name: skill
     type: tool_used

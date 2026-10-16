@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Declare a bug: the totals that invoices.py prints leave out the tax, though the rounding that ABC-5 added still works.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 24
+  timeout_seconds: 180
 graders:
   - name: created
     type: regex

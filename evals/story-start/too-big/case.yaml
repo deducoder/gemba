@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Declare a story: turn invoices.py into a full invoicing tool. Add --csv, --json and --pdf output, filters by date range, amount and status, sorting by any column, totals per customer and per month, sending an invoice by email, marking invoices as paid, and an audit log of every change.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
-  timeout_seconds: 600
+  max_turns: 11
+  timeout_seconds: 120
 graders:
   - name: no-create
     type: regex

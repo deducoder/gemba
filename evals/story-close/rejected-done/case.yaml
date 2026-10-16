@@ -9,8 +9,8 @@ context:
 execution:
   prompt: 'Close the story ABC-75.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 30
-  timeout_seconds: 600
+  max_turns: 15
+  timeout_seconds: 120
 graders:
   - name: skill
     type: tool_used

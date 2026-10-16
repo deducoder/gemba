@@ -9,6 +9,8 @@ context:
 execution:
   prompt: 'Fix the typo ''facutra'' in the comment at the top of invoices.py.'
   allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 8
+  timeout_seconds: 60
 graders:
   - name: no-skill
     type: tool_used
