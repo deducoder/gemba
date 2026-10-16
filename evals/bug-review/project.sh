@@ -21,11 +21,12 @@ text = text.replace("\n\nif __name__", f'''
 if __name__''')
 open("test_invoices.py", "w").write(text)
 PY
+    git commit -qam "test(invoices): check the totals of acme include the tax"
 }
 for commit in ${COMMITS:-test fix}; do
     case "$commit" in
-        test) add_test "[116.0, 290.0]"; git commit -qam "test(invoices): check the totals of acme include the tax" ;;
-        weak-test) add_test "[100.0, 250.0]"; git commit -qam "test(invoices): check the totals of acme include the tax" ;;
+        test) add_test "[116.0, 290.0]" ;;
+        weak-test) add_test "[100.0, 250.0]" ;;
         fix) git checkout -q main -- invoices.py; git commit -qam "fix(invoices): add the tax to the invoice totals" ;;
         test-edit) sed -i 's/\[116.0, 290.0\]/[100.0, 250.0]/' test_invoices.py; git commit -qam "fix(invoices): match the totals of acme" ;;
     esac
