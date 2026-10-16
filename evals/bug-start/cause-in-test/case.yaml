@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: bug-start-cause-in-test
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a bug: python3 test_invoices.py fails on develop.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 33
+  timeout_seconds: 240
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Bug'
+  - name: cause-in-the-test
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue.*read: [^}]{0,40}\}[^}]{0,200}test_invoices\.py'
+  - name: product-change-criterion
+    type: regex
+    target: mock_calls
+    pattern: 'createJiraIssue[\s\S]*Done when[\s\S]*(sin (el )?impuesto|without (the )?tax|quit\w* el impuesto|drop\w* the tax)[\s\S]*Out of scope'
+  - name: close-before-create
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
+    after: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
