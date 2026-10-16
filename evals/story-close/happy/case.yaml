@@ -32,6 +32,12 @@ graders:
     after:
       tool: Bash
       input_match: 'git push(?! +origin +--delete)'
+  - name: no-git-log
+    type: tool_used
+    tool: Bash
+    input_match: 'git log'
+    min: 0
+    max: 0
   - name: not-done
     type: regex
     target: mock_calls

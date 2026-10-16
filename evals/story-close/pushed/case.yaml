@@ -24,13 +24,12 @@ graders:
     type: tool_used
     tool: Bash
     input_match: 'branch\.py --merge story ABC-62'
-  - name: checked-before-done
-    type: tool_order
-    before:
-      tool: Bash
-      input_match: 'origin/develop\.\.develop'
-    after:
-      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: no-git-log
+    type: tool_used
+    tool: Bash
+    input_match: 'git log'
+    min: 0
+    max: 0
   - name: no-develop-push
     type: tool_used
     tool: Bash
