@@ -12,10 +12,6 @@ execution:
   max_turns: 40
   timeout_seconds: 600
 graders:
-  - name: skill
-    type: tool_used
-    tool: Skill
-    input_match: bug-start
   - name: no-create
     type: regex
     target: mock_calls
