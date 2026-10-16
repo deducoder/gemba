@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reviewed story ABC-74: its branch with the commit, pushed.
 . "$(dirname "$0")/../../story-review/work.sh" ABC-74 commit
-git push -q
+git push -q -u origin HEAD
 git switch -q develop
 python3 - <<'PY'
 text = open("invoices.py").read()
