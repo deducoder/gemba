@@ -20,6 +20,10 @@ graders:
     type: tool_used
     tool: Bash
     input_match: 'invoices\.py globex'
+  - name: drift
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue'
   - name: no-fix-commit
     type: tool_used
     tool: Bash
