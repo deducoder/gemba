@@ -56,13 +56,13 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
    Run only that test, so a test of the project that already fails cannot stand in for it, and show that it fails with the symptom of the Reproduction, not with an import error or a missing fixture. When it passes or fails for another reason, leave a drift comment.
 
-   When the cause is in the tests, as the reference above defines it, the branch holds only the `test` commit. Then, instead of the `run` above, run the fixed test against the change to the product its Done when names:
+   When the cause is in the tests, as the reference above defines it, the branch holds only the `test` commit: when it holds another, leave a drift comment, because the product must not change. Otherwise, instead of the `run` above, run the fixed test against the change to the product its Done when names:
 
    ```
-   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <the change to the product> && <command that runs only the fixed test>'
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git checkout -q --detach <hash of the test commit> && <the change to the product> && git diff --stat && <command that runs only the fixed test>'
    ```
 
-   and show that it fails because of that change. When it passes, the test does not detect the defect: leave a drift comment.
+   and show that it fails as the reference above asks. When it passes, the test does not detect the defect: leave a drift comment.
 
 6. **Check the fix touches the cause.** Run `git diff --name-only origin/develop...HEAD` and check that it lists the path of each `read:` line of the Root cause, without its `:<line>`. When a path is missing, leave a drift comment.
 
