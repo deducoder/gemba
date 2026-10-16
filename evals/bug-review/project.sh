@@ -16,5 +16,5 @@ if __name__''')
 open("test_invoices.py", "w").write(text)
 PY
 git commit -qam "test(invoices): check the totals of acme include the tax"
-sed -i 's/round(invoice\["subtotal"\], 2)/round(invoice["subtotal"] * (1 + TAX), 2)/' invoices.py
+git checkout -q main -- invoices.py
 git commit -qam "fix(invoices): add the tax to the invoice totals"
