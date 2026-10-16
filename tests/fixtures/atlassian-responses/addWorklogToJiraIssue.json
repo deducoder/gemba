@@ -1,0 +1,40 @@
+{
+  "self": "",
+  "author": {
+    "self": "",
+    "accountId": "",
+    "emailAddress": "",
+    "avatarUrls": {
+      "48x48": "",
+      "24x24": "",
+      "16x16": "",
+      "32x32": ""
+    },
+    "displayName": "",
+    "active": true,
+    "timeZone": "America/Mexico_City",
+    "accountType": "atlassian"
+  },
+  "updateAuthor": {
+    "self": "",
+    "accountId": "",
+    "emailAddress": "",
+    "avatarUrls": {
+      "48x48": "",
+      "24x24": "",
+      "16x16": "",
+      "32x32": ""
+    },
+    "displayName": "",
+    "active": true,
+    "timeZone": "America/Mexico_City",
+    "accountType": "atlassian"
+  },
+  "created": "2026-10-16T10:09:07.897-0600",
+  "updated": "2026-10-16T10:09:07.897-0600",
+  "started": "2026-10-16T10:09:07.888-0600",
+  "timeSpent": "12m",
+  "timeSpentSeconds": 720,
+  "id": "10586",
+  "issueId": "12068"
+}

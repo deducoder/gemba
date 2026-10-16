@@ -46,6 +46,7 @@ claude plugin validate plugins/gemba-code --strict  # validate the code plugin
 python3 -m unittest discover tests                # run the tests
 claude plugin eval . --scaffold --allow-tools 'Bash(python3:*)' 'Bash(git:*)' Edit Write  # run the evals
 python3 evals/changed.py                          # run the evals of what changed
+python3 evals/save_response.py <tool> <PROJECT> < response.json  # save a real Jira response
 ```
 
 Inside the session, `/reload-plugins` applies changes without restarting.
@@ -55,6 +56,8 @@ GitHub Actions installs the `claude` CLI and runs the tests, which include the v
 The evals need `--scaffold`, which builds each case's project, and `--allow-tools`, which grants Bash for `python3` and `git`, the commands the skills' scripts use, and Edit and Write, which the cases that build a fix use to change files; the grant covers any `python3` or `git` command, not only those scripts. Both run bash as you, so use them only on cases you trust. Add `--case <glob>` to run the cases whose `name` in `case.yaml` matches, such as `bug-implement-*`; given twice, only the last one counts.
 
 `evals/changed.py` runs, with those flags and one run per case, only the evals of the skills that the files changed since `origin/develop` touch, committed or not; a change to what every case shares, such as `evals/mocks/` or a plugin's `context/`, runs them all. Add `--dry-run` to print the commands without running them.
+
+The tests compare each Jira mock of the evals with the real response of its tool saved in `tests/fixtures/atlassian-responses/`, and fail when a mock has a key the real response lacks; mocks that raise the tool's error (`error: true`) or instruct an agent (`type: agent`) are left out. To save a tool's real response again, call the tool from a Claude Code session on a test project, write its result as is to a file and run `evals/save_response.py` with the tool, the project key and that file: it empties emails, account IDs, names and avatar URLs, keeping their keys, and names the project `ABC`, as the mocks do.
 
 ## License
 

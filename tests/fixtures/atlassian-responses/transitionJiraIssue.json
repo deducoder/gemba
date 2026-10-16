@@ -1,0 +1,91 @@
+{
+  "issues": {
+    "nodes": [
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12068",
+        "self": "",
+        "key": "ABC-34",
+        "fields": {
+          "summary": "Print the invoices as csv",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "project": {
+            "self": "",
+            "id": "10510",
+            "key": "ABC",
+            "name": "ABC",
+            "projectTypeKey": "software",
+            "simplified": false,
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            }
+          },
+          "description": "Como persona que factura, quiero imprimir las facturas como csv, para abrirlas en una hoja de cálculo.\n\n### Done when\n\n* `python3 invoices.py acme --csv` imprime una factura por línea, separada por comas.\n\n",
+          "assignee": {
+            "self": "",
+            "accountId": "",
+            "emailAddress": "",
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            },
+            "displayName": "",
+            "active": true,
+            "timeZone": "America/Mexico_City",
+            "accountType": "atlassian"
+          },
+          "status": {
+            "self": "",
+            "description": "Implementación en curso, tarea por tarea con las verificaciones en verde; en un epic, sus stories en curso. Sale cuando todas las tareas están hechas.",
+            "iconUrl": "",
+            "name": "Implement",
+            "id": "10076",
+            "statusCategory": {
+              "self": "",
+              "id": 4,
+              "key": "indeterminate",
+              "colorName": "yellow",
+              "name": "In Progress"
+            }
+          }
+        },
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-34"
+      }
+    ]
+  },
+  "context": {
+    "atlassianAccountId": "",
+    "cloudId": "60bceecb-ff67-4e42-ad74-e1b4da07354e",
+    "toolsExposure": "primary",
+    "clientName": "claude.ai",
+    "mcpClientName": "unknown",
+    "toolName": "transitionJiraIssue",
+    "endpoint": "v1-authv2:streamable-http",
+    "sessionId": "r11-f3d8c075-6b41-4ada-9a77-b29a62334f4b",
+    "invocationId": "159b7e69-67d2-4c2d-98c8-fc9d0d2b4d12",
+    "env": "prod",
+    "featureFlags": {
+      "mcp-app-v2-primary": false,
+      "mcp-jira-instrumentation-phase-1": true,
+      "ken-4811-4724-jira-mcp-status-assignee-fields": true,
+      "mcp-ui-local-cache": true,
+      "jira-mcp-app-loading-skeleton-and-error-case": false,
+      "jira-mcp-app-shared-row-components": true,
+      "claude_mcp_ui_theme_fix_jac-99665": true
+    }
+  }
+}
