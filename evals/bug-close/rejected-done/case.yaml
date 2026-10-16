@@ -30,10 +30,16 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'transitionJiraIssue'
+  - name: transitions-read-first
+    type: tool_order
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__getTransitionsForJiraIssue
+    after:
+      tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: no-local-delete
     type: tool_used
     tool: Bash
-    input_match: 'git branch -d'
+    input_match: 'git branch +(-d|-D|--delete)'
     min: 0
     max: 0
   - name: no-remote-delete

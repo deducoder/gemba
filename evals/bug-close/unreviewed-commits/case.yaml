@@ -10,7 +10,7 @@ execution:
   prompt: 'Close the bug ABC-30.'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 11
-  timeout_seconds: 60
+  timeout_seconds: 90
 graders:
   - name: skill
     type: tool_used
