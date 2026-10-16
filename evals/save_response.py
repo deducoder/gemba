@@ -3,8 +3,8 @@ the personal data of whoever captured it and with its project named ABC, as the 
 
 Usage: python3 evals/save_response.py <tool> <PROJECT> < response.json
 
-It drops every `emailAddress`, `accountId`, `atlassianAccountId`, `avatarUrls`, `iconUrl` and
-`self` key, at any depth, names ABC each project and each word <PROJECT> and writes the result
+It drops every `emailAddress`, `accountId`, `atlassianAccountId`, `displayName`, `avatarUrls`,
+`iconUrl` and `self` key, at any depth, names ABC each project and each word <PROJECT> and writes the result
 to tests/fixtures/atlassian-responses/<tool>.json.
 """
 
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DROPPED = {"emailAddress", "accountId", "atlassianAccountId", "avatarUrls", "iconUrl", "self"}
+DROPPED = {"emailAddress", "accountId", "atlassianAccountId", "displayName", "avatarUrls", "iconUrl", "self"}
 
 
 def without_personal_data(value):
