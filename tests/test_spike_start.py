@@ -82,7 +82,7 @@ class SpikeDraft(unittest.TestCase):
             "read: invoices.py:6 → las facturas viven en la lista INVOICES",
             'ran: grep -ri "acme pay" . → sin resultados',
         ])
-        self.assertNotIn("Evidence", [n["text"] for n in self.nodes])
+        self.assertNotIn("Evidence", [n.get("text") for n in self.nodes])
 
     def test_the_evidence_need_not_match_the_number_of_criteria(self):
         result = run(DRAFT.replace('* ran: `grep -ri "acme pay" .` → sin resultados\n', ""))
