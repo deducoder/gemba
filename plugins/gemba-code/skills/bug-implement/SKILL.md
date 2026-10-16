@@ -65,9 +65,17 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    It prints the branch. This skill never pushes it.
 
-7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. Edit nothing until the person approves it; without plan mode, present the plan and wait.
+7. **Plan in plan mode.** Read the code of the `read:` lines of the Root cause before proposing anything. The plan names the regression test that shows the failure of the Reproduction, the fix of the Root cause, and how each Done when criterion will be shown. When every `read:` line of the Root cause points to a test of the project, the cause is in the tests: the plan names the fixed test and the change to the product its Done when says it detects, and no fix of the product. Edit nothing until the person approves it; without plan mode, present the plan and wait.
 
 8. **Commit the regression test first.** Write a test that fails for the reason the Root cause names, run it and show that failure before committing: it shows the symptom of the Reproduction, not an import error or a missing fixture, and a test that passes or fails for another reason is rewritten, not committed. Then commit it as the first commit of the branch, a `test` commit in the commit format of the Gemba Code context. A resumed bug does not repeat what its branch already holds: with that commit, go on to step 9; with the `fix` commit too, go on to step 11.
+
+   When the cause is in the tests, the fixed test is the whole fix: it passes on the product as it is, so instead show that it detects the change to the product its Done when names. Before committing it, open develop as in step 3 and run, alone, with an inner `'` written `'\''`:
+
+   ```
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py run 'git -C <project root> diff HEAD -- <paths of the fixed test> | git apply && <the change to the product> && <command that runs only the fixed test>'
+   ```
+
+   Show that it fails, then close develop; a test that passes there is rewritten, not committed. Run the fixed test in the project, where it passes, and commit it as the only commit of the branch, a `test` commit. The product does not change, so there is no `fix` commit and its Neighboring inputs keep their behavior: go on to step 11.
 
 9. **Write the fix and run the neighbors.** With the fix in the working tree and before committing it, run the regression test, which now passes, and each row of Neighboring inputs, and compare each row with its Current behavior. When a row changes and no Done when criterion asks for it, name the row, its Current behavior and what it does now, and find why before committing the fix:
    - **The cause of the bug:** the row's Current behavior comes from the defect the Root cause names, so it belonged in Done when. Leave a drift comment on the Neighboring inputs criterion, with that row as what was found, and stop.
