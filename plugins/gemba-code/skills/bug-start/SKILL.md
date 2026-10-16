@@ -31,13 +31,15 @@ Template:
 
 The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
-1. **Open develop** with this command, run alone and exactly in this form:
+1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira or opening develop.
+
+2. **Open develop** with this command, run alone and exactly in this form:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py open
    ```
 
-   It prints the path of a worktree of develop. In steps 2 to 4, read every file under that path and run every command, alone, in this form, which runs it in the worktree:
+   It prints the path of a worktree of develop. In steps 3 to 5, read every file under that path and run every command, alone, in this form, which runs it in the worktree:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py run '<command>'
@@ -45,28 +47,28 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 
    with an inner `'` written `'\''`. Each `run` asks the person's permission like any other command. Never read or run anything in the project itself: it may be on another branch, with changes of its own that must stay as they are.
 
-2. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output.
+3. **Reproduce the failure.** Read the code and the history the failure touches and the commands that already exist to run it (tests, `--help`), then reproduce it with a command, and keep the command and its literal output.
 
-3. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line.
+4. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line.
 
-4. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
+5. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
 
-5. **Close develop** with this command, run alone and exactly in this form:
+6. **Close develop** with this command, run alone and exactly in this form:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/develop.py close
    ```
 
-6. **Ask, in one message, only the decisions the failure leaves open and you cannot deduce.** Ask nothing when nothing is missing.
+7. **Ask, in one message, only the decisions the failure leaves open and you cannot deduce.** Ask nothing when nothing is missing.
 
-7. **Draft the bug** with the template: its headings, labels, table header and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
-   - The Reproduction holds the command of step 2 as you passed it to `run`, without `develop.py run`, and its output, literal; the Root cause of Evidence, the `ran:` and `read:` lines of step 3, with the commands written the same way.
+8. **Draft the bug** with the template: its headings, labels, table header and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
+   - The Reproduction holds the command of step 3 as you passed it to `run`, without `develop.py run`, and its output, literal; the Root cause of Evidence, the `ran:` and `read:` lines of step 4, with the commands written the same way.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it.
 
-8. **Give it a priority and an original estimate** with the Bug rules of the priority above and the estimate rules above.
+9. **Give it a priority and an original estimate** with the Bug rules of the priority above and the estimate rules above.
 
-9. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+10. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/bug.py --site <site> <<'BUG'
@@ -74,6 +76,6 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    BUG
    ```
 
-10. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as ADF.
+11. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as ADF.
 
-11. **Reply** with the key and link of the bug it created, and nothing else.
+12. **Reply** with the key and link of the bug it created, and nothing else.
