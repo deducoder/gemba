@@ -24,7 +24,7 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
-Until the Implement mark this skill only reads, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads, apart from a drift comment, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -41,7 +41,9 @@ Until the Implement mark this skill only reads, and it creates or edits no work 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close
    ```
 
-   `open` prints the path of a worktree of develop and `run` runs the command there; keep its literal output.
+   `open` prints the path of a worktree of develop and `run` runs the command there; keep its literal output. When it no longer shows the failure, stop without marking the bug or creating its branch: show the command and its output.
+
+   Before closing develop, check the Root cause there: run each of its `ran:` commands with `develop.py run` and read each of its `read:` sources in the worktree, and check that they still give what the Evidence noted. When one no longer does, leave a drift comment and stop.
 
 4. **Check the project is ready** with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
