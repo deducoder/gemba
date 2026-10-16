@@ -34,12 +34,12 @@ graders:
     before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
     after:
       tool: Bash
-      input_match: 'scripts/develop\.py run .*checkout.*test_invoices'
+      input_match: 'scripts/develop\.py run .*checkout.*test_the_totals_of_acme_include_the_tax'
   - name: worktree-closed
     type: tool_order
     before:
       tool: Bash
-      input_match: 'scripts/develop\.py run .*checkout.*test_invoices'
+      input_match: 'scripts/develop\.py run .*checkout.*test_the_totals_of_acme_include_the_tax'
     after:
       tool: Bash
       input_match: 'scripts/develop\.py close'
