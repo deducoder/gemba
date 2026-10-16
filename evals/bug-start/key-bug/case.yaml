@@ -9,7 +9,7 @@ context:
 execution:
   prompt: 'Declare the bug ABC-12.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 40
+  max_turns: 12
   timeout_seconds: 600
 graders:
   - name: skill

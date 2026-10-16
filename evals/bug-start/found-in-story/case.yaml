@@ -25,10 +25,11 @@ graders:
     target: mock_calls
     pattern: 'issueTypeName\W+Bug'
   - name: no-parent
-    type: regex
-    target: mock_calls
-    pattern: '"parent"'
-    match: not_contains
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '"parent"'
+    min: 0
+    max: 0
   - name: relates
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink

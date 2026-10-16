@@ -22,9 +22,13 @@ graders:
     pattern: createJiraIssue
     match: not_contains
   - name: develop-closed
-    type: tool_used
-    tool: Bash
-    input_match: 'scripts/develop\.py close'
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/develop\.py open'
+    after:
+      tool: Bash
+      input_match: 'scripts/develop\.py close'
   - name: shows-what-it-ran
     type: regex
     pattern: 'invoice-rates|rates service|servicio'
