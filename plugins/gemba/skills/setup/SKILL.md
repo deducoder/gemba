@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, turns off commit and PR attribution, and creates the initial git history. Safe to re-run.
+description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -20,6 +20,12 @@ CLAUDE.md:
 
 ```
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
+```
+
+.gemba/project/git.json:
+
+```
+!`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/git.json" 2>/dev/null || echo "(missing)"`
 ```
 
 .claude/settings.json:
@@ -51,9 +57,11 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    - With a single site, use it and say so.
    - Ask for the Jira and the Confluence space with their keys as options, even when there is a single one, adding an option to type another key.
 
-3. **CLAUDE.md.** Make `CLAUDE.md` start with the template above, filled in. When `CLAUDE.md` already has a `# Gemba` block, update that block in place; when it has other content, insert the block above it with Edit, never retyping it; when it is missing, write it.
+3. **Integration.** Ask how finished work reaches `develop`, with `merge` first and labeled `(Recommended)`, and `pull-request`. Ask it only when `.gemba/project/git.json` is missing.
 
-4. **Atlassian declaration.** Write `.gemba/project/atlassian.json` exactly in this shape:
+4. **CLAUDE.md.** Make `CLAUDE.md` start with the template above, filled in. When `CLAUDE.md` already has a `# Gemba` block, update that block in place; when it has other content, insert the block above it with Edit, never retyping it; when it is missing, write it.
+
+5. **Atlassian declaration.** Write `.gemba/project/atlassian.json` exactly in this shape:
 
    ```json
    {
@@ -63,7 +71,15 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-5. **Attribution.** In `.claude/settings.json`, set this key, keeping every other key, with two-space indentation and one key per line. Create the file when it is missing.
+6. **Integration declaration.** Write `.gemba/project/git.json` exactly in this shape:
+
+   ```json
+   {
+     "integration": "<merge or pull-request>"
+   }
+   ```
+
+7. **Attribution.** In `.claude/settings.json`, set this key, keeping every other key, with two-space indentation and one key per line. Create the file when it is missing.
 
    ```json
    "attribution": {
@@ -73,7 +89,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-6. **Git history,** last, so the initial commit holds what the steps above wrote.
+8. **Git history,** last, so the initial commit holds what the steps above wrote.
 
    - **With history:** change nothing; report what is missing among `main`, `origin`, `develop` and their upstreams, each with the command that adds it, and name the files the steps above changed, which stay uncommitted.
    - **Without history:**
@@ -82,4 +98,4 @@ Ask only for what the current state lacks, in as few questions as possible, and 
      3. Run `git add -A`, `git commit -m "initial commit"`, with no trailers, and `git remote add origin <url>` (`git remote set-url origin <url>` when `origin` exists).
      4. Ask whether to push. Only on a yes, run `git push -u origin main`, `git switch -c develop` and `git push -u origin develop`.
 
-7. **Report** one line per step: what changed, or that it was already right. Say that the changes apply from the next session. Reply in the Conversation language.
+9. **Report** one line per step: what changed, or that it was already right. Say that the changes apply from the next session. Reply in the Conversation language.
