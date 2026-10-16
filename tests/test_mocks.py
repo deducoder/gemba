@@ -38,6 +38,18 @@ def paths(value, prefix=""):
     return found
 
 
+def texts(value, personal=False):
+    """Yields each text of a JSON value with whether it sits under a key of PERSONAL."""
+    if isinstance(value, dict):
+        for key, item in value.items():
+            yield from texts(item, personal or key in SAVE_RESPONSE.PERSONAL)
+    elif isinstance(value, list):
+        for item in value:
+            yield from texts(item, personal)
+    elif isinstance(value, str):
+        yield value, personal
+
+
 def response(tool):
     return RESPONSES / f"{tool}.json"
 
@@ -57,12 +69,12 @@ class Mocks(unittest.TestCase):
 
     def test_every_key_of_a_mock_is_in_the_real_response_of_its_tool(self):
         """A tool without a saved response fails the test above, not each of its mocks."""
-        for mock in MOCKS:
-            frontmatter, body = split(mock)
-            if re.search(r"^(type: agent|error: true)$", frontmatter, re.M) or not response(mock.stem).is_file():
-                continue
+        for mock in filter(lambda mock: response(mock.stem).is_file(), MOCKS):
             name = mock.relative_to(ROOT)
             with self.subTest(mock=str(name)):
+                frontmatter, body = split(mock)
+                if re.search(r"^(type: agent|error: true)$", frontmatter, re.M):
+                    continue
                 real = real_paths(mock.stem)
                 for path, type_ in paths(json.loads(body)).items():
                     self.assertIn(path, real, f"{name}: {path} is not in the real response of {mock.stem}")
@@ -73,11 +85,12 @@ class Mocks(unittest.TestCase):
         self.assertTrue(responses, f"no saved real responses in {RESPONSES.relative_to(ROOT)}")
         for response in responses:
             with self.subTest(response=response.name):
-                text = response.read_text(encoding="utf-8")
+                found = list(texts(json.loads(response.read_text(encoding="utf-8"))))
+                self.assertEqual([text for text, personal in found if personal and text], [])
+                text = "\n".join(text for text, _ in found)
                 self.assertNotRegex(text, r"[\w.+-]+@[\w-]+\.[\w.]+")
-                self.assertNotRegex(text, rf'"({"|".join(SAVE_RESPONSE.DROPPED)})"')
                 self.assertNotRegex(text, r"https?://\S*avatar")
-                self.assertLessEqual(set(re.findall(r"\b([A-Z][A-Z0-9]+)-\d+\b", text)), {"ABC"})
+                self.assertLessEqual(set(re.findall(r"(?<!\w)([A-Z][A-Z0-9]+)-\d+(?!\w)", text)), {"ABC"})
 
 
 if __name__ == "__main__":
