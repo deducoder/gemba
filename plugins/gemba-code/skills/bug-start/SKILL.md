@@ -29,6 +29,8 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
+
 The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
@@ -56,7 +58,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    - what the request asks for does not exist yet in develop, so it is something new to build: reply that it is a story, to declare with `/gemba-code:story-start`;
    - the failure does not happen: show the command and its output.
 
-5. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. When the cause cannot be named with evidence, for example because the code that produces the output is not in the repository, stop and show what you ran and read. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line. When every `read:` line points to a test of the project, the cause is in the tests: the fix changes the test, and nothing in the product fails without it. Then find a change to the product, near the code the test checks, that the fixed test must detect, and run the fixed test against it in the worktree to show that it fails.
+5. **Name the root cause.** Follow the output to the code that produces it, reading only what that trail needs, until you can write it in one sentence: "<mechanism> causes <symptom> because <reason>", in the `Content:` language. A restated symptom is not a cause. When the cause cannot be named with evidence, for example because the code that produces the output is not in the repository, stop and show what you ran and read. Keep each command you ran as a `ran:` line with its output, and each line of code you read as a `read:` line with its path, relative to the repository, and line. When the cause is in the tests, as the reference above defines it, also find the change to the product the fixed test must detect, and run the fixed test against it in the worktree to show that it fails.
 
 6. **Run the neighboring inputs:** the inputs near the Reproduction that the code of the `read:` lines also handles and that work correctly today, each with what it does. They are what the fix must not change. An input that fails the same way is part of the failure: it goes in Done when, not in Neighboring inputs.
 
@@ -70,7 +72,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 
 9. **Draft the bug** with the template: its headings, labels, table header and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
    - The Reproduction holds the command of **Reproduce the failure** as you passed it to `run`, without `develop.py run`, and its output, literal; the Root cause of Evidence, the `ran:` and `read:` lines of **Name the root cause**, with the commands written the same way.
-   - When the cause is in the tests, Done when also holds a criterion with that change to the product and the command of the fixed test: "With <the change to the product>, <command that runs the fixed test> fails", in the `Content:` language.
+   - When the cause is in the tests, Done when also holds the criterion with that change to the product, in the form the reference above gives.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it.
 
