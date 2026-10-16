@@ -7,6 +7,7 @@ Prints a PreToolUse decision: `deny` for a forced push (`--force`, `--force-with
 `-f`, a `+refspec`) and `ask` for any other push. It prints nothing for a command that
 pushes nothing. A push is a `git` command, with any path, env assignments and global
 options before it, whose subcommand is `push`, in any segment of the command line.
+Wrappers (`sh -c`, `xargs`, `env`) and git aliases are out of scope.
 """
 
 import json
@@ -17,7 +18,7 @@ import sys
 
 # Global options of git that take their value as the next word.
 WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix", "--config-env"}
-OPERATORS = {"&&", "||", ";", "|", "&", "(", ")"}
+SEPARATORS = set("&;|()<>")
 
 
 def segments(command):
@@ -26,7 +27,7 @@ def segments(command):
     lexer.whitespace_split = True
     current = []
     for word in lexer:
-        if word in OPERATORS or set(word) <= set("&;|()<>"):
+        if set(word) <= SEPARATORS:
             yield current
             current = []
         else:
@@ -51,7 +52,7 @@ def forced(arguments):
     return any(
         argument.startswith("--force")
         or (argument.startswith("-") and not argument.startswith("--") and "f" in argument)
-        or (not argument.startswith("-") and argument.startswith("+"))
+        or argument.startswith("+")
         for argument in arguments
     )
 
@@ -74,10 +75,11 @@ def main():
     command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
     decision = decide(command) if isinstance(command, str) else None
     if decision:
+        verdict, reason = decision
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "permissionDecision": decision[0],
-            "permissionDecisionReason": decision[1],
+            "permissionDecision": verdict,
+            "permissionDecisionReason": reason,
         }}))
 
 

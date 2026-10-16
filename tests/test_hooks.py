@@ -106,9 +106,10 @@ def gate(command):
 
 class PushGate(unittest.TestCase):
     def test_gemba_code_registers_the_gate_on_bash_before_the_tool_runs(self):
-        groups = HOOKS[ROOT / "plugins/gemba-code"]["PreToolUse"]
+        plugin = ROOT / "plugins/gemba-code"
+        groups = HOOKS[plugin]["PreToolUse"]
         self.assertEqual([group["matcher"] for group in groups], ["Bash"])
-        self.assertIn(str(GATE), [part for _, _, hook in command_hooks("PreToolUse") for part in argv(ROOT / "plugins/gemba-code", hook)])
+        self.assertEqual(argv(plugin, groups[0]["hooks"][0]), ["python3", str(GATE)])
 
     def test_a_push_asks(self):
         for command in ASK:
