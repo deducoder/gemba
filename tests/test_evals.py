@@ -18,7 +18,7 @@ def listed_plugins(case):
             inside = True
         elif inside and (item := re.match(r"^\s+-\s+(\S+)\s*$", line)):
             paths.append((case.parent / item.group(1)).resolve())
-        elif inside:
+        elif inside and re.match(r"^\S", line):
             break
     return paths
 
