@@ -1,6 +1,6 @@
 ---
 name: bug-implement
-description: Implements a declared bug from Jira on its own branch. Runs its Reproduction on develop without touching the working tree, marks it in Implement, creates its branch from develop, plans in plan mode, commits a failing regression test before the fix, runs its neighboring inputs again before committing the fix, reports the evidence of each criterion and registers the time of the phase. It stops, writing nothing, when the bug cannot be built yet, and resumes one already in Implement. Use when the user asks to fix, implement or work on a declared bug, or gives a bug key to start fixing. It edits no code until the plan is approved, and never merges.
+description: Implements a declared bug from Jira on its own branch. Runs its Reproduction on develop without touching the working tree, marks it in Implement, creates its branch from develop, plans in plan mode, commits a failing regression test before the fix, runs its neighboring inputs again before committing the fix, reports the evidence of each criterion and registers the time of the phase. It stops, writing nothing but a drift comment, when the bug cannot be built yet, and resumes one already in Implement. Use when the user asks to fix, implement or work on a declared bug, or gives a bug key to start fixing. It edits no code until the plan is approved, and never merges.
 argument-hint: "[bug key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -85,4 +85,4 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 ## Leave a drift comment
 
-Add it to the bug with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes.
+Add it to the bug with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes; for a Root cause line that no longer holds, the Criterion is that `ran:` or `read:` line.
