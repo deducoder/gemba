@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: bug-implement-neighbor-changed
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Fix the bug ABC-30. I approve in advance the plan you propose: build it without waiting.'
+  allowed_tools: [Read, Glob, Grep, Edit, Write, Skill]
+  max_turns: 60
+  timeout_seconds: 900
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-implement
+  - name: neighbor-ran
+    type: tool_used
+    tool: Bash
+    input_match: 'invoices\.py globex'
+  - name: no-fix-commit
+    type: tool_used
+    tool: Bash
+    input_match: 'git commit.*fix\('
+    min: 0
+    max: 0
+  - name: row
+    type: regex
+    pattern: 'globex'
+  - name: before
+    type: regex
+    pattern: '80\.00'
+  - name: after
+    type: regex
+    pattern: '92\.80'
