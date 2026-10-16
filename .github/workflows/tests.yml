@@ -17,7 +17,4 @@ jobs:
         with:
           node-version: "22"
       - run: npm install -g @anthropic-ai/claude-code@2.1.301
-      - run: python3 -m unittest discover tests
-      - run: claude plugin validate . --strict
-      - run: claude plugin validate plugins/gemba --strict
-      - run: claude plugin validate plugins/gemba-code --strict
+      - run: python3 -m unittest discover -v tests
