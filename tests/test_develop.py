@@ -1,0 +1,87 @@
+"""Checks bug-start's develop.py: it opens develop in a worktree to reproduce a failure
+and closes it, leaving the branch, the uncommitted changes and the untracked files of
+the project as they were."""
+
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPT = ROOT / "plugins/gemba-code/skills/bug-start/scripts/develop.py"
+
+
+def git(cwd, *args):
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+
+
+def develop(cwd, *args):
+    return subprocess.run([sys.executable, str(SCRIPT), *args], cwd=cwd, capture_output=True, text=True)
+
+
+class DevelopWorktree(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmp.name)
+        git(self.repo, "init", "-q", "-b", "main")
+        git(self.repo, "config", "user.name", "test")
+        git(self.repo, "config", "user.email", "test@example.com")
+        (self.repo / "app.py").write_text("print('main')\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "initial commit")
+        git(self.repo, "switch", "-qc", "develop")
+        (self.repo / "app.py").write_text("print('develop')\n")
+        git(self.repo, "commit", "-qam", "change the app on develop")
+        git(self.repo, "switch", "-qc", "story/ABC-1/work", "main")
+        (self.repo / "app.py").write_text("print('work in progress')\n")
+        (self.repo / "notes.md").write_text("untracked\n")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def state(self):
+        return git(self.repo, "branch", "--show-current"), git(self.repo, "status", "--porcelain", "--untracked-files=all")
+
+    def test_open_prints_a_worktree_of_develop_and_leaves_the_project_as_it_was(self):
+        before = self.state()
+        result = develop(self.repo, "open")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        path = Path(result.stdout.strip())
+        self.assertEqual((path / "app.py").read_text(), "print('develop')\n")
+        self.assertEqual(git(path, "rev-parse", "HEAD"), git(self.repo, "rev-parse", "develop"))
+        self.assertEqual(self.state(), before)
+        self.assertEqual((self.repo / "app.py").read_text(), "print('work in progress')\n")
+
+    def test_close_removes_the_worktree_and_leaves_the_project_as_it_was(self):
+        before = self.state()
+        path = Path(develop(self.repo, "open").stdout.strip())
+        (path / "__pycache__").mkdir()
+        (path / "output.txt").write_text("left by a run\n")
+        result = develop(self.repo, "close")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(path.exists())
+        self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 1)
+        self.assertEqual(self.state(), before)
+
+    def test_open_twice_replaces_the_worktree_left_by_a_stopped_run(self):
+        develop(self.repo, "open")
+        result = develop(self.repo, "open")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 2)
+
+    def test_close_without_a_worktree_succeeds(self):
+        result = develop(self.repo, "close")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_open_without_develop_exits_1_and_creates_nothing(self):
+        git(self.repo, "branch", "-D", "develop")
+        result = develop(self.repo, "open")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("develop", result.stderr)
+        self.assertEqual(len(git(self.repo, "worktree", "list").splitlines()), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
