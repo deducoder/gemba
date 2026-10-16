@@ -44,7 +44,7 @@ graders:
     max: 0
   - name: says-develop-is-on-the-remote
     type: regex
-    pattern: 'push'
+    pattern: 'already (been )?pushed|nothing (left )?to push|on the remote|origin/develop'
     flags: i
   - name: reason
     type: regex
