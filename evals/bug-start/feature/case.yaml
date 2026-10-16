@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: bug-start-feature
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a bug: invoices.py has no --csv option to print the customer''s invoices as CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 600
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: bug-start
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+    match: not_contains
+  - name: story
+    type: regex
+    pattern: 'story-start'
