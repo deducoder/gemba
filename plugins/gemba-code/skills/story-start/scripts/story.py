@@ -20,12 +20,17 @@ import argparse
 import json
 import re
 import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
+
+from draft import (  # noqa: E402
+    check_criteria, check_scope, check_summary, check_unmarked, criterion, doc, excluded, inline, prose, section,
+)
 
 SECTIONS = ["Done when", "Evidence", "Out of scope"]
 MAX_CRITERIA = 8
-ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
-KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
-CODE = re.compile(r"`([^`]+)`")
 
 
 def parse(text):
@@ -51,23 +56,14 @@ def parse(text):
     return summary, intro, sections, loose, repeated
 
 
-def prose(line):
-    """Returns a line without its `code`, where == and → are literal."""
-    return CODE.sub("", line)
-
-
 def problems(summary, intro, sections, loose, repeated):
     """Returns what doesn't follow the template; empty when the draft does."""
     found = []
-    if not summary or len(summary) > 64:
-        found.append("Summary: write it on the first line, 64 characters at most")
-    elif summary.endswith(".") or not summary[0].isupper():
-        found.append("Summary: sentence case, with no final period")
+    check_summary(summary, found)
     if len(intro) != 1 or not intro[0].endswith("."):
         found.append("opening sentence: write one sentence that says who wants what and why")
     for name, text in (("Summary", summary), ("opening sentence", " ".join(intro))):
-        if "==" in prose(text):
-            found.append(f"{name}: only Done when criteria are wrapped in ==")
+        check_unmarked(name, text, found)
     if list(sections) != SECTIONS:
         found.append(f"sections: expected {', '.join(SECTIONS)}, in that order; found {', '.join(sections) or 'none'}")
         return found
@@ -88,60 +84,13 @@ def problems(summary, intro, sections, loose, repeated):
     for line in evidence:
         if not line.startswith(("ran:", "read:")):
             found.append(f"Evidence: start with 'ran:' or 'read:': {line}")
-    for line in criteria:
-        wrapped = line.startswith("==") and line.endswith("==") and len(line) > 4
-        inner = line[2:-2] if wrapped else line
-        if "==" in prose(inner):
-            found.append(f"Done when: wrap the whole criterion in ==, or none of it: {line}")
-        elif wrapped and not prose(inner).strip():
-            found.append(f"Done when: a deduced criterion needs words outside `code` to show in orange: {line}")
+    check_criteria(criteria, found)
     for name in ("Evidence", "Out of scope"):
         for line in sections[name]:
             if "==" in prose(line):
                 found.append(f"{name}: only Done when criteria are wrapped in ==: {line}")
-    for line in scope:
-        if "→" in prose(line) and not KEY.match(line.rsplit("→", 1)[1].strip()):
-            found.append(f"Out of scope: keep the arrow only for the key of an existing work item: {line}")
+    check_scope(scope, found)
     return found
-
-
-def inline(text, marks=()):
-    """Splits text into ADF text nodes, with `code` as a code mark and no other mark on it."""
-    nodes = []
-    for i, part in enumerate(CODE.split(text)):
-        if not part:
-            continue
-        if i % 2:
-            nodes.append({"type": "text", "text": part, "marks": [{"type": "code"}]})
-        else:
-            nodes.append({"type": "text", "text": part, **({"marks": list(marks)} if marks else {})})
-    return nodes
-
-
-def criterion(line):
-    if line.startswith("==") and line.endswith("==") and len(line) > 4:
-        return inline(line[2:-2], [ORANGE])
-    return inline(line)
-
-
-def excluded(line, site):
-    if "→" not in prose(line):
-        return inline(line)
-    what, key = (part.strip() for part in line.rsplit("→", 1))
-    return inline(f"{what} → ") + [{"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}]
-
-
-def section(name, items):
-    return [
-        {"type": "heading", "attrs": {"level": 3}, "content": [{"type": "text", "text": name}]},
-        {"type": "bulletList", "content": [
-            {"type": "listItem", "content": [{"type": "paragraph", "content": item}]} for item in items
-        ]},
-    ]
-
-
-def doc(content):
-    return {"type": "doc", "version": 1, "content": content}
 
 
 def description(intro, sections, site):
