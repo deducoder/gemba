@@ -10,6 +10,7 @@ options before it, whose subcommand is `push`, in any segment of the command lin
 Wrappers (`sh -c`, `xargs`, `env`) and git aliases are out of scope.
 """
 
+import itertools
 import json
 import os
 import re
@@ -64,9 +65,12 @@ def decide(command):
     """Returns ("ask" | "deny", reason) for a command that pushes, else None."""
     try:
         pushes = [a for a in map(push_arguments, segments(command)) if a is not None]
-    except ValueError:  # unbalanced quotes: read the words as they are written
-        words = command.split()
-        pushes = [words[words.index("push") + 1:]] if "git" in map(os.path.basename, words) and "push" in words else []
+    except ValueError:  # unbalanced quotes: read the words of each line as they are written, up to a comment
+        pushes = []
+        for line in command.splitlines():
+            words = line.split()
+            if "git" in map(os.path.basename, words) and "push" in words:
+                pushes.append(list(itertools.takewhile(lambda word: not word.startswith("#"), words[words.index("push") + 1:])))
     if not pushes:
         return None
     if any(forced(arguments) for arguments in pushes):
