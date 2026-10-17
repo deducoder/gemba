@@ -1,0 +1,79 @@
+{
+  "issues": {
+    "nodes": [
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12101",
+        "self": "",
+        "key": "ABC-62",
+        "fields": {
+          "summary": "Declare the children of an epic in epic-start",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "status": {
+            "self": "",
+            "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+            "iconUrl": "",
+            "name": "Backlog",
+            "id": "10074",
+            "statusCategory": {
+              "self": "",
+              "id": 2,
+              "key": "new",
+              "colorName": "blue-gray",
+              "name": "To Do"
+            }
+          }
+        },
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-62"
+      },
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12099",
+        "self": "",
+        "key": "ABC-60",
+        "fields": {
+          "summary": "Rename the Evidence root cause heading to Cause trail",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "status": {
+            "self": "",
+            "description": "Cerrado: integrado y entregado. Sale sólo si se reabre.",
+            "iconUrl": "",
+            "name": "Done",
+            "id": "10078",
+            "statusCategory": {
+              "self": "",
+              "id": 3,
+              "key": "done",
+              "colorName": "green",
+              "name": "Done"
+            }
+          }
+        },
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-60"
+      }
+    ],
+    "webUrl": "https://deducoder.atlassian.net/issues?jql=key%20in%20(ABC-60%2C%20ABC-62)",
+    "pageInfo": {
+      "hasNextPage": false,
+      "endCursor": null
+    }
+  }
+}

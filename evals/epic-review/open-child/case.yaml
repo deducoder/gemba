@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: epic-review-open-child
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the epic ABC-45.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 10
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: epic-review
+  - name: children
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql.*parent'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|createJiraIssue|createIssueLink|addCommentToJiraIssue|addWorklogToJiraIssue'
+    match: not_contains
+  - name: no-code-review
+    type: tool_used
+    tool: Skill
+    input_match: code-review
+    min: 0
+    max: 0
+  - name: names-the-open-child
+    type: regex
+    pattern: 'ABC-43[\s\S]{0,80}Implement|Implement[\s\S]{0,80}ABC-43'
