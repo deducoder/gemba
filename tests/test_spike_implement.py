@@ -110,6 +110,22 @@ class FindingsDraft(unittest.TestCase):
             self.assertNotIn(word, text)
 
 
+class FindingsEvidence(unittest.TestCase):
+    def test_an_empty_output_becomes_a_code_block_without_text(self):
+        result = run(DRAFT.replace(OUTPUT, ""))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        blocks = [n for n in json.loads(result.stdout)["body"]["content"] if n["type"] == "codeBlock"]
+        self.assertNotIn({"type": "text", "text": ""}, blocks[1].get("content", []))
+
+    def test_consecutive_ran_and_read_lines_are_one_paragraph_each(self):
+        draft = DRAFT.replace("read: `invoices.py:6`", "read: `a.py:1` → una\nread: `invoices.py:6`")
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        labels = [n["content"][0]["text"] for n in json.loads(result.stdout)["body"]["content"]
+                  if n["type"] == "paragraph" and n["content"][0].get("marks") == [{"type": "strong"}]]
+        self.assertEqual(labels.count("read: "), 2)
+
+
 class FindingsRejects(unittest.TestCase):
     def test_a_title_that_does_not_start_with_the_key(self):
         rejected(DRAFT.replace("ABC-7 Check", "ABC-8 Check", 1), "title", "ABC-7")
@@ -125,6 +141,11 @@ class FindingsRejects(unittest.TestCase):
 
     def test_an_answer_that_does_not_open_with_yes_no_or_inconclusive(self):
         rejected(DRAFT.replace("Sí. Con SQLite", "Quizá. Con SQLite"), "Answer", "sí, no o inconclusa")
+
+    def test_an_answer_that_starts_with_a_word_that_is_not_a_verdict(self):
+        for lead in ("No se pudo medir, pero", "Si el índice rechaza, entonces"):
+            with self.subTest(lead=lead):
+                rejected(DRAFT.replace("Sí. Con SQLite", f"{lead} con SQLite"), "Answer", "sí, no o inconclusa")
 
     def test_an_inconclusive_answer_passes(self):
         result = run(DRAFT.replace("Sí. Con SQLite", "Inconclusa. Con SQLite"))
