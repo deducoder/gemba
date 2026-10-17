@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: spike-start-research
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a spike: does the Acme Pay billing API paginate its invoice list, and with which parameters?'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-start
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: 'createJiraIssue|editJiraIssue|addCommentToJiraIssue'
+    match: not_contains
+  - name: research
+    type: regex
+    pattern: '/gemba-code:research'
