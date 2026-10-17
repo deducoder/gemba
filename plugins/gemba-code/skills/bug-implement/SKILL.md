@@ -5,6 +5,7 @@ argument-hint: "[bug key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
@@ -24,9 +25,11 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/cancelled.md`
+
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
 
-Until the Implement mark this skill only reads, apart from a drift comment, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -98,3 +101,15 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 ## Leave a drift comment
 
 Add it to the bug with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes; for a Root cause line that no longer holds, the Criterion is that `ran:` or `read:` line.
+
+## Cancel the bug
+
+When the person decides to cancel the bug, in the request or after a stop of this skill, write the cancellation comment of the template above instead of a drift comment, and check it with this command, run alone and exactly in this form, fixing each problem it names until it passes:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
+<the comment>
+CANCELLED
+```
+
+Add what it printed to the bug with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`). Then read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Cancelled: pick it by destination, never by id. When it returns an error, stop and relay Jira's reason. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is. Then stop.
