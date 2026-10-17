@@ -44,7 +44,8 @@ the deletion discards; with `--dry-run` it only prints. The folder goes first, w
 and no `--force`, so git refuses a folder with changes or files without tracking and nothing is deleted.
 It refuses, in both modes, a folder that is not a worktree of the branch, a folder with changes or files
 without tracking (it lists them) and an origin it cannot ask; when there is no folder, no local branch and
-no branch on origin the second line is `gone`. It never merges and never pushes, and it leaves the branch of origin alone.
+no branch on origin the second line is `gone`. It never merges and never pushes, and it leaves the branch
+of origin alone.
 """
 
 import os
