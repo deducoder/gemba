@@ -42,7 +42,7 @@ item that is never merged. It prints the branch, on a second line `on origin` or
 origin has the branch) and then the commits of the branch that origin/develop lacks, one per line, which
 the deletion discards; with `--dry-run` it only prints. The folder goes first, with `git worktree remove`
 and no `--force`, so git refuses a folder with changes or files without tracking and nothing is deleted.
-It never merges and never pushes, and it leaves the branch of origin alone.
+It refuses a folder that is not a worktree of the branch, and an origin it cannot ask. It never merges and never pushes, and it leaves the branch of origin alone.
 """
 
 import os
@@ -115,6 +115,12 @@ def switch_to(branch):
     print(branch)
 
 
+def foreign_folder(folder, branch):
+    """Returns the reason a folder that exists is not a worktree of the branch, or None."""
+    if os.path.isdir(folder) and git("-C", folder, "branch", "--show-current").stdout.strip() != branch:
+        return f"{folder} exists and is not a worktree of {branch}"
+
+
 def open_worktree(branch, key):
     """Opens the branch in `.claude/worktrees/<KEY>`, leaving the working tree where it is, and
     prints the branch and the folder; returns the reason it refuses, or None. A folder that is
@@ -122,15 +128,16 @@ def open_worktree(branch, key):
     with its commits, from the local branch or from origin/<branch>; a branch that does not exist
     starts from origin/develop. None of them tracks a branch."""
     folder = f".claude/worktrees/{key}"
-    if os.path.isdir(folder):
-        if git("-C", folder, "branch", "--show-current").stdout.strip() != branch:
-            return f"{folder} exists and is not a worktree of {branch}"
-    elif has_ref(f"refs/heads/{branch}"):
-        git("worktree", "prune")
-        git("worktree", "add", "-q", folder, branch)
-    else:
-        start = f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else DEVELOP
-        git("worktree", "add", "-q", "--no-track", "-b", branch, folder, start)
+    reason = foreign_folder(folder, branch)
+    if reason:
+        return reason
+    if not os.path.isdir(folder):
+        if has_ref(f"refs/heads/{branch}"):
+            git("worktree", "prune")
+            git("worktree", "add", "-q", folder, branch)
+        else:
+            start = f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else DEVELOP
+            git("worktree", "add", "-q", "--no-track", "-b", branch, folder, start)
     print(branch)
     print(folder)
 
@@ -138,14 +145,14 @@ def open_worktree(branch, key):
 def discard(branch, key, dry_run):
     """Prints the branch, whether origin has it and the commits origin/develop lacks, and deletes the
     folder `.claude/worktrees/<KEY>` and then the local branch unless it is a dry run; returns the reason
-    it refuses, or None. A part that is already gone is skipped, and a folder deleted by hand is pruned
-    so the branch can go."""
+    it refuses (a remote it cannot ask), or None. A part that is already gone is skipped, and a folder
+    deleted by hand is pruned so the branch can go."""
     folder = f".claude/worktrees/{key}"
     local = has_ref(f"refs/heads/{branch}")
-    print(branch)
-    print("on origin" if succeeds("ls-remote", "--exit-code", "--heads", "origin", branch) else "local only")
-    if local:
-        print(commits(f"{DEVELOP}..{branch}"))
+    found = subprocess.run(["git", "ls-remote", "--exit-code", "--heads", "origin", branch], capture_output=True, text=True)
+    if found.returncode not in (0, 2):
+        return found.stderr.strip()
+    print("\n".join(filter(None, (branch, "on origin" if found.returncode == 0 else "local only", local and commits(f"{DEVELOP}..{branch}")))))
     if not dry_run:
         if os.path.isdir(folder):
             git("worktree", "remove", folder)
@@ -248,7 +255,7 @@ def main(argv):
     if mode == "--merge":
         return guarded(branch, lambda: merge_into_develop(branch), mergeable)
     if mode == "--discard":
-        return guarded(branch, lambda: discard(branch, key, dry_run), lambda _: None)
+        return guarded(branch, lambda: discard(branch, key, dry_run), lambda _: foreign_folder(f".claude/worktrees/{key}", branch))
     if mode == "--worktree":
         return guarded(branch, lambda: open_worktree(branch, key), lambda _: check(None))
     if mode == "--ready":
