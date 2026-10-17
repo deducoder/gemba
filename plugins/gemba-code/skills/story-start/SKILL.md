@@ -32,9 +32,11 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
+   - A key that cannot be read stops the skill: create nothing, and reply with the key and Jira's reason.
    - An Epic of the project in Backlog is the parent of the story.
    - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
-   - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
+   - A work item the request asks to declare as a story, with no other idea described, stops the skill when it is a Story or of another type: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
+   - A key named for any other reason is context for the idea: the story is drafted with what it says, and gets no link and no parent.
 
 3. **Observe before drafting.** Read the code, documentation and history the idea touches, run the commands that already exist (tests, `--help`), and check against its source every command, file, field or option a criterion will name, until you are sure the story can be built. Then decide whether the idea is a story at all; when it is not, create nothing and reply with what it is instead:
    - **A bug** when it describes a failure of something that already exists: what fails and the evidence that shows it.
