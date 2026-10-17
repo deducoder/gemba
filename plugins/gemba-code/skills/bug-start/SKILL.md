@@ -76,7 +76,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it.
 
-10. **Give it a priority and an original estimate** with the Bug rules of the priority above and the estimate rules above.
+10. **Give it a priority and an original estimate** with the Bug rules of the priority above and the Bug rules of the estimate above.
 
 11. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 

@@ -49,7 +49,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
    - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it; read that key first, unless step 2 already did.
 
-6. **Give it a priority and an original estimate** with the Story rules of the priority above and the estimate rules above.
+6. **Give it a priority and an original estimate** with the Story rules of the priority above and the Story rules of the estimate above.
 
 7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
