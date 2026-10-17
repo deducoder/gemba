@@ -549,6 +549,35 @@ class Branch(unittest.TestCase):
         self.assertTrue((self.work / ".claude/worktrees/ABC-5").is_dir())
         self.assertNotEqual(git(self.work, "branch", "--list", "story/ABC-5/other"), "")
 
+    def test_discard_refuses_a_folder_with_changes_or_files_without_tracking_and_deletes_nothing(self):
+        folder, head = self.open_worktree_with_a_commit()
+        (folder / "a").write_text("changed")
+        (folder / "scratch.txt").write_text("scratch")
+        for args in (("--discard",), ("--discard", "--dry-run")):
+            result = run(self.work, *args, "spike", "ABC-5", "Check a partial unique index")
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout, "")
+            self.assertIn(".claude/worktrees/ABC-5", result.stderr)
+            self.assertIn("M a", result.stderr)
+            self.assertIn("scratch.txt", result.stderr)
+        self.assertTrue(folder.is_dir())
+        self.assertNotEqual(git(self.work, "branch", "--list", "spike/*"), "")
+
+    def test_discard_says_gone_when_there_is_no_folder_no_branch_and_nothing_on_origin(self):
+        for args in (("--discard",), ("--discard", "--dry-run")):
+            result = run(self.work, *args, "spike", "ABC-5", "Check a partial unique index")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "gone"])
+
+    def test_discard_still_says_on_origin_when_only_the_remote_branch_is_left(self):
+        folder, head = self.open_worktree_with_a_commit()
+        git(folder, "push", "-q", "origin", "HEAD")
+        run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "on origin"])
+        self.assertIn(head, git(self.work, "ls-remote", "--heads", "origin", "spike/*"))
+
 
 if __name__ == "__main__":
     unittest.main()
