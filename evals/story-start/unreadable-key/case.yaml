@@ -12,11 +12,15 @@ execution:
   max_turns: 8
   timeout_seconds: 60
 graders:
-  - name: no-create
+  - name: no-write
     type: regex
     target: mock_calls
-    pattern: createJiraIssue
+    pattern: 'createJiraIssue|editJiraIssue|addCommentToJiraIssue|createIssueLink|transitionJiraIssue'
     match: not_contains
   - name: names-the-key
     type: regex
     pattern: 'ABC-99'
+  - name: jira-reason
+    type: regex
+    pattern: 'does not exist|permission|no existe|permiso'
+    flags: i
