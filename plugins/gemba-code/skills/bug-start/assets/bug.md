@@ -19,7 +19,7 @@
 
 ### Evidence
 
-<Only its two subsections: Evidence becomes the comment, and the rest, up to Out of scope, the description.>
+<Only its two subsections: Evidence becomes the comment, and the rest, Out of scope included, the description.>
 
 #### Reproduction
 
