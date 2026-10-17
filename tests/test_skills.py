@@ -119,7 +119,7 @@ class SkillStructure(unittest.TestCase):
 
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         names = {path.parent.name for path in SIDE_EFFECTS}
-        self.assertLessEqual({"setup", "session-close", "story-close", "bug-close", "spike-close"}, names)
+        self.assertLessEqual({"setup", "session-close", "story-close", "bug-close", "spike-close", "epic-close"}, names)
         for path in SIDE_EFFECTS:
             with self.subTest(skill=path.parent.name):
                 self.assertEqual(read(path)[0].get("disable-model-invocation"), "true")
