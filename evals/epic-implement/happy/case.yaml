@@ -1,0 +1,62 @@
+schema_version: "1.1"
+name: epic-implement-happy
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Start the epic ABC-50.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 20
+  timeout_seconds: 240
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: epic-implement
+  - name: children
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql.*parent.*ABC-50'
+  - name: mark-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+41'
+  - name: children-read-before-the-mark
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql[\s\S]*transitionJiraIssue'
+  - name: ready-by-priority
+    type: regex
+    pattern: 'ABC-52[\s\S]*ABC-55[\s\S]*ABC-51'
+  - name: blocked-child-not-listed
+    type: regex
+    pattern: 'ABC-53'
+    match: not_contains
+  - name: child-in-implement-not-listed
+    type: regex
+    pattern: 'ABC-54'
+    match: not_contains
+  - name: assignee
+    type: regex
+    pattern: 'Ana Ruiz'
+  - name: unassigned
+    type: regex
+    pattern: 'unassigned|sin asignar|no assignee'
+    flags: i
+  - name: due-date-and-days-left
+    type: regex
+    pattern: '2027-01-29[\s\S]*\d+\s+(calendar\s+)?(days?|días)|\d+\s+(calendar\s+)?(days?|días)[\s\S]*2027-01-29'
+  - name: no-worklog-or-estimate
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue|editJiraIssue'
+    match: not_contains
+  - name: no-branch-or-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git (switch|checkout|branch|push)'
+    min: 0
+    max: 0
