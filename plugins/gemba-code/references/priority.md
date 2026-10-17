@@ -2,6 +2,15 @@
 
 A work item's priority is its urgency. Deduce it from its own content, never from links or other work items. When the content does not decide between two levels, take the lower one. A date or urgency the user gave moves it one level up; "it can wait" moves it one level down. Do not ask for it.
 
+## Epic
+
+What happens if it is not delivered?
+
+- **Highest:** its version is not released without it.
+- **High:** the purpose of its version is not met.
+- **Medium:** it changes what the user can do.
+- **Low:** it changes only how something looks or feels.
+
 ## Story
 
 What happens if it is not built?
