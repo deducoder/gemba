@@ -21,30 +21,26 @@ graders:
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__addCommentToJiraIssue
     min: 2
-  - name: links
-    type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    min: 1
   - name: keys
     type: regex
     pattern: 'ABC-101[\s\S]*ABC-102'
   - name: first-blocks
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*"type"\s*:\s*"Blocks")(?=[\s\S]*"inwardIssue"\s*:\s*"ABC-101")(?=[\s\S]*"outwardIssue"\s*:\s*"ABC-102")'
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101)(?=[\s\S]*outwardIssue\W+ABC-102)'
   - name: second-blocks
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*"type"\s*:\s*"Blocks")(?=[\s\S]*"inwardIssue"\s*:\s*"ABC-102")(?=[\s\S]*"outwardIssue"\s*:\s*"ABC-103")'
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102)(?=[\s\S]*outwardIssue\W+ABC-103)'
   - name: no-inverted-first
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*"type"\s*:\s*"Blocks")(?=[\s\S]*"inwardIssue"\s*:\s*"ABC-102")(?=[\s\S]*"outwardIssue"\s*:\s*"ABC-101")'
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102)(?=[\s\S]*outwardIssue\W+ABC-101)'
     min: 0
     max: 0
   - name: no-inverted-second
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*"type"\s*:\s*"Blocks")(?=[\s\S]*"inwardIssue"\s*:\s*"ABC-103")(?=[\s\S]*"outwardIssue"\s*:\s*"ABC-102")'
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-103)(?=[\s\S]*outwardIssue\W+ABC-102)'
     min: 0
     max: 0

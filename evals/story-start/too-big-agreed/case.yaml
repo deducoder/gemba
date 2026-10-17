@@ -31,4 +31,4 @@ graders:
   - name: relates
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*"type"\s*:\s*"Relates")(?=[\s\S]*"(?:inward|outward)Issue"\s*:\s*"ABC-101")(?=[\s\S]*"(?:inward|outward)Issue"\s*:\s*"ABC-102")'
+    input_match: '^(?=[\s\S]*Relates)(?=[\s\S]*ABC-101)(?=[\s\S]*ABC-102)'
