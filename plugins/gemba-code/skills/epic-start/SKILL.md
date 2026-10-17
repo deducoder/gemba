@@ -1,6 +1,6 @@
 ---
 name: epic-start
-description: Declares an epic in Jira from a deliverable. Reads the code the deliverable touches, proposes in plan mode the epic with its Done when, the stories and spikes that cover each criterion and a due date within its fix version, and creates the epic in Backlog once the plan is approved. Use when the user asks to declare, plan, define or write an epic, or describes a deliverable too big for one story that commits to a date or a version. Not for one story, an open question to research, or something that is broken. It starts no work and creates no children.
+description: Declares an epic in Jira from a deliverable. Reads the code the deliverable touches, proposes in plan mode the epic with its Done when, the stories and spikes that cover each criterion and a due date within its fix version, creates the epic in Backlog once the plan is approved and declares each child under it with story-start or spike-start. Use when the user asks to declare, plan, define or write an epic, or describes a deliverable too big for one story that commits to a date or a version. Not for one story, an open question to research, or something that is broken. It starts no work and assigns no one.
 argument-hint: "[deliverable]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -29,7 +29,7 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
-The epic stays in Backlog: this skill changes no status, creates no branch and creates no work item other than the epic; its children are declared afterwards with `story-start` and `spike-start`. Nothing is written in Jira before the plan is approved. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The epic and its children stay in Backlog: this skill changes no status, creates no branch and assigns no one. It creates the epic itself, and each child only through `story-start` or `spike-start`. Nothing is written in Jira before the plan is approved. A conversation in which this skill already created the epic goes on with the children not yet declared, and does not create the epic again. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -60,4 +60,9 @@ The epic stays in Backlog: this skill changes no status, creates no branch and c
 
 10. **Create the epic** once the plan is approved, with `createJiraIssue`: the project, the issue type Epic, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), and in `additional_fields` `{"priority": {"name": "<level>"}, "fixVersions": [{"name": "<version>"}], "duedate": "<YYYY-MM-DD>"}`, with no original estimate and no component.
 
-11. **Reply** with the key and the link of the epic, and the children of the approved plan, to declare with `story-start` or `spike-start` and the epic's key, and nothing else.
+11. **Declare the children** in the order of the plan, one at a time. For each, invoke with the Skill tool `gemba-code:story-start` for a story or `gemba-code:spike-start` for a spike, with a request that names the epic's key and the child as the approved plan states it (its Summary and the Done when criterion of the epic it covers), and not its `Blocks`. The start makes the epic the parent of what it creates, and its own rules decide its priority and its estimate.
+    - What a start asks, such as an open decision or a split of the story, goes to the person: relay it and wait for the answer, then let the start finish and go on with the next child.
+    - A child its start does not create, because it names a bug, a spike, another story or an answer instead, is kept with what its start proposed, and the next child follows.
+    - A start's reply ends that child, not this skill: keep the key and the link of each work item it created.
+
+12. **Reply** with the key and the link of the epic and of each child created, and each child of the plan that was not created with what its start proposed, and nothing else.
