@@ -23,29 +23,15 @@ import argparse
 import json
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, check_sections, check_summary, doc, heading, inline, split  # noqa: E402
+from draft import FENCE, TRAIL, check_sections, check_summary, doc, heading, inline, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Evidence", "Next"]
 VERDICT = re.compile(r"^(sí|si|no|inconclusa)\b[.,:;]?", re.IGNORECASE)
-TRAIL = ("ran:", "read:")
-
-
-def unclosed(text):
-    """Returns the fence that a fenced block opened and never closed, or None."""
-    fence = None
-    for line in text.splitlines():
-        opener = FENCE.match(line)
-        if fence is None and opener:
-            fence = opener.group(1)
-        elif fence is not None and line.strip() == fence:
-            fence = None
-    return fence
 
 
 def paragraphs(lines):
@@ -93,19 +79,18 @@ def problems(draft, key):
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     answer, evidence, nxt = (paragraphs(sections[name]) for name in SECTIONS)
-    if not answer or not isinstance(answer[0], str) or not VERDICT.match(normalized(answer[0])):
+    if not answer or not isinstance(answer[0], str) or not VERDICT.match(answer[0]):
         found.append("Answer: open with sí, no o inconclusa, then the sentence that supports it")
     if not any(isinstance(block, str) and block.startswith(TRAIL) for block in evidence):
         found.append("Evidence: write at least one line that starts with 'ran:' or 'read:'")
     if not nxt:
         found.append("Next: write at least one paragraph")
+    for name, blocks in (("Answer", answer), ("Next", nxt)):
+        if any(not isinstance(block, str) for block in blocks):
+            found.append(f"{name}: write no code blocks; they belong in the Evidence")
     if found:
         return found, None
     return found, {"title": title, "question": question[0], "answer": answer, "evidence": evidence, "next": nxt}
-
-
-def normalized(text):
-    return unicodedata.normalize("NFC", text)
 
 
 def paragraph(text):
@@ -114,7 +99,7 @@ def paragraph(text):
 
 def verdict(text):
     """Returns the Answer paragraph with its yes, no or inconclusive in bold."""
-    first = VERDICT.match(normalized(text))
+    first = VERDICT.match(text)
     nodes = inline(text[first.end():])
     return {"type": "paragraph", "content": [
         {"type": "text", "text": text[:first.end()], "marks": [{"type": "strong"}]}, *nodes]}
@@ -142,11 +127,11 @@ def body(content, site, key):
         paragraph(content["question"]),
         heading("Answer", 2),
         verdict(content["answer"][0]),
-        *[paragraph(block) for block in content["answer"][1:] if isinstance(block, str)],
+        *[paragraph(block) for block in content["answer"][1:]],
         heading("Evidence", 2),
         *[evidence(block) for block in content["evidence"]],
         heading("Next", 2),
-        *[paragraph(block) for block in content["next"] if isinstance(block, str)],
+        *[paragraph(block) for block in content["next"]],
     ])
 
 

@@ -137,6 +137,10 @@ class FindingsRejects(unittest.TestCase):
     def test_an_unclosed_code_block(self):
         rejected(DRAFT.replace('print("probe")\n```', 'print("probe")\n'), "Evidence", "code block")
 
+    def test_a_code_block_in_the_answer_or_in_next(self):
+        rejected(DRAFT.replace("Sí. Con SQLite", "Sí.\n\n```\ncódigo\n```\n\nCon SQLite"), "Answer", "code blocks")
+        rejected(DRAFT.replace("La historia de liberar", "```\ncódigo\n```\n\nLa historia de liberar"), "Next", "code blocks")
+
     def test_an_empty_next(self):
         rejected(DRAFT.replace("La historia de liberar biases cambia la restricción por el índice parcial.\n", ""), "Next")
 

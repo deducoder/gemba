@@ -11,6 +11,7 @@ KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 CODE = re.compile(r"`([^`]+)`")
 HEADING = re.compile(r"^(#{3,4}) (.+?)\s*$")
 FENCE = re.compile(r"^(`{3,}|~{3,})")
+TRAIL = ("ran:", "read:")
 
 
 def split(text):
@@ -42,6 +43,18 @@ def split(text):
             fence = None
         target.append(line)
     return summary, intro, sections, subsections, repeated
+
+
+def unclosed(text):
+    """Returns the fence that a fenced block opened and never closed, or None."""
+    fence = None
+    for line in text.splitlines():
+        opener = FENCE.match(line)
+        if fence is None and opener:
+            fence = opener.group(1)
+        elif fence is not None and line.strip() == fence:
+            fence = None
+    return fence
 
 
 def filled(lines):
@@ -99,7 +112,7 @@ def check_unmarked(name, text, found):
 
 def check_trail(name, lines, found):
     for line in lines:
-        if not line.startswith(("ran:", "read:")):
+        if not line.startswith(TRAIL):
             found.append(f"{name}: start each line with 'ran:' or 'read:': {line}")
 
 
