@@ -111,7 +111,8 @@ class Changed(unittest.TestCase):
         self.touch("evals/story-start/project.sh")
         self.run_script()
         self.assertEqual(self.cases(), {"epic-start-*", "story-start-*", "story-implement-*", "bug-start-*", "bug-implement-*",
-                                        "story-review-*", "story-close-*", "bug-review-*", "bug-close-*", "spike-start-*", "spike-implement-*", "spike-review-*", "spike-close-*"})
+                                        "story-review-*", "story-close-*", "bug-review-*", "bug-close-*", "spike-start-*", "spike-implement-*", "spike-review-*", "spike-close-*",
+                                        "epic-review-*"})
 
     def test_a_moved_file_picks_the_evals_of_its_old_place_too(self):
         git(self.work, "mv", "evals/story-start/plant-bug.sh", "evals/bug-start/plant-bug.sh")

@@ -1,0 +1,58 @@
+schema_version: "1.1"
+name: epic-review-happy
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the epic ABC-40.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 30
+  timeout_seconds: 300
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: epic-review
+  - name: children
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql.*parent'
+  - name: mark-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+41'
+  - name: only-reads-before-the-mark
+    type: regex
+    target: mock_calls
+    pattern: '(createJiraIssue|createIssueLink|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
+    match: not_contains
+  - name: merge-found
+    type: tool_used
+    tool: Bash
+    input_match: 'git log --merges.*story/ABC-41/'
+  - name: code-review-once-on-the-merge-range
+    type: tool_used
+    tool: Skill
+    input_match: 'code-review.*[0-9a-f]{7,}\^1\.\.[0-9a-f]{7,}'
+    min: 1
+    max: 1
+  - name: review-after-the-mark
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    after:
+      tool: Skill
+      input_match: code-review
+  - name: no-merge-search-for-the-spike-or-cancelled
+    type: tool_used
+    tool: Bash
+    input_match: 'ABC-4[23]'
+    min: 0
+    max: 0
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue'
+    match: not_contains
