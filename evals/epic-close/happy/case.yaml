@@ -23,11 +23,16 @@ graders:
   - name: does-not-wait-for-the-related-item
     type: regex
     target: mock_calls
-    pattern: 'issueIdOrKey\W+ABC-70|searchJiraIssuesUsingJql'
+    pattern: 'issueIdOrKey\W+(ABC-70|70\b)|searchJiraIssuesUsingJql|getJiraIssueRemoteIssueLinks|\bfetch\b|\bsearch\b'
     match: not_contains
-  - name: done
+  - name: one-transition
     type: regex
-    pattern: 'done'
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*transitionJiraIssue'
+    match: not_contains
+  - name: reports-the-close
+    type: regex
+    pattern: 'browse/ABC-60[\s\S]*\bdone\b|\bdone\b[\s\S]*browse/ABC-60'
     flags: i
   - name: no-git
     type: tool_used

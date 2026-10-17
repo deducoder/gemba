@@ -15,7 +15,8 @@ graders:
   - name: no-jira
     type: regex
     target: mock_calls
-    pattern: 'Jira'
+    pattern: 'Jira|Atlassian|Confluence|\bfetch\b|\bsearch\b'
+    flags: i
     match: not_contains
   - name: setup
     type: regex

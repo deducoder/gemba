@@ -20,6 +20,11 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'transitionJiraIssue[\s\S]*id\W+31'
+  - name: one-transition
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*transitionJiraIssue'
+    match: not_contains
   - name: reason
     type: regex
     pattern: 'not valid|refus|reject'
