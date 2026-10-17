@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, KEY, check_sections, doc, heading, inline, split, unclosed  # noqa: E402
+from draft import CODE, FENCE, KEY, check_sections, doc, heading, inline, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -113,17 +113,24 @@ def problems(draft):
             if state not in STATES:
                 found.append(f"Findings: {name} is {state}; use Documented, Inferred or Unverified")
                 continue
-            numbers = [int(n) for n in CITE.findall(text)]
-            if state == "Documented":
-                if not numbers:
+            numbers = [int(n) for n in CITE.findall(CODE.sub("", text))]
+            if state == "Unverified":
+                if numbers:
+                    found.append(f"Findings: {name} Unverified cites no source")
+            else:
+                if state == "Documented" and not numbers:
                     found.append(f"Findings: {name} Documented needs the number of its source as [n]")
                 for n in numbers:
                     if not 1 <= n <= len(sources):
                         found.append(f"Findings: {name} cites the source {n}, which Sources does not have")
-            elif state == "Inferred" and not FROM.search(text):
-                found.append(f"Findings: {name} Inferred names what it follows from, ending in (from n.m)")
-            elif state == "Unverified" and numbers:
-                found.append(f"Findings: {name} Unverified cites no source")
+            if state == "Inferred":
+                follows = FROM.search(text)
+                if not follows:
+                    found.append(f"Findings: {name} Inferred names what it follows from, ending in (from n.m)")
+                known = {earlier for _, items in topics for earlier, *_ in items}
+                for ref in (re.findall(r"\d+\.\d+", follows.group(0)) if follows else []):
+                    if ref not in known:
+                        found.append(f"Findings: {name} Inferred follows {ref}, which is not a finding before it")
             topics[-1][1].append((name, state, text))
         if not count:
             found.append(f"Findings: {topic} needs at least one finding")
@@ -150,12 +157,16 @@ def paragraph(text):
 def cited(text, sources):
     """Returns the text with each [n] as a link to the source n, without a card."""
     nodes = []
-    for i, part in enumerate(CITE.split(text)):
+    for i, chunk in enumerate(CODE.split(text)):
         if i % 2:
-            nodes.append({"type": "text", "text": f"[{part}]",
-                          "marks": [{"type": "link", "attrs": {"href": sources[int(part) - 1][0]}}]})
-        elif part:
-            nodes.extend(inline(part))
+            nodes.extend(inline(f"`{chunk}`"))
+            continue
+        for j, part in enumerate(CITE.split(chunk)):
+            if j % 2:
+                nodes.append({"type": "text", "text": f"[{part}]",
+                              "marks": [{"type": "link", "attrs": {"href": sources[int(part) - 1][0]}}]})
+            elif part:
+                nodes.extend(inline(part))
     return nodes
 
 
