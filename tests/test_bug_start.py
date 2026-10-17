@@ -46,7 +46,7 @@ DRAFT = f"""Invoice totals leave out the tax
 {REPRODUCTION}
 ```
 
-#### Root cause
+#### Cause trail
 
 * ran: `python3 -m unittest` → `FAILED (failures=1)`
 * read: `invoices.py:16`
@@ -106,9 +106,9 @@ class BugDraft(unittest.TestCase):
         self.assertEqual([text_of(row["content"][0]) for row in rows[1:]], ["python3 invoices.py nobody", "python3 invoices.py"])
         self.assertIn({"type": "text", "text": "python3 invoices.py nobody", "marks": [{"type": "code"}]}, list(texts(rows[1])))
 
-    def test_the_evidence_goes_to_one_comment_with_the_reproduction_and_the_root_cause(self):
+    def test_the_evidence_goes_to_one_comment_with_the_reproduction_and_the_cause_trail(self):
         comment = self.bug["comment"]
-        self.assertEqual(headings(comment), [(3, "Evidence"), (4, "Reproduction"), (4, "Root cause")])
+        self.assertEqual(headings(comment), [(3, "Evidence"), (4, "Reproduction"), (4, "Cause trail")])
         blocks = [n for n in comment["content"] if n["type"] == "codeBlock"]
         self.assertEqual([b["content"][0]["text"] for b in blocks], [REPRODUCTION])
         lists = [n for n in comment["content"] if n["type"] == "bulletList"]
@@ -134,8 +134,13 @@ class BugDraft(unittest.TestCase):
         outside_fences = re.sub(r"^```.*?^```$", "", template, flags=re.MULTILINE | re.DOTALL)
         self.assertEqual(
             re.findall(r"^#{3,4} (.+)$", outside_fences, re.MULTILINE),
-            ["Root cause", "Neighboring inputs", "Done when", "Evidence", "Reproduction", "Root cause", "Out of scope"],
+            ["Root cause", "Neighboring inputs", "Done when", "Evidence", "Reproduction", "Cause trail", "Out of scope"],
         )
+
+    def test_a_root_cause_heading_in_the_evidence_is_rejected_asking_for_the_cause_trail(self):
+        result = run(DRAFT.replace("#### Cause trail\n", "#### Root cause\n"))
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("#### Cause trail", result.stderr)
 
     def test_a_draft_off_the_template_exits_1_with_one_line_per_problem(self):
         cases = {
@@ -152,7 +157,7 @@ class BugDraft(unittest.TestCase):
             "a reproduction without a fenced block": DRAFT.replace("```\n" + REPRODUCTION + "\n```", REPRODUCTION.splitlines()[0]),
             "an empty reproduction": DRAFT.replace(REPRODUCTION, ""),
             "evidence without ran or read": DRAFT.replace("* read: `invoices.py:16`", "* see the code"),
-            "evidence without its root cause": DRAFT.replace("#### Root cause\n", "#### Cause\n"),
+            "evidence without its cause trail": DRAFT.replace("#### Cause trail\n", "#### Cause\n"),
             "an arrow to something that is not a key": DRAFT.replace("→ ABC-7", "→ a story of its own"),
             "equals outside Done when": DRAFT.replace("* Redondear por línea → ABC-7", "* ==Redondear por línea=="),
             "a partly wrapped criterion": DRAFT.replace("* ==El comportamiento de cada fila", "* ==El comportamiento== de cada fila").replace("no cambia.==", "no cambia."),

@@ -71,7 +71,7 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
 8. **Ask, in one message, only the decisions the failure leaves open and you cannot deduce.** Ask nothing when nothing is missing.
 
 9. **Draft the bug** with the template: its headings, labels, table header and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
-   - The Reproduction holds the command of **Reproduce the failure** as you passed it to `run`, without `develop.py run`, and its output, literal; the Root cause of Evidence, the `ran:` and `read:` lines of **Name the root cause**, with the commands written the same way.
+   - The Reproduction holds the command of **Reproduce the failure** as you passed it to `run`, without `develop.py run`, and its output, literal; the Cause trail of Evidence, the `ran:` and `read:` lines of **Name the root cause**, with the commands written the same way.
    - When the cause is in the tests, Done when also holds the criterion with that change to the product, in the form the reference above gives.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it.
