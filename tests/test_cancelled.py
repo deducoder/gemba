@@ -51,6 +51,13 @@ class CancellationComment(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(lines(json.loads(result.stdout))[2], [{"type": "text", "text": "Replaced by: Ninguno."}])
 
+    def test_replaced_by_holds_only_the_key_when_a_key_replaces_it(self):
+        for value in ("ABC-99.", "ABC-99 (la story del CSV)", "abc-99"):
+            with self.subTest(value=value):
+                result = run(COMMENT.replace("ABC-99", value))
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Replaced by", result.stderr)
+
     def test_a_comment_without_the_heading_is_rejected(self):
         result = run(COMMENT.replace("### Cancelled\n", ""))
         self.assertEqual(result.returncode, 1)
