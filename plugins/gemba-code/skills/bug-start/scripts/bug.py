@@ -11,7 +11,7 @@ failure, then the sections of the template in order:
 - `### Neighboring inputs`: a table headed `| Input | Current behavior |`.
 - `### Done when`: one `* ` bullet per criterion.
 - `### Evidence`: `#### Reproduction`, one fenced block with the literal command
-  and its output, then `#### Root cause`, one `* ran:` or `* read:` bullet per line.
+  and its output, then `#### Cause trail`, one `* ran:` or `* read:` bullet per line.
 - `### Out of scope`: one `* ` bullet per line.
 
 Lines are written and converted as the plugin's scripts/draft.py says.
@@ -38,7 +38,7 @@ from draft import (  # noqa: E402
 )
 
 SECTIONS = ["Root cause", "Neighboring inputs", "Done when", "Evidence", "Out of scope"]
-EVIDENCE = [("Evidence", "Reproduction"), ("Evidence", "Root cause")]
+EVIDENCE = [("Evidence", "Reproduction"), ("Evidence", "Cause trail")]
 HEADER = ["Input", "Current behavior"]
 TABLE = f"| {' | '.join(HEADER)} |"
 SEPARATOR = re.compile(r"^\|(\s*:?-+:?\s*\|)+$")
@@ -98,7 +98,7 @@ def problems(summary, intro, sections, subsections, repeated):
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     if list(subsections) != EVIDENCE or filled(sections["Evidence"]):
-        found.append("Evidence: write the subsections #### Reproduction and #### Root cause, in that order, and nothing else")
+        found.append("Evidence: write the subsections #### Reproduction and #### Cause trail, in that order, and nothing else")
         return found, None
 
     cause = filled(sections["Root cause"])
@@ -108,8 +108,8 @@ def problems(summary, intro, sections, subsections, repeated):
     criteria = items("Done when", sections["Done when"], found)
     check_criteria(criteria, found)
     reproduction = check_reproduction(subsections[EVIDENCE[0]], found)
-    trail = items("Evidence Root cause", subsections[EVIDENCE[1]], found)
-    check_trail("Evidence Root cause", trail, found)
+    trail = items("Evidence Cause trail", subsections[EVIDENCE[1]], found)
+    check_trail("Evidence Cause trail", trail, found)
     scope = items("Out of scope", sections["Out of scope"], found)
     check_scope(scope, found)
     for name, lines in (("Root cause", cause), ("Neighboring inputs", [cell for row in rows for cell in row]),
@@ -145,12 +145,12 @@ def description(content, site):
 
 
 def comment(content):
-    """Returns the Evidence comment: the Reproduction block and the trail of the Root cause."""
+    """Returns the Evidence comment: the Reproduction block and the Cause trail."""
     return doc([
         heading("Evidence"),
         heading("Reproduction", 4),
         {"type": "codeBlock", "content": [{"type": "text", "text": content["reproduction"]}]},
-        heading("Root cause", 4),
+        heading("Cause trail", 4),
         bullets([inline(line) for line in content["trail"]]),
     ])
 

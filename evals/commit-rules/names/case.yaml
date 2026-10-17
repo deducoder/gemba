@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: commit-rules-names
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+execution:
+  prompt: 'Write only the commit message line for a change that makes the gemba-code hook parse the json response of the jira api and run it in ci.'
+  allowed_tools: []
+  max_turns: 2
+  timeout_seconds: 60
+graders:
+  - name: names-capitalized
+    type: regex
+    pattern: '^(?=.*\bJira\b)(?=.*\bAPI\b)(?=.*\bJSON\b)(?=.*\bCI\b)'
+    flags: s
+  - name: no-lowercase-names
+    type: regex
+    pattern: '(?<!\()\b(jira|json|ci|api)\b'
+    match: not_contains
+  - name: identifier-as-written
+    type: regex
+    pattern: 'gemba-code'
