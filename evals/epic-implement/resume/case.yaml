@@ -1,0 +1,48 @@
+schema_version: "1.1"
+name: epic-implement-resume
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Start the epic ABC-50.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 180
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: epic-implement
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue'
+    match: not_contains
+  - name: lists-the-ready-child
+    type: regex
+    pattern: 'ABC-58'
+  - name: done-child-not-listed
+    type: regex
+    pattern: 'ABC-59'
+    match: not_contains
+  - name: overdue-warning
+    type: regex
+    pattern: '2026-01-15'
+  - name: says-overdue
+    type: regex
+    pattern: 'overdue|past (its |the )?due|vencid|atrasad'
+    flags: i
+  - name: no-worklog-or-estimate
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue|editJiraIssue'
+    match: not_contains
+  - name: no-branch-or-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git (switch|checkout|branch|push)'
+    min: 0
+    max: 0

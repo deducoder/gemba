@@ -1,0 +1,46 @@
+schema_version: "1.1"
+name: spike-implement-cancel
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement the spike ABC-36. If its Evidence no longer holds, cancel it: ABC-99 replaces it.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 24
+  timeout_seconds: 180
+graders:
+  - name: checked
+    type: tool_used
+    tool: Bash
+    input_match: 'cancelled\.py --site'
+  - name: cancel-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue[\s\S]*Cancelled[\s\S]*Reason: [\s\S]*Found: (ran|read):[\s\S]*Replaced by[\s\S]*'
+  - name: replaced-by
+    type: regex
+    target: mock_calls
+    pattern: 'inlineCard[\s\S]*browse/ABC-99'
+  - name: only-the-cancel-mark
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    min: 1
+    max: 1
+  - name: cancelled-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+14'
+  - name: no-branch
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py (story|bug|spike|--worktree)'
+    min: 0
+    max: 0
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue'
+    match: not_contains

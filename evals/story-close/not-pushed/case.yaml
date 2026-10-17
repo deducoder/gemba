@@ -7,15 +7,11 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: 'Close the story ABC-76.'
+  prompt: '/gemba-code:story-close ABC-76'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 11
   timeout_seconds: 90
 graders:
-  - name: skill
-    type: tool_used
-    tool: Skill
-    input_match: story-close
   - name: read
     type: regex
     target: mock_calls

@@ -1,10 +1,11 @@
 ---
 name: spike-implement
-description: Implements a declared spike from Jira by running its experiments in a worktree and publishing the findings in Confluence. Revalidates its Evidence, marks it in Implement, opens its branch from develop in .claude/worktrees without tracking, plans in plan mode against its Done when, runs the experiments committing in the spike branch, publishes the findings as a live doc in Work/Spikes, reports the evidence of each criterion and registers the time of the phase. Use when the user asks to implement, run, research or work on a declared spike, or to resume one ("implement the spike…", "implementa el spike…", "corre el spike…", "retoma el spike…"), or gives a spike key to start researching. It stops without writing when the spike is not ready. It edits and runs nothing until the plan is approved, never pushes the branch and never merges.
+description: Implements a declared spike from Jira by running its experiments in a worktree and publishing the findings in Confluence. Revalidates its Evidence, marks it in Implement, opens its branch from develop in .claude/worktrees without tracking, plans in plan mode against its Done when, runs the experiments committing in the spike branch, publishes the findings as a live doc in Work/Spikes, reports the evidence of each criterion and registers the time of the phase. Use when the user asks to implement, run, research or work on a declared spike, or to resume one ("implement the spike…", "implementa el spike…", "corre el spike…", "retoma el spike…"), or gives a spike key to start researching. It stops without writing when the spike is not ready, and cancels it with a comment when the person decides so. It edits and runs nothing until the plan is approved, never pushes the branch and never merges.
 argument-hint: "[spike key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/findings.py *)
 ---
@@ -23,13 +24,15 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/cancelled.md`
+
 Findings template:
 
 ```markdown
 !`cat ${CLAUDE_SKILL_DIR}/assets/findings.md`
 ```
 
-Until the Implement mark this skill only reads, apart from a drift comment, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings.
+Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -63,15 +66,15 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    It prints the branch and, on a second line, the folder `.claude/worktrees/<KEY>`, where the branch lives without an upstream. This skill never pushes the branch: the findings live in Confluence.
 
-8. **Plan in plan mode.** The plan names, for each criterion of the Done when of the spike, the experiment that answers it and what each outcome would show. Edit and run nothing until the person approves it; without plan mode, present the plan and wait.
+8. **Plan in plan mode.** The plan names, for each criterion of the Done when of the spike, the experiment that answers it and what each outcome would show. When an experiment needs personal data (the email, name or account of the person, such as the contact an API asks for in its `User-Agent`), ask the person for it before the plan is final, and name in the plan the variable that will carry it. Edit and run nothing until the person approves it; without plan mode, present the plan and wait.
 
-9. **Run the approved experiments inside the worktree,** working in `.claude/worktrees/<KEY>` only (`git -C` for git, the folder as the working directory for everything else), and commit the experimental work in the spike branch in the commit format of the Gemba Code context. Keep each command and its literal output for the findings.
+9. **Run the approved experiments inside the worktree,** working in `.claude/worktrees/<KEY>` only (`git -C` for git, the folder as the working directory for everything else), and commit the experimental work in the spike branch in the commit format of the Gemba Code context. Keep each command and its literal output for the findings. Personal data the person gave reaches the experiment only through an environment variable set when the command runs: it is never written in a file of the worktree, in a commit or in a command you keep, which names the variable instead, and its value is replaced by that name in every output you keep.
 
    The time worked starts at the last change into Implement: read it once with `getJiraIssue`, asking only for `status` and `expand: "changelog"`. Before each experiment run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>` and compare its `minutes` with the time-box: the `originalEstimateSeconds` of step 2, divided by 60; a spike without an original estimate has no time-box to reach. When `minutes` has reached it, run no more experiments and go on to step 10 with what you have; the Answer is Inconclusa unless what you have already answers the question.
 
    When an experiment contradicts a criterion of the Done when of the spike, leave a drift comment and stop: publish nothing.
 
-10. **Publish the findings.** Write them with the template above: the title `<KEY> <Summary>` and the first paragraph of the description of the spike as it was read, the Answer, the Evidence with every `ran:` and `read:` of the experiments and the literal output of each, and the Next. Check the draft with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+10. **Publish the findings.** Write them with the template above: the title `<KEY> <Summary>` and the first paragraph of the description of the spike as it was read, the Answer, the Evidence with every `ran:` and `read:` of the experiments and the literal output of each, with the name of the variable where the output held personal data, and the Next. Check the draft with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
     ```
     python3 ${CLAUDE_SKILL_DIR}/scripts/findings.py --site <site> --key <KEY> <<'FINDINGS'
@@ -94,3 +97,15 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 ## Leave a drift comment
 
 Add it to the spike with `addCommentToJiraIssue` and `contentFormat: "markdown"`, following the drift template above, with its labels in English and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. Name each criterion that changes.
+
+## Cancel the spike
+
+When the person decides to cancel the spike, in the request or after a stop of this skill, and it is in Backlog or Implement, write the cancellation comment of the template above instead of a drift comment, and check it with this command, run alone and exactly in this form, fixing each problem it names until it passes:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
+<the comment>
+CANCELLED
+```
+
+Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the spike with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the spike. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A spike in any other status is not cancelled here: say its status and stop.

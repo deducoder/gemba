@@ -1,0 +1,41 @@
+schema_version: "1.1"
+name: epic-start-child-not-created
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+  history_file: history.jsonl
+execution:
+  prompt: 'Approved, go ahead.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 60
+  timeout_seconds: 600
+graders:
+  - name: spike-start
+    type: tool_used
+    tool: Skill
+    input_match: '^(?=[\s\S]*spike-start)(?=[\s\S]*ABC-60)'
+  - name: no-spike
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: 'issueTypeName\W+Spike'
+    min: 0
+    max: 0
+  - name: story-goes-on
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Story)(?=[\s\S]*parent\W+ABC-60)'
+  - name: no-link-to-what-was-not-created
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    min: 0
+    max: 0
+  - name: reply-keys
+    type: regex
+    pattern: '^(?=[\s\S]*browse/ABC-60)(?=[\s\S]*browse/ABC-101)'
+  - name: reply-not-created
+    type: regex
+    pattern: '^(?=[\s\S]*\btax)(?=[\s\S]*(\bnot (been )?(created|declared)\b|\balready answer|\banswered\b|\bno spike\b))'
+    flags: i

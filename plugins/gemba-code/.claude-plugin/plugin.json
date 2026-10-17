@@ -1,7 +1,7 @@
 {
   "name": "gemba-code",
   "displayName": "Gemba Code",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Gemba applied to code: the work cycle of bugs, epics, spikes and stories, and the git rules.",
   "author": {
     "name": "Daniel Efraín Domínguez Urbina",

@@ -1,0 +1,293 @@
+{
+  "issues": {
+    "nodes": [
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12109",
+        "self": "",
+        "key": "ABC-4",
+        "fields": {
+          "summary": "Probe the child that is blocked",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "issuelinks": [
+            {
+              "id": "10449",
+              "self": "",
+              "type": {
+                "id": "10000",
+                "name": "Blocks",
+                "inward": "is blocked by",
+                "outward": "blocks",
+                "self": ""
+              },
+              "inwardIssue": {
+                "id": "12108",
+                "key": "ABC-3",
+                "self": "",
+                "fields": {
+                  "summary": "Probe the child that blocks",
+                  "status": {
+                    "self": "",
+                    "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+                    "iconUrl": "",
+                    "name": "Backlog",
+                    "id": "10074",
+                    "statusCategory": {
+                      "self": "",
+                      "id": 2,
+                      "key": "new",
+                      "colorName": "blue-gray",
+                      "name": "To Do"
+                    }
+                  },
+                  "priority": {
+                    "self": "",
+                    "iconUrl": "",
+                    "name": "Medium",
+                    "id": "3"
+                  },
+                  "issuetype": {
+                    "self": "",
+                    "id": "10009",
+                    "description": "Entregable de valor solicitado por el cliente o el negocio.",
+                    "iconUrl": "",
+                    "name": "Story",
+                    "subtask": false,
+                    "avatarId": 10315,
+                    "hierarchyLevel": 0
+                  }
+                }
+              }
+            },
+            {
+              "id": "10450",
+              "self": "",
+              "type": {
+                "id": "10003",
+                "name": "Relates",
+                "inward": "relates to",
+                "outward": "relates to",
+                "self": ""
+              },
+              "outwardIssue": {
+                "id": "12110",
+                "key": "ABC-5",
+                "self": "",
+                "fields": {
+                  "summary": "Probe the item related to a child",
+                  "status": {
+                    "self": "",
+                    "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+                    "iconUrl": "",
+                    "name": "Backlog",
+                    "id": "10074",
+                    "statusCategory": {
+                      "self": "",
+                      "id": 2,
+                      "key": "new",
+                      "colorName": "blue-gray",
+                      "name": "To Do"
+                    }
+                  },
+                  "priority": {
+                    "self": "",
+                    "iconUrl": "",
+                    "name": "Low",
+                    "id": "4"
+                  },
+                  "issuetype": {
+                    "self": "",
+                    "id": "10078",
+                    "description": "Corrección sobre un trabajo previamente entregado.",
+                    "iconUrl": "",
+                    "name": "Bug",
+                    "subtask": false,
+                    "avatarId": 10303,
+                    "hierarchyLevel": 0
+                  }
+                }
+              }
+            }
+          ],
+          "assignee": {
+            "self": "",
+            "accountId": "",
+            "emailAddress": "",
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            },
+            "displayName": "",
+            "active": true,
+            "timeZone": "America/Mexico_City",
+            "accountType": "atlassian"
+          },
+          "priority": {
+            "self": "",
+            "iconUrl": "",
+            "name": "High",
+            "id": "2"
+          },
+          "status": {
+            "self": "",
+            "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+            "iconUrl": "",
+            "name": "Backlog",
+            "id": "10074",
+            "statusCategory": {
+              "self": "",
+              "id": 2,
+              "key": "new",
+              "colorName": "blue-gray",
+              "name": "To Do"
+            }
+          }
+        },
+        "webUrl": "https://example.atlassian.net/browse/ABC-4"
+      },
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12108",
+        "self": "",
+        "key": "ABC-3",
+        "fields": {
+          "summary": "Probe the child that blocks",
+          "issuetype": {
+            "self": "",
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "issuelinks": [
+            {
+              "id": "10449",
+              "self": "",
+              "type": {
+                "id": "10000",
+                "name": "Blocks",
+                "inward": "is blocked by",
+                "outward": "blocks",
+                "self": ""
+              },
+              "outwardIssue": {
+                "id": "12109",
+                "key": "ABC-4",
+                "self": "",
+                "fields": {
+                  "summary": "Probe the child that is blocked",
+                  "status": {
+                    "self": "",
+                    "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+                    "iconUrl": "",
+                    "name": "Backlog",
+                    "id": "10074",
+                    "statusCategory": {
+                      "self": "",
+                      "id": 2,
+                      "key": "new",
+                      "colorName": "blue-gray",
+                      "name": "To Do"
+                    }
+                  },
+                  "priority": {
+                    "self": "",
+                    "iconUrl": "",
+                    "name": "High",
+                    "id": "2"
+                  },
+                  "issuetype": {
+                    "self": "",
+                    "id": "10009",
+                    "description": "Entregable de valor solicitado por el cliente o el negocio.",
+                    "iconUrl": "",
+                    "name": "Story",
+                    "subtask": false,
+                    "avatarId": 10315,
+                    "hierarchyLevel": 0
+                  }
+                }
+              }
+            }
+          ],
+          "assignee": {
+            "self": "",
+            "accountId": "",
+            "emailAddress": "",
+            "avatarUrls": {
+              "48x48": "",
+              "24x24": "",
+              "16x16": "",
+              "32x32": ""
+            },
+            "displayName": "",
+            "active": true,
+            "timeZone": "America/Mexico_City",
+            "accountType": "atlassian"
+          },
+          "priority": {
+            "self": "",
+            "iconUrl": "",
+            "name": "Medium",
+            "id": "3"
+          },
+          "status": {
+            "self": "",
+            "description": "Registrado, sin trabajo iniciado. Sale cuando alguien lo arranca.",
+            "iconUrl": "",
+            "name": "Backlog",
+            "id": "10074",
+            "statusCategory": {
+              "self": "",
+              "id": 2,
+              "key": "new",
+              "colorName": "blue-gray",
+              "name": "To Do"
+            }
+          }
+        },
+        "webUrl": "https://example.atlassian.net/browse/ABC-3"
+      }
+    ],
+    "webUrl": "https://example.atlassian.net/issues?jql=parent%20%3D%20ABC-2",
+    "pageInfo": {
+      "hasNextPage": false,
+      "endCursor": null
+    }
+  },
+  "context": {
+    "atlassianAccountId": "",
+    "cloudId": "00000000-0000-0000-0000-000000000000",
+    "toolsExposure": "primary",
+    "clientName": "claude.ai",
+    "mcpClientName": "claude-code",
+    "toolName": "searchJiraIssuesUsingJql",
+    "endpoint": "v1-authv2:streamable-http",
+    "sessionId": "r11-60baca9f-32bd-4115-8e0d-926937f4095a",
+    "invocationId": "ef774456-6458-470c-9014-35a9aa536518",
+    "env": "prod",
+    "featureFlags": {
+      "mcp-app-v2-primary": false,
+      "mcp-jira-instrumentation-phase-1": true,
+      "ken-4811-4724-jira-mcp-status-assignee-fields": true,
+      "mcp-ui-local-cache": true,
+      "jira-mcp-app-loading-skeleton-and-error-case": false,
+      "jira-mcp-app-shared-row-components": true,
+      "claude_mcp_ui_theme_fix_jac-99665": true
+    }
+  }
+}

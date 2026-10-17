@@ -164,6 +164,73 @@
       }
     },
     {
+      "name": "getJiraProjectIssueTypesMetadata",
+      "description": "Get issue types",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "description": "Cloud ID (UUID or site URL)",
+            "type": "string"
+          },
+          "maxResults": {
+            "default": 50,
+            "maximum": 200,
+            "type": "number"
+          },
+          "projectIdOrKey": {
+            "type": "string"
+          },
+          "startAt": {
+            "default": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "cloudId",
+          "projectIdOrKey"
+        ]
+      }
+    },
+    {
+      "name": "getJiraIssueTypeMetaWithFields",
+      "description": "Get field metadata",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "description": "Cloud ID (UUID or site URL)",
+            "type": "string"
+          },
+          "issueTypeId": {
+            "type": "string"
+          },
+          "maxResults": {
+            "type": "number"
+          },
+          "projectIdOrKey": {
+            "type": "string"
+          },
+          "requiredFieldsOnly": {
+            "description": "When true (default), returns only the fields that are required to create an issue of this type, reducing response size. Set to false to return all available fields (both required and optional).",
+            "type": "boolean"
+          },
+          "startAt": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "cloudId",
+          "projectIdOrKey",
+          "issueTypeId"
+        ]
+      }
+    },
+    {
       "name": "addCommentToJiraIssue",
       "description": "Add or update a comment on a Jira issue",
       "inputSchema": {

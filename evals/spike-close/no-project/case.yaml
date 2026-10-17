@@ -7,15 +7,11 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: 'Close the spike ABC-39.'
+  prompt: '/gemba-code:spike-close ABC-39'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 8
   timeout_seconds: 120
 graders:
-  - name: skill
-    type: tool_used
-    tool: Skill
-    input_match: spike-close
   - name: no-jira
     type: regex
     target: mock_calls

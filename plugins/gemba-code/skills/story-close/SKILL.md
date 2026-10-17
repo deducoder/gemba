@@ -1,6 +1,7 @@
 ---
 name: story-close
 description: Closes a reviewed story from Jira. Merges its branch into develop with --no-ff, pushes develop, marks the story Done and deletes the branch locally and on the remote. It writes no worklog: each phase already did. It resumes a close that stopped before or after pushing develop. Use when the user asks to close, merge or finish a story, or gives a story key whose review is done and whose branch is pushed.
+disable-model-invocation: true
 argument-hint: "[story key]"
 allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)

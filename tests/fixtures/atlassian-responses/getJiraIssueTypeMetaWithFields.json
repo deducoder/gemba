@@ -1,0 +1,274 @@
+{
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 11,
+  "fields": [
+    {
+      "required": false,
+      "schema": {
+        "type": "array",
+        "items": "attachment",
+        "system": "attachment"
+      },
+      "name": "Attachment",
+      "key": "attachment",
+      "hasDefaultValue": false,
+      "operations": [
+        "set",
+        "copy"
+      ],
+      "fieldId": "attachment"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "array",
+        "items": "component",
+        "system": "components"
+      },
+      "name": "Components",
+      "key": "components",
+      "hasDefaultValue": false,
+      "operations": [
+        "add",
+        "set",
+        "remove"
+      ],
+      "allowedValues": [
+        {
+          "self": "",
+          "id": "10115",
+          "name": "bug-close"
+        },
+        {
+          "self": "",
+          "id": "10103",
+          "name": "context",
+          "description": "Contexto de ABC inyectado en cada sesión."
+        }
+      ],
+      "fieldId": "components"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "string",
+        "system": "description"
+      },
+      "name": "Description",
+      "key": "description",
+      "hasDefaultValue": false,
+      "operations": [
+        "set"
+      ],
+      "fieldId": "description"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "date",
+        "system": "duedate"
+      },
+      "name": "Due date",
+      "key": "duedate",
+      "hasDefaultValue": false,
+      "operations": [
+        "set"
+      ],
+      "fieldId": "duedate"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "array",
+        "items": "version",
+        "system": "fixVersions"
+      },
+      "name": "Fix versions",
+      "key": "fixVersions",
+      "hasDefaultValue": false,
+      "operations": [
+        "set",
+        "add",
+        "remove"
+      ],
+      "allowedValues": [
+        {
+          "self": "",
+          "id": "10172",
+          "name": "ABC v0.4.1",
+          "archived": false,
+          "released": true,
+          "startDate": "2026-10-17",
+          "releaseDate": "2026-10-17",
+          "userStartDate": "16/Oct/26",
+          "userReleaseDate": "16/Oct/26",
+          "projectId": 10511
+        },
+        {
+          "self": "",
+          "id": "10173",
+          "name": "ABC v0.5.0",
+          "archived": false,
+          "released": false,
+          "startDate": "2026-10-17",
+          "releaseDate": "2026-10-18",
+          "overdue": false,
+          "userStartDate": "16/Oct/26",
+          "userReleaseDate": "17/Oct/26",
+          "projectId": 10511
+        }
+      ],
+      "fieldId": "fixVersions"
+    },
+    {
+      "required": true,
+      "schema": {
+        "type": "issuetype",
+        "system": "issuetype"
+      },
+      "name": "Issue Type",
+      "key": "issuetype",
+      "hasDefaultValue": false,
+      "operations": [],
+      "allowedValues": [
+        {
+          "self": "",
+          "id": "10000",
+          "description": "Fase o iniciativa mayor que agrupa entregables relacionados a largo plazo.",
+          "iconUrl": "",
+          "name": "Epic",
+          "subtask": false,
+          "hierarchyLevel": 1
+        }
+      ],
+      "fieldId": "issuetype"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "array",
+        "items": "string",
+        "system": "labels"
+      },
+      "name": "Labels",
+      "key": "labels",
+      "autoCompleteUrl": "x",
+      "hasDefaultValue": false,
+      "operations": [
+        "add",
+        "set",
+        "remove"
+      ],
+      "fieldId": "labels"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "priority",
+        "system": "priority"
+      },
+      "name": "Priority",
+      "key": "priority",
+      "hasDefaultValue": true,
+      "operations": [
+        "set"
+      ],
+      "allowedValues": [
+        {
+          "self": "",
+          "iconUrl": "",
+          "name": "Highest",
+          "id": "1"
+        },
+        {
+          "self": "",
+          "iconUrl": "",
+          "name": "High",
+          "id": "2"
+        },
+        {
+          "self": "",
+          "iconUrl": "",
+          "name": "Medium",
+          "id": "3"
+        },
+        {
+          "self": "",
+          "iconUrl": "",
+          "name": "Low",
+          "id": "4"
+        }
+      ],
+      "defaultValue": {
+        "self": "",
+        "iconUrl": "",
+        "name": "Medium",
+        "id": "3"
+      },
+      "fieldId": "priority"
+    },
+    {
+      "required": true,
+      "schema": {
+        "type": "project",
+        "system": "project"
+      },
+      "name": "Project",
+      "key": "project",
+      "hasDefaultValue": false,
+      "operations": [
+        "set"
+      ],
+      "allowedValues": [
+        {
+          "self": "",
+          "id": "10511",
+          "key": "ABC",
+          "name": "ABC",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": ""
+          }
+        }
+      ],
+      "fieldId": "project"
+    },
+    {
+      "required": false,
+      "schema": {
+        "type": "resolution",
+        "system": "resolution"
+      },
+      "name": "Resolution",
+      "key": "resolution",
+      "hasDefaultValue": false,
+      "operations": [
+        "set"
+      ],
+      "allowedValues": [
+        {
+          "self": "",
+          "id": "10000",
+          "name": "Done"
+        }
+      ],
+      "fieldId": "resolution"
+    },
+    {
+      "required": true,
+      "schema": {
+        "type": "string",
+        "system": "summary"
+      },
+      "name": "Summary",
+      "key": "summary",
+      "hasDefaultValue": false,
+      "operations": [
+        "set"
+      ],
+      "fieldId": "summary"
+    }
+  ]
+}
