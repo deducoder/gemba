@@ -507,9 +507,9 @@ class Branch(unittest.TestCase):
 
     def test_discard_dry_run_prints_the_same_and_deletes_nothing(self):
         folder, head = self.open_worktree_with_a_commit()
-        real = run(self.work, "--discard", "--dry-run", "spike", "ABC-5", "Check a partial unique index")
-        self.assertEqual(real.returncode, 0, real.stderr)
-        self.assertEqual(real.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "local only", f"{head[:7]} test(probe): experimental commit"])
+        result = run(self.work, "--discard", "--dry-run", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "local only", f"{head[:7]} test(probe): experimental commit"])
         self.assertTrue(folder.is_dir())
         self.assertEqual(git(self.work, "branch", "--list", "spike/*").split()[-1], "spike/ABC-5/check-a-partial-unique-index")
 
@@ -521,6 +521,33 @@ class Branch(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
         self.assertNotIn("worktrees/ABC-5", git(self.work, "worktree", "list"))
+
+    def test_discard_prints_no_commit_line_for_a_branch_without_commits_of_its_own(self):
+        run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "local only"])
+
+    def test_discard_refuses_when_it_cannot_tell_whether_origin_has_the_branch(self):
+        folder, head = self.open_worktree_with_a_commit()
+        git(self.work, "remote", "set-url", "origin", str(self.remote.parent / "missing.git"))
+        for args in (("--discard",), ("--discard", "--dry-run")):
+            result = run(self.work, *args, "spike", "ABC-5", "Check a partial unique index")
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout, "")
+            self.assertNotEqual(result.stderr, "")
+        self.assertTrue(folder.is_dir())
+        self.assertNotEqual(git(self.work, "branch", "--list", "spike/*"), "")
+
+    def test_discard_refuses_a_folder_that_is_not_a_worktree_of_the_branch(self):
+        git(self.work, "worktree", "add", "-q", "-b", "story/ABC-5/other", ".claude/worktrees/ABC-5", "origin/develop")
+        for args in (("--discard",), ("--discard", "--dry-run")):
+            result = run(self.work, *args, "spike", "ABC-5", "Check a partial unique index")
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout, "")
+            self.assertIn(".claude/worktrees/ABC-5", result.stderr)
+        self.assertTrue((self.work / ".claude/worktrees/ABC-5").is_dir())
+        self.assertNotEqual(git(self.work, "branch", "--list", "story/ABC-5/other"), "")
 
 
 if __name__ == "__main__":
