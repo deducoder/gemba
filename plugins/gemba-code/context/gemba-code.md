@@ -13,6 +13,6 @@ Types: `bug` (incorrect behavior of something that exists), `epic` (a goal that 
 
 ## Commits
 
-- A single line, in English, lowercase except canonical names (`CLAUDE.md`), with no body, footer or trailers.
+- A single line, in English, with no body, footer or trailers. The description is lowercase except a proper name (brand, company or product) or an acronym, which keep their canonical capitalization (`Jira`, `CI`, `JSON`); an identifier (branch, scope, executable or file) is written as it is in the code (`gemba-code`, `CLAUDE.md`).
 - Format: `<type>(<scope>): <description>`, with a type among `feat`, `fix`, `test`, `refactor`, `docs` and `chore`, a scope that names the work item's component, or the file itself when there is none (`docs(readme)`), and an imperative description with no final period that never repeats the branch name. Example: `feat(billing): add invoice export`.
 - Commits are split by what was done.
