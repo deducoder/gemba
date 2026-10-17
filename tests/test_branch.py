@@ -569,14 +569,21 @@ class Branch(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "gone"])
 
-    def test_discard_still_says_on_origin_when_only_the_remote_branch_is_left(self):
+    def test_discard_still_lists_the_commits_when_only_the_remote_branch_is_left(self):
         folder, head = self.open_worktree_with_a_commit()
         git(folder, "push", "-q", "origin", "HEAD")
         run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
         result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "on origin"])
+        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "on origin", f"{head[:7]} test(probe): experimental commit"])
         self.assertIn(head, git(self.work, "ls-remote", "--heads", "origin", "spike/*"))
+
+    def test_discard_says_local_only_when_the_folder_is_gone_but_the_branch_is_not(self):
+        folder, head = self.open_worktree_with_a_commit()
+        shutil.rmtree(folder)
+        result = run(self.work, "--discard", "--dry-run", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "local only", f"{head[:7]} test(probe): experimental commit"])
 
 
 if __name__ == "__main__":
