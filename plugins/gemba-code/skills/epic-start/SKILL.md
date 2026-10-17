@@ -35,7 +35,7 @@ The epic and its children stay in Backlog: this skill changes no status, creates
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
    - A key that cannot be read stops the skill: create nothing, and reply with the key and Jira's reason.
-   - A key that is already an Epic stops the skill: create and edit nothing, and reply with its key and its link.
+   - A key that is already an Epic stops the skill: create and edit nothing, and reply with its key and its link. The epic this skill created earlier in the conversation does not stop it: go on from step 11 with the children not yet declared.
    - A key named for any other reason is context for the deliverable: the epic is drafted with what it says, and gets no link.
 
 3. **Observe before planning.** Read the code, documentation and history the deliverable touches, and run the commands that already exist (tests, `--help`), until you know which stories and spikes it takes.
