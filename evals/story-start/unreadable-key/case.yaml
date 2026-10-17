@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: story-start-unreadable-key
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a story: add a --csv option to invoices.py that prints the customer''s invoices as CSV, as ABC-99 describes.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 8
+  timeout_seconds: 60
+graders:
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+    match: not_contains
+  - name: names-the-key
+    type: regex
+    pattern: 'ABC-99'
