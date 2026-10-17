@@ -7,7 +7,7 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: 'Start the epic ABC-47.'
+  prompt: 'Start the epic ABC-50.'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 12
   timeout_seconds: 150
@@ -26,7 +26,7 @@ graders:
     flags: i
   - name: no-children-listed
     type: regex
-    pattern: 'ABC-48'
+    pattern: 'ABC-5[1-6]'
     match: not_contains
   - name: no-worklog-or-estimate
     type: regex
