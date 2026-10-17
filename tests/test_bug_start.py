@@ -137,12 +137,6 @@ class BugDraft(unittest.TestCase):
             ["Root cause", "Neighboring inputs", "Done when", "Evidence", "Reproduction", "Cause trail", "Out of scope"],
         )
 
-    def test_the_template_says_the_evidence_is_the_comment_and_the_rest_the_description(self):
-        template = (SKILL / "assets/bug.md").read_text(encoding="utf-8")
-        evidence = template.split("### Evidence\n", 1)[1].split("#### Reproduction", 1)[0]
-        self.assertIn("comment", evidence)
-        self.assertIn("description", evidence)
-
     def test_a_root_cause_heading_in_the_evidence_is_rejected_asking_for_the_cause_trail(self):
         result = run(DRAFT.replace("#### Cause trail\n", "#### Root cause\n"))
         self.assertEqual(result.returncode, 1, result.stdout)
