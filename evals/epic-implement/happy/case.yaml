@@ -48,7 +48,7 @@ graders:
     flags: i
   - name: due-date-and-days-left
     type: regex
-    pattern: '2027-01-29[\s\S]*\d+\s+(calendar\s+)?(days?|días)|\d+\s+(calendar\s+)?(days?|días)[\s\S]*2027-01-29'
+    pattern: '2099-12-31[\s\S]*\d+\s+(calendar\s+)?(days?|días)|\d+\s+(calendar\s+)?(days?|días)[\s\S]*2099-12-31'
   - name: no-worklog-or-estimate
     type: regex
     target: mock_calls
