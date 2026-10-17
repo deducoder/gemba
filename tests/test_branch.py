@@ -457,6 +457,30 @@ class Branch(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(git(self.work / ".claude/worktrees/ABC-5", "branch", "--show-current"), "spike/ABC-5/check-a-partial-unique-index")
 
+    def test_worktree_opens_a_branch_that_only_exists_on_origin_with_its_commits(self):
+        git(self.work, "switch", "-q", "-c", "spike/ABC-5/check-a-partial-unique-index", "origin/develop")
+        (self.work / "probe.txt").write_text("probe")
+        git(self.work, "add", "probe.txt")
+        git(self.work, "commit", "-qm", "test(probe): experimental commit")
+        head = git(self.work, "rev-parse", "HEAD")
+        git(self.work, "push", "-q", "origin", "spike/ABC-5/check-a-partial-unique-index")
+        git(self.work, "switch", "-q", "develop")
+        git(self.work, "branch", "-D", "spike/ABC-5/check-a-partial-unique-index")
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.work / ".claude/worktrees/ABC-5"
+        self.assertEqual(git(folder, "rev-parse", "HEAD"), head)
+        upstream = subprocess.run(["git", "rev-parse", "--abbrev-ref", "@{upstream}"], cwd=folder, capture_output=True, text=True)
+        self.assertNotEqual(upstream.returncode, 0)
+
+    def test_worktree_refuses_a_folder_that_is_not_a_worktree_of_the_branch(self):
+        (self.work / ".claude/worktrees/ABC-5").mkdir(parents=True)
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn(".claude/worktrees/ABC-5", result.stderr)
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+
 
 if __name__ == "__main__":
     unittest.main()
