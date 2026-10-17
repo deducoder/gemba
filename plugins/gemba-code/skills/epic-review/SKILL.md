@@ -16,7 +16,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
-2. **Read the epic.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype`, `status` and `duedate`. Stop, writing nothing and naming it, when:
+2. **Read the epic.** Without a key in the request, ask for it. Read it with `getJiraIssue`, asking for its `summary`, `issuetype`, `status`, `duedate` and `issuelinks`. Stop, writing nothing and naming it, when:
    - it is not an Epic: say its type;
    - its status is not Implement or Review: say its status.
 
@@ -36,6 +36,6 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
    and invoke `/code-review <merge>^1..<merge>` with the Skill tool for each hash it printed. Spikes are never merged and Cancelled children delivered nothing: skip both. When a story has no merge, name it. When no story has a merge, say so and review no code.
 
-7. **Declare each finding loose.** For each finding of step 6 that you or the person do not dismiss, invoke with the Skill tool the start skill of its type, without naming the epic, so it gets no parent: `/gemba-code:bug-start` for something that fails, `/gemba-code:story-start` for something to build and `/gemba-code:spike-start` for a question to research. Then link the new work item to the epic with `createIssueLink`, the link type `Relates`. The epic gets no child: what its review finds is work of its own.
+7. **Declare each finding loose.** For each finding of step 6 that you or the person do not dismiss and that no work item already linked to the epic with `Relates` covers, invoke with the Skill tool the start skill of its type, without naming the epic, so it gets no parent: `/gemba-code:bug-start` for something that fails, `/gemba-code:story-start` for something to build and `/gemba-code:spike-start` for a question to research. When it created a work item, link it to the epic with `createIssueLink`, the link type `Relates`; a finding already covered is named with the key that covers it. The epic gets no child: what its review finds is work of its own.
 
 8. **Report** the children and their status, the merges reviewed, each finding with the key and link of the work item declared for it and the due date warning when there is one. This skill writes no worklog: each child registered the time of its own phases.
