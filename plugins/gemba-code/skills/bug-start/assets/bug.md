@@ -19,6 +19,8 @@
 
 ### Evidence
 
+<Only its two subsections: Evidence becomes the comment, and the rest, up to Out of scope, the description.>
+
 #### Reproduction
 
 ```
@@ -26,7 +28,7 @@
 <literal output>
 ```
 
-#### Root cause
+#### Cause trail
 
 * ran: `<exact command>` → <summarized output>
 * read: `<path>:<line>`
