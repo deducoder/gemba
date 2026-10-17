@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: spike-implement-folder-missing
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement the spike ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 15
+  timeout_seconds: 90
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-implement
+  - name: looked-for-the-folder
+    type: regex
+    target: mock_calls
+    pattern: 'getConfluencePageDescendants'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue|createConfluencePage'
+    match: not_contains
+  - name: no-worktree
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --worktree'
+    min: 0
+    max: 0
+  - name: names-the-missing-folder
+    type: regex
+    pattern: 'Spikes'
+    flags: i
