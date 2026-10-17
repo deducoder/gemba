@@ -1,0 +1,27 @@
+schema_version: "1.1"
+name: epic-implement-wrong-status
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Start the epic ABC-50.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 8
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: epic-implement
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|editJiraIssue|createJiraIssue|createIssueLink|addCommentToJiraIssue|addWorklogToJiraIssue'
+    match: not_contains
+  - name: reason
+    type: regex
+    pattern: '(is|está|estado|status)\W+(\w+\W+){0,3}review\b'
+    flags: i
