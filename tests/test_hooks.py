@@ -83,6 +83,7 @@ ASK = [
     "`git push`",
     "git status #\ngit push",
     "echo 'unterminated git push",
+    "git push -q -u origin HEAD  # the bug's branch\nrm -f notes.txt",
 ]
 DENY = [
     "git push --force",
@@ -92,8 +93,11 @@ DENY = [
     "git push origin +main",
     "git status\ngit push --force origin main",
     "git push --force origin 'main",
+    "git push --force origin main  # it's",
+    "git push origin 'feat #1 --force",
+    "git push origin main \\\n  --force 'x",
 ]
-NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx"]
+NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx", "echo 'x", "# git push --force is blocked\necho 'x"]
 
 
 def gate(command):
