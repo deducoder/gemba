@@ -5,8 +5,8 @@ Usage: python3 cancelled.py --site <site> < comment.md
 
 The comment comes on stdin: the heading `### Cancelled`, then one `* ` bullet per
 line, `Reason:`, `Found:` and `Replaced by:`, in that order. `Found:` starts with
-`ran:` or `read:`, and `Replaced by:` holds the key of the work item that replaces
-it, which becomes a link to the issue on the site, or the text saying none does.
+`ran:` or `read:`, and `Replaced by:` holds only the key of the work item that
+replaces it, which becomes a link to the issue on the site, or the text saying none does.
 `code` becomes a code mark.
 
 When the comment follows the template, prints its ADF document as JSON. Otherwise
@@ -15,6 +15,7 @@ prints one line per problem to stderr, prints nothing to stdout and exits 1.
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -25,6 +26,7 @@ from draft import KEY, bullets, check_trail, doc, filled, heading, inline, items
 
 HEADING = "### Cancelled"
 LABELS = ["Reason", "Found", "Replaced by"]
+MENTION = re.compile(r"\b[A-Za-z][A-Za-z0-9_]+-\d+\b")
 
 
 def problems(text):
@@ -45,6 +47,9 @@ def problems(text):
             found.append(f"{label}: write what goes after the colon")
     if values["Found"]:
         check_trail("Found", [values["Found"]], found)
+    replaced = values["Replaced by"]
+    if MENTION.search(replaced) and not KEY.match(replaced):
+        found.append(f"Replaced by: write only the key of the work item that replaces it: {replaced}")
     return found, values
 
 
