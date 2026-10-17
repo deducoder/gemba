@@ -1,0 +1,46 @@
+schema_version: "1.1"
+name: story-start-split-blocks
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+  history_file: history.jsonl
+execution:
+  prompt: 'Yes, go ahead with that split. Use a JSON file next to the script, SMTP with the host and credentials from environment variables, and fpdf2 for the PDF. Story 2 cannot start before story 1 is done, and story 3 cannot start before story 2 is done.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 39
+  timeout_seconds: 300
+graders:
+  - name: stories
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    min: 2
+  - name: evidence
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__addCommentToJiraIssue
+    min: 2
+  - name: keys
+    type: regex
+    pattern: 'ABC-101[\s\S]*ABC-102'
+  - name: first-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101)(?=[\s\S]*outwardIssue\W+ABC-102)'
+  - name: second-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102)(?=[\s\S]*outwardIssue\W+ABC-103)'
+  - name: no-inverted-first
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102)(?=[\s\S]*outwardIssue\W+ABC-101)'
+    min: 0
+    max: 0
+  - name: no-inverted-second
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-103)(?=[\s\S]*outwardIssue\W+ABC-102)'
+    min: 0
+    max: 0
