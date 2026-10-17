@@ -438,7 +438,7 @@ class Branch(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.split("\n")[:2], ["spike/ABC-5/check-a-partial-unique-index", ".claude/worktrees/ABC-5"])
         self.assertEqual(git(folder, "rev-parse", "HEAD"), head)
-        self.assertEqual(len([line for line in git(self.work, "worktree", "list").splitlines() if "worktrees/ABC-5" in line]), 1)
+        self.assertEqual(git(self.work, "worktree", "list").count("worktrees/ABC-5"), 1)
 
     def test_worktree_recreates_the_folder_from_the_branch_when_it_is_gone(self):
         folder, head = self.open_worktree_with_a_commit()

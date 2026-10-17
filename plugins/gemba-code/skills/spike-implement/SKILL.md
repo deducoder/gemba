@@ -39,7 +39,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    - something linked as "is blocked by" is not Done or Cancelled: say which work item;
    - it has an epic (`parent`) that is not in Implement: say the epic and its status. A spike without an epic has nothing to check here.
 
-3. **Revalidate the Done when.** Read the Evidence comment of the spike: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop, without marking it Implement. A spike already in Implement is resumed, so for it do this step after step 7.
+3. **Revalidate the Done when.** Read the Evidence comment of the spike: re-run each `ran:` command and re-read each `read:` source, and check that they still give what was noted. Run only commands that read; when one would write, stop and ask. When something no longer holds, leave a drift comment and stop: a spike in Backlog stays there. A spike already in Implement is resumed, so for it do this step after step 7.
 
 4. **Check the project is ready** with this command, the Summary in single quotes and an inner `'` written `'\''`:
 
@@ -61,7 +61,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --worktree spike <KEY> '<Summary>'
    ```
 
-   It prints the branch and, on a second line, the folder `.claude/worktrees/<KEY>`, where the branch lives without an upstream. A spike being resumed gets back its branch with the commits it has, and the folder is opened again from the branch when it is gone. This skill never pushes the branch: the findings live in Confluence.
+   It prints the branch and, on a second line, the folder `.claude/worktrees/<KEY>`, where the branch lives without an upstream. This skill never pushes the branch: the findings live in Confluence.
 
 8. **Plan in plan mode.** The plan names, for each criterion of the Done when of the spike, the experiment that answers it and what each outcome would show. Edit and run nothing until the person approves it; without plan mode, present the plan and wait.
 

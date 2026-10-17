@@ -114,10 +114,10 @@ def open_worktree(branch, key):
     again when it is gone, and left as it is when it is there. A branch that does not exist starts
     from origin/develop without tracking it."""
     folder = f".claude/worktrees/{key}"
-    git("worktree", "prune")
     if not has_ref(f"refs/heads/{branch}"):
         git("worktree", "add", "-q", "--no-track", "-b", branch, folder, DEVELOP)
     elif not os.path.isdir(folder):
+        git("worktree", "prune")
         git("worktree", "add", "-q", folder, branch)
     print(branch)
     print(folder)
