@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: spike-implement-epic-not-in-implement
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement the spike ABC-35.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 10
+  timeout_seconds: 60
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-35'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue|createConfluencePage|updateConfluencePage'
+    match: not_contains
+  - name: no-branch
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --worktree'
+    min: 0
+    max: 0
+  - name: reason
+    type: regex
+    pattern: 'ABC-7[\s\S]*backlog|backlog[\s\S]*ABC-7'
+    flags: i

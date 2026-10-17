@@ -156,6 +156,14 @@
               "colorName": "yellow",
               "name": "In Progress"
             }
+          },
+          "timetracking": {
+            "originalEstimate": "",
+            "remainingEstimate": "",
+            "timeSpent": "",
+            "originalEstimateSeconds": 14400,
+            "remainingEstimateSeconds": 12960,
+            "timeSpentSeconds": 1440
           }
         },
         "descriptionEditable": true,

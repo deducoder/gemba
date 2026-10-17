@@ -679,6 +679,51 @@
           "body"
         ]
       }
+    },
+    {
+      "name": "updateConfluencePage",
+      "description": "Update a Confluence page or blog post.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "pageId": {
+            "type": "string",
+            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
+          },
+          "title": {
+            "type": "string",
+            "description": "New title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Replacement page body."
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "html",
+              "markdown",
+              "adf"
+            ],
+            "description": "Body format."
+          },
+          "versionMessage": {
+            "type": "string",
+            "description": "Version message"
+          }
+        },
+        "required": [
+          "cloudId",
+          "pageId",
+          "body"
+        ]
+      }
     }
   ]
 }
