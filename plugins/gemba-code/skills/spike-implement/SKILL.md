@@ -49,7 +49,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    When it refuses, relay its reason and stop.
 
-5. **Find the folder of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`. When either is missing, stop, writing nothing and naming which one is missing: the person creates them before the spike starts.
+5. **Find the folder of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`. Keep the page of the descendants whose parent is `Spikes` and whose title starts with the spike's key and a space: it is the live doc of this spike, when it exists. When either is missing, stop, writing nothing and naming which one is missing: the person creates them before the spike starts.
 
 6. **Mark it Implement,** only when it is in Backlog: a spike already in Implement is resumed, so skip this step. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
 
@@ -61,11 +61,15 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py --worktree spike <KEY> '<Summary>'
    ```
 
-   It prints the branch and, on a second line, the folder `.claude/worktrees/<KEY>`, where the branch lives without an upstream. This skill never pushes the branch: the findings live in Confluence.
+   It prints the branch and, on a second line, the folder `.claude/worktrees/<KEY>`, where the branch lives without an upstream. A spike being resumed gets back its branch with the commits it has, and the folder is opened again from the branch when it is gone. This skill never pushes the branch: the findings live in Confluence.
 
 8. **Plan in plan mode.** The plan names, for each criterion of the Done when of the spike, the experiment that answers it and what each outcome would show. Edit and run nothing until the person approves it; without plan mode, present the plan and wait.
 
-9. **Run the approved experiments inside the worktree,** working in `.claude/worktrees/<KEY>` only (`git -C` for git, the folder as the working directory for everything else), and commit the experimental work in the spike branch in the commit format of the Gemba Code context. Keep each command and its literal output for the findings. Once the experiments are over, stop.
+9. **Run the approved experiments inside the worktree,** working in `.claude/worktrees/<KEY>` only (`git -C` for git, the folder as the working directory for everything else), and commit the experimental work in the spike branch in the commit format of the Gemba Code context. Keep each command and its literal output for the findings.
+
+   The time worked starts at the last change into Implement: read it once with `getJiraIssue`, asking only for `status` and `expand: "changelog"`. Before each experiment run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>` and compare its `minutes` with the time-box: the `originalEstimateSeconds` of step 2, divided by 60. When `minutes` has reached it, run no more experiments and go on to step 10 with what you have; the Answer is Inconclusa unless what you have already answers the question.
+
+   When an experiment contradicts a criterion of the Done when of the spike, leave a drift comment and stop: publish nothing.
 
 10. **Publish the findings.** Write them with the template above: the title `<KEY> <Summary>` and the first paragraph of the description of the spike as it was read, the Answer, the Evidence with every `ran:` and `read:` of the experiments and the literal output of each, and the Next. Check the draft with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
@@ -75,11 +79,11 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
     FINDINGS
     ```
 
-    Then create the page with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Spikes` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
+    When step 5 kept a page for this spike, update it with `updateConfluencePage`: its `id` as `pageId`, the `title` and the `body` the script printed as ADF (`contentFormat: "adf"`), so the link to the issue stays. Otherwise create the page with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Spikes` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
 
 11. **Report** each Done when criterion of the spike with its evidence in the form `ran:` or `read:`, the Answer, and the link to the page.
 
-12. **Register the time of the phase.** Read the spike again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the last change into Implement. Run:
+12. **Register the time of the phase.** Take the time of the last change into Implement that step 9 read. Run:
 
     ```
     python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
