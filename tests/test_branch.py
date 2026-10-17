@@ -514,6 +514,14 @@ class Branch(unittest.TestCase):
         self.assertEqual(git(self.work, "branch", "--list", "spike/*").split()[-1], "spike/ABC-5/check-a-partial-unique-index")
 
 
+    def test_discard_deletes_the_branch_when_its_folder_is_already_gone(self):
+        folder, head = self.open_worktree_with_a_commit()
+        shutil.rmtree(folder)
+        result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+        self.assertNotIn("worktrees/ABC-5", git(self.work, "worktree", "list"))
+
 
 if __name__ == "__main__":
     unittest.main()
