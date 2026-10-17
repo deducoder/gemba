@@ -481,6 +481,39 @@ class Branch(unittest.TestCase):
         self.assertIn(".claude/worktrees/ABC-5", result.stderr)
         self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
 
+    def test_discard_deletes_the_folder_and_the_branch_and_prints_what_it_discards(self):
+        folder, head = self.open_worktree_with_a_commit()
+        develop = git(self.work, "rev-parse", "develop")
+        result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        branch, remote, *commits = result.stdout.splitlines()
+        self.assertEqual(branch, "spike/ABC-5/check-a-partial-unique-index")
+        self.assertEqual(remote, "local only")
+        self.assertEqual(commits, [f"{head[:7]} test(probe): experimental commit"])
+        self.assertFalse(folder.exists())
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+        self.assertEqual(git(self.work, "rev-parse", "develop"), develop)
+        self.assertEqual(git(self.work, "ls-remote", "--heads", "origin", "spike/*"), "")
+
+    def test_discard_says_the_branch_is_on_origin_and_leaves_that_branch_alone(self):
+        folder, head = self.open_worktree_with_a_commit()
+        git(folder, "push", "-q", "origin", "HEAD")
+        result = run(self.work, "--discard", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines()[1], "on origin")
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+        self.assertIn(head, git(self.work, "ls-remote", "--heads", "origin", "spike/*"))
+
+    def test_discard_dry_run_prints_the_same_and_deletes_nothing(self):
+        folder, head = self.open_worktree_with_a_commit()
+        real = run(self.work, "--discard", "--dry-run", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(real.returncode, 0, real.stderr)
+        self.assertEqual(real.stdout.splitlines(), ["spike/ABC-5/check-a-partial-unique-index", "local only", f"{head[:7]} test(probe): experimental commit"])
+        self.assertTrue(folder.is_dir())
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*").split()[-1], "spike/ABC-5/check-a-partial-unique-index")
+
+
 
 if __name__ == "__main__":
     unittest.main()
