@@ -1,6 +1,6 @@
 ---
 name: spike-start
-description: Declares a spike in Jira from a closed question whose answer a decision waits on. Checks that the project does not answer it already, sends a question answered by reading sources to research, drafts the spike with the question, its decision, its Done when and its time-box, and creates it in Backlog with the evidence in a comment. Use when the user asks to declare, open or write a spike or a research, or asks to research or find out whether something nobody has verified works ("can X do Y?", "find out whether…", "investiga si…"). It declares the question and does not answer it. Not for a question answered by reading sources, something to build or something that is broken.
+description: Declares a spike in Jira from a closed question whose answer a decision waits on. Checks that the project does not answer it already, sends a question answered by reading sources to research, drafts the spike with the question, its decision, its Done when and its time-box, and creates it in Backlog with the evidence in a comment. Use when the user asks to declare, open or write a spike, or asks to find out whether something nobody has verified works ("can X do Y?", "find out whether…", "investiga si…"). It declares the question and does not answer it. Not for a question answered by reading sources, something to build or something that is broken.
 argument-hint: "[question]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
