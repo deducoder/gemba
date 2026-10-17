@@ -36,7 +36,7 @@ This skill only reads sources and writes one Confluence page. It creates and edi
    - `Inferred` when it follows from other findings, naming them as `(from n.m)`.
    - `Unverified` when no source states it.
 
-   What needs running goes to Next as the closed question of a spike. The Answer is complete and cites the findings it rests on as `[Finding n.m]`. Sources go in the order of their kind: `official` and `spec` before `source` and `secondary`.
+   What needs running goes to Next as the closed question of a spike. The Answer is complete and cites the findings it rests on as `[Finding n.m]`. A `secondary` source never goes before an `official` or `spec` one.
 
 6. **Check the draft** with this command, run alone and exactly in this form, with `--key <KEY>` only when step 2 kept a key, and fix each problem it names until it passes:
 
