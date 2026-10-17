@@ -1,0 +1,47 @@
+{
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 4,
+  "issueTypes": [
+    {
+      "self": "",
+      "id": "10000",
+      "description": "Fase o iniciativa mayor que agrupa entregables relacionados a largo plazo.",
+      "iconUrl": "",
+      "name": "Epic",
+      "untranslatedName": "Epic",
+      "subtask": false,
+      "hierarchyLevel": 1
+    },
+    {
+      "self": "",
+      "id": "10009",
+      "description": "Entregable de valor solicitado por el cliente o el negocio.",
+      "iconUrl": "",
+      "name": "Story",
+      "untranslatedName": "Story",
+      "subtask": false,
+      "hierarchyLevel": 0
+    },
+    {
+      "self": "",
+      "id": "10078",
+      "description": "Corrección sobre un trabajo previamente entregado.",
+      "iconUrl": "",
+      "name": "Bug",
+      "untranslatedName": "Bug",
+      "subtask": false,
+      "hierarchyLevel": 0
+    },
+    {
+      "self": "",
+      "id": "10079",
+      "description": "Investigación o exploración previa antes de ejecutar o proponer algo.",
+      "iconUrl": "",
+      "name": "Spike",
+      "untranslatedName": "Spike",
+      "subtask": false,
+      "hierarchyLevel": 0
+    }
+  ]
+}
