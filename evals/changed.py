@@ -8,7 +8,7 @@ The change is every file that differs from where the branch left origin/develop,
 committed or not, plus the untracked ones. Each file picks evals by its path:
 - plugins/<plugin>/skills/<skill>/ picks that skill;
 - a plugin script picks the skills whose SKILL.md names it or a script that imports it,
-  and all of them when no SKILL.md does or a hook runs it;
+  and all of them when no SKILL.md does, a hook runs it or a script of a skill imports it;
 - any other file of a plugin (manifest, context/, hooks/, references/), the marketplace
   manifest, evals/mocks/ and tests/fixtures/atlassian-stub/ pick them all;
 - evals/<skill>/ picks that skill and, through the scripts that load the file from
@@ -86,6 +86,9 @@ def picked_by(path, root, loaded_by):
         scripts = importers(plugin / "scripts", parts[3])
         hooks = plugin / "hooks/hooks.json"
         if hooks.exists() and any(f"scripts/{script}" in hooks.read_text(encoding="utf-8") for script in scripts):
+            return None
+        if any(re.search(rf"^(from|import) {Path(script).stem}\b", other.read_text(encoding="utf-8"), re.M)
+               for other in plugin.glob("skills/*/scripts/*.py") for script in scripts):
             return None
         naming = {skill.parent.name for skill in root.glob("plugins/*/skills/*/SKILL.md")
                   if any(f"scripts/{script}" in skill.read_text(encoding="utf-8") for script in scripts)}
