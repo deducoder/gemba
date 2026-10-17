@@ -32,4 +32,4 @@ Until the Implement mark this skill only reads. It never creates a branch or pus
 
 6. **Show the due date** of the epic and the calendar days from today above to it. When it is today, say it is due today. When it is earlier than today, warn that the epic is overdue, naming the date, and go on: it does not stop the skill. When the epic has no due date, say so.
 
-7. **Reply** with the status of the epic, the ready children of step 5 and the due date of step 6, and nothing else.
+7. **Reply** with the status of the epic, the ready children and the count of those not ready of step 5, and the due date of step 6, and nothing else.
