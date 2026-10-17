@@ -138,7 +138,8 @@ def open_worktree(branch, key):
 def discard(branch, key, dry_run):
     """Prints the branch, whether origin has it and the commits origin/develop lacks, and deletes the
     folder `.claude/worktrees/<KEY>` and then the local branch unless it is a dry run; returns the reason
-    it refuses, or None. A part that is already gone is skipped, and a folder deleted by hand is pruned so the branch can go."""
+    it refuses, or None. A part that is already gone is skipped, and a folder deleted by hand is pruned
+    so the branch can go."""
     folder = f".claude/worktrees/{key}"
     local = has_ref(f"refs/heads/{branch}")
     print(branch)
