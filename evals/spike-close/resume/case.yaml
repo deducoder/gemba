@@ -1,0 +1,42 @@
+schema_version: "1.1"
+name: spike-close-resume
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Close the spike ABC-39.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 120
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-close
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-39'
+  - name: previewed
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --discard --dry-run spike ABC-39'
+  - name: not-marked-again
+    type: regex
+    target: mock_calls
+    pattern: 'getTransitionsForJiraIssue|transitionJiraIssue'
+    match: not_contains
+  - name: deleted
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --discard spike ABC-39'
+    min: 1
+    max: 99
+  - name: no-comment-no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue|addWorklogToJiraIssue'
+    match: not_contains
