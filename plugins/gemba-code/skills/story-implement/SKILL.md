@@ -1,6 +1,6 @@
 ---
 name: story-implement
-description: Implements a declared story from Jira on its own branch. Marks it in Implement, creates its branch from develop, plans in plan mode against its Done when, builds the approved plan, reports the evidence of each criterion and registers the time of the phase. It stops, writing nothing, when the story cannot be built yet, and resumes one already in Implement. Use when the user asks to implement, build or work on a declared story, or gives a story key to start building. It edits no code until the plan is approved, and never merges.
+description: Implements a declared story from Jira on its own branch. Marks it in Implement, creates its branch from develop, plans in plan mode against its Done when, builds the approved plan, reports the evidence of each criterion and registers the time of the phase. It stops, writing nothing, when the story cannot be built yet, cancels it with a comment when the person decides so, and resumes one already in Implement. Use when the user asks to implement, build or work on a declared story, or gives a story key to start building. It edits no code until the plan is approved, and never merges.
 argument-hint: "[story key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -77,7 +77,7 @@ Add it to the story with `addCommentToJiraIssue` and `contentFormat: "markdown"`
 
 ## Cancel the story
 
-When the person decides to cancel the story, in the request or after a stop of this skill, write the cancellation comment of the template above instead of a drift comment, and check it with this command, run alone and exactly in this form, fixing each problem it names until it passes:
+When the person decides to cancel the story, in the request or after a stop of this skill, and it is in Backlog or Implement, write the cancellation comment of the template above instead of a drift comment, and check it with this command, run alone and exactly in this form, fixing each problem it names until it passes:
 
 ```
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
@@ -85,4 +85,4 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
 CANCELLED
 ```
 
-Add what it printed to the story with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`). Then read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Cancelled: pick it by destination, never by id. When it returns an error, stop and relay Jira's reason. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is. Then stop.
+Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the story with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the story. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A story in any other status is not cancelled here: say its status and stop.
