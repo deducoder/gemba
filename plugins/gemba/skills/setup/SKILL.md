@@ -97,8 +97,8 @@ Ask only for what the current state lacks, in as few questions as possible, and 
 
 8. **Worktrees.** Make `.gitignore` ignore the folder where worktrees live, so they are never tracked:
    - **Missing:** create it with the single line `.claude/worktrees/`.
-   - **Without that line:** append it at the end, after a newline when the last line has none, keeping every other line.
-   - **With that line:** change nothing.
+   - **Without that exact line:** append it at the end, after a newline when the last line has none, keeping every other line. A similar pattern, such as `.claude/worktrees` or `.claude/`, does not count.
+   - **With that exact line:** change nothing.
 
 9. **Git history,** last, so the initial commit holds what the steps above wrote.
 
