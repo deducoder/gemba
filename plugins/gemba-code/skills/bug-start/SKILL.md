@@ -25,7 +25,7 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/priority.md`
 
-!`cat ${CLAUDE_SKILL_DIR}/references/estimate.md`
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/estimate.md`
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
