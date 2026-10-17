@@ -2,6 +2,7 @@
 it starts from and what it prints."""
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -422,6 +423,39 @@ class Branch(unittest.TestCase):
         self.assertIn("Uncommitted changes", result.stderr)
         self.assertFalse((self.work / ".claude/worktrees/ABC-5").exists())
         self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+
+    def open_worktree_with_a_commit(self):
+        run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        folder = self.work / ".claude/worktrees/ABC-5"
+        (folder / "probe.txt").write_text("probe")
+        git(folder, "add", "probe.txt")
+        git(folder, "commit", "-qm", "test(probe): experimental commit")
+        return folder, git(folder, "rev-parse", "HEAD")
+
+    def test_worktree_resumes_one_whose_branch_and_folder_exist(self):
+        folder, head = self.open_worktree_with_a_commit()
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.split("\n")[:2], ["spike/ABC-5/check-a-partial-unique-index", ".claude/worktrees/ABC-5"])
+        self.assertEqual(git(folder, "rev-parse", "HEAD"), head)
+        self.assertEqual(len([line for line in git(self.work, "worktree", "list").splitlines() if "worktrees/ABC-5" in line]), 1)
+
+    def test_worktree_recreates_the_folder_from_the_branch_when_it_is_gone(self):
+        folder, head = self.open_worktree_with_a_commit()
+        shutil.rmtree(folder)
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.split("\n")[:2], ["spike/ABC-5/check-a-partial-unique-index", ".claude/worktrees/ABC-5"])
+        self.assertEqual(git(folder, "branch", "--show-current"), "spike/ABC-5/check-a-partial-unique-index")
+        self.assertEqual(git(folder, "rev-parse", "HEAD"), head)
+        upstream = subprocess.run(["git", "rev-parse", "--abbrev-ref", "@{upstream}"], cwd=folder, capture_output=True, text=True)
+        self.assertNotEqual(upstream.returncode, 0)
+
+    def test_worktree_opens_the_folder_for_a_branch_that_already_exists(self):
+        git(self.work, "branch", "spike/ABC-5/check-a-partial-unique-index", "origin/develop")
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(git(self.work / ".claude/worktrees/ABC-5", "branch", "--show-current"), "spike/ABC-5/check-a-partial-unique-index")
 
 
 if __name__ == "__main__":
