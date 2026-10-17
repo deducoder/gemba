@@ -1,6 +1,6 @@
 ---
 name: spike-review
-description: Reviews an implemented spike from Jira against the findings it published. Marks it in Review, finds its live doc in Work/Spikes, runs again each ran line and reads again each read line of its Evidence, checks that the Answer holds and that each Done when criterion of the spike has its answer, and registers the time of the phase. It stops, writing nothing, when the spike or its live doc is not ready, resumes one already in Review and leaves a drift comment when something no longer holds. Use when the user asks to review, check or verify a spike or its findings ("review the spike…", "revisa el spike…", "verifica los hallazgos…"), or gives a spike key whose findings are published. It never pushes the spike branch and never merges.
+description: Reviews an implemented spike from Jira against the findings it published: marks it in Review, runs its Evidence again, checks that its Answer and each Done when criterion hold, and registers the time of the phase. It stops, writing nothing, when the spike or its findings are not ready, and leaves a drift comment when something no longer holds. Use when the user asks to review, check or verify a spike or its findings ("review the spike…", "revisa el spike…", "verifica los hallazgos…"), or gives a spike key whose findings are published. It never pushes the spike branch and never merges.
 argument-hint: "[spike key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -31,11 +31,11 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
 3. **Find the live doc of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`, and the live doc is the page whose parent is `Spikes` and whose title starts with the spike's key and a space. Stop, writing nothing, when `Work`, `Spikes` or the page is missing, and say which one; when more than one page matches, stop and name them.
 
-4. **Mark it Review,** only when it is in Implement: a spike already in Review is resumed, so skip this step and go on from step 5. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
+4. **Read the findings.** Read the live doc with `getConfluencePage` and `contentFormat: "markdown"`: its `Answer`, its `Evidence` and its `Next`. Stop, writing nothing, when it has no `Answer` or no `Evidence`, and say which one.
+
+5. **Mark it Review,** only when it is in Implement: a spike already in Review is resumed, so skip this step and go on from step 6. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason and run no more commands.
-
-5. **Read the findings.** Read the live doc with `getConfluencePage` and `contentFormat: "markdown"`: its `Answer`, its `Evidence` and its `Next`.
 
 6. **Run the Evidence again on the current state.** Re-run each `ran:` command and re-read each `read:` source of the `Evidence`, and compare what they give now with the literal output the live doc keeps. A `ran:` that runs a script runs it in a temporary directory outside the repository (`mktemp -d`), with the script of its code block, so nothing is written in the project. Run only commands that read; when one would write anywhere but the temporary directory, stop and ask.
 
