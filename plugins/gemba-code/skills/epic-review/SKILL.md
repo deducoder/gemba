@@ -20,7 +20,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
    - it is not an Epic: say its type;
    - its status is not Implement or Review: say its status.
 
-3. **Read its children** with `searchJiraIssuesUsingJql`, the JQL `parent = <KEY>` and the fields `summary`, `issuetype` and `status`. When a child is not Done or Cancelled, stop, writing nothing, and name each such child with its key and its status.
+3. **Read its children** with `searchJiraIssuesUsingJql`, the JQL `parent = <KEY>` and the fields `summary`, `issuetype` and `status`, asking for the next page with its `nextPageToken` while `pageInfo.hasNextPage` is true. When a child is not Done or Cancelled, stop, writing nothing, and name each such child with its key and its status.
 
 4. **Mark it Review,** only when it is in Implement: an epic already in Review is resumed, so skip this step and go on from step 5. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Review: pick it by destination, never by id. This is the first write of the phase.
 
@@ -28,13 +28,13 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
 5. **Warn about the due date.** When the epic has a `duedate` and today is later than it, say that the epic reached Review after its due date, naming the date, and go on: it does not stop the skill.
 
-6. **Review the code of each story.** For each child that is a Story in Done, find its merge into `develop` with:
+6. **Review the code of each story.** Update the remote with `git fetch -q origin`, and for each child that is a Story in Done find its merges into `develop` with:
 
    ```
-   git log --merges --format='%H %s' develop --grep "^Merge branch 'story/<child KEY>/"
+   git log --merges --format='%H %s' origin/develop --grep "^Merge branch 'story/<child KEY>/"
    ```
 
-   and invoke `/code-review <merge>^1..<merge>` with the Skill tool, `<merge>` being the hash it printed. Spikes are never merged and Cancelled children delivered nothing: skip both. When a story has no merge, name it. When no story has a merge, say so and review no code.
+   and invoke `/code-review <merge>^1..<merge>` with the Skill tool for each hash it printed. Spikes are never merged and Cancelled children delivered nothing: skip both. When a story has no merge, name it. When no story has a merge, say so and review no code.
 
 7. **Declare each finding loose.** For each finding of step 6 that you or the person do not dismiss, invoke with the Skill tool the start skill of its type, without naming the epic, so it gets no parent: `/gemba-code:bug-start` for something that fails, `/gemba-code:story-start` for something to build and `/gemba-code:spike-start` for a question to research. Then link the new work item to the epic with `createIssueLink`, the link type `Relates`. The epic gets no child: what its review finds is work of its own.
 
