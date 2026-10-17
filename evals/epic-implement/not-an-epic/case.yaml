@@ -27,5 +27,5 @@ graders:
     match: not_contains
   - name: reason
     type: regex
-    pattern: 'story'
+    pattern: '(is|es|type|tipo)\W+(\w+\W+){0,3}story\b'
     flags: i

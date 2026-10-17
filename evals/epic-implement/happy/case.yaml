@@ -25,9 +25,13 @@ graders:
     target: mock_calls
     pattern: 'transitionJiraIssue[\s\S]*id\W+41'
   - name: children-read-before-the-mark
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__searchJiraIssuesUsingJql
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: not-ready-count
     type: regex
-    target: mock_calls
-    pattern: 'searchJiraIssuesUsingJql[\s\S]*transitionJiraIssue'
+    pattern: '\b(2|two|dos)\b[^\n]*(not ready|no están listos|no listos)|(not ready|no están listos|no listos)[^\n]*\b(2|two|dos)\b'
+    flags: i
   - name: ready-by-priority
     type: regex
     pattern: 'ABC-52[\s\S]*ABC-55[\s\S]*ABC-51'

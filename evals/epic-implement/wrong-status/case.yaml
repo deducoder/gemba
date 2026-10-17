@@ -23,5 +23,5 @@ graders:
     match: not_contains
   - name: reason
     type: regex
-    pattern: 'review'
+    pattern: '(is|está|estado|status)\W+(\w+\W+){0,3}review\b'
     flags: i
