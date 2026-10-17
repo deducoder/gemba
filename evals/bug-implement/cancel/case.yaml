@@ -23,7 +23,7 @@ graders:
   - name: replaced-by
     type: regex
     target: mock_calls
-    pattern: 'Replaced by: Ninguno\.'
+    pattern: 'Replaced by: (Ninguno|None)\.'
   - name: only-the-cancel-mark
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
