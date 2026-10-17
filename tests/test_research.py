@@ -100,7 +100,7 @@ class ResearchDraft(unittest.TestCase):
         self.assertEqual(states, ["1.1 Documented:", "1.2 Inferred:", "1.3 Unverified:"])
 
     def test_each_source_is_a_smart_link_followed_by_its_kind_and_date(self):
-        cards = [n for n in self.body if n["type"] == "paragraph" and n["content"][0:2] and n["content"][1]["type"] == "inlineCard"]
+        cards = [n for n in self.body if n["type"] == "paragraph" and len(n["content"]) > 1 and n["content"][1]["type"] == "inlineCard"]
         self.assertEqual([c["content"][1]["attrs"]["url"] for c in cards], [URL_ONE, URL_TWO])
         self.assertIn("(official, 2026-10-17)", flat(cards[0]))
 
@@ -150,11 +150,9 @@ class ResearchRejects(unittest.TestCase):
         rejected(DRAFT.replace("1.3 Unverified", "1.3 Observed"), "1.3")
 
     def test_a_secondary_source_before_an_official_one(self):
-        lines = DRAFT.split("\n")
-        one = next(i for i, l in enumerate(lines) if l.startswith("[1] "))
-        lines[one], lines[one + 1] = lines[one + 1], lines[one]
-        rejected("\n".join(lines).replace("[1] https://example", "[1] https://example").replace(
-            f"[2] {URL_ONE}", f"[1] {URL_ONE}"), "secondary")
+        swapped = DRAFT.replace(f"[1] {URL_ONE} (official", f"[1] {URL_TWO} (secondary", 1).replace(
+            f"[2] {URL_TWO} (secondary", f"[2] {URL_ONE} (official", 1)
+        rejected(swapped, "secondary")
 
     def test_a_source_without_its_kind_and_date(self):
         rejected(DRAFT.replace("(official, 2026-10-17)", ""), "Sources")
