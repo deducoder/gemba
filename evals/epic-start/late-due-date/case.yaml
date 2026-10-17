@@ -23,5 +23,5 @@ graders:
     pattern: '2026-11-30'
   - name: asks
     type: regex
-    pattern: 'another (date|version)|other (date|version)|different (date|version)|move the epic'
+    pattern: '(another|other|different|later) (due )?(date|(fix )?version)|on or before|move the epic'
     flags: i
