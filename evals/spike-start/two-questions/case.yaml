@@ -1,0 +1,29 @@
+schema_version: "1.1"
+name: spike-start-two-questions
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare spikes: can invoices.py fetch the invoices from the Acme Pay billing API instead of its INVOICES list? And can it email each invoice to its customer through the Acme Mail service? Whether the next stories replace the list and add the email depends on each answer.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 40
+  timeout_seconds: 300
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-start
+  - name: spikes
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    min: 2
+  - name: evidence
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__addCommentToJiraIssue
+    min: 2
+  - name: keys
+    type: regex
+    pattern: 'ABC-101[\s\S]*ABC-102'
