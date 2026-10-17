@@ -10,8 +10,8 @@ context:
 execution:
   prompt: 'Approved, go ahead.'
   allowed_tools: [Read, Glob, Grep, Skill]
-  max_turns: 20
-  timeout_seconds: 240
+  max_turns: 60
+  timeout_seconds: 600
 graders:
   - name: epic
     type: tool_used
@@ -20,16 +20,57 @@ graders:
   - name: fields
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
-    input_match: '^(?=[\s\S]*duedate\W+2026-10-26)(?=[\s\S]*fixVersions[\s\S]*ABC v1\.1\.0)(?=[\s\S]*priority\W+name\W+Medium)'
-  - name: no-estimate
-    type: regex
-    target: mock_calls
-    pattern: 'timetracking|originalEstimate|components'
-    match: not_contains
-  - name: one-issue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Epic)(?=[\s\S]*duedate\W+2026-10-20)(?=[\s\S]*fixVersions[\s\S]*ABC v1\.1\.0)(?=[\s\S]*priority\W+name\W+Medium)'
+  - name: epic-without-estimate
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Epic)(?![\s\S]*(timetracking|originalEstimate|components))'
+  - name: one-epic
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: 'issueTypeName\W+Epic'
     max: 1
+  - name: story-start
+    type: tool_used
+    tool: Skill
+    input_match: '^(?=[\s\S]*story-start)(?=[\s\S]*ABC-60)'
+  - name: spike-start
+    type: tool_used
+    tool: Skill
+    input_match: '^(?=[\s\S]*spike-start)(?=[\s\S]*ABC-60)'
+  - name: story-parent
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Story)(?=[\s\S]*parent\W+ABC-60)'
+    max: 1
+  - name: spike-parent
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Spike)(?=[\s\S]*parent\W+ABC-60)'
+    max: 1
+  - name: story-before-spike
+    type: tool_order
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+      input_match: 'issueTypeName\W+Story'
+    after:
+      tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+      input_match: 'issueTypeName\W+Spike'
+  - name: blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-102\b)'
+  - name: no-inverted-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-101\b)'
+    min: 0
+    max: 0
+  - name: no-assignee
+    type: regex
+    target: mock_calls
+    pattern: 'assignee|editJiraIssue'
+    match: not_contains
   - name: reply
     type: regex
-    pattern: 'https://example\.atlassian\.net/browse/ABC-60'
+    pattern: '^(?=[\s\S]*browse/ABC-60)(?=[\s\S]*browse/ABC-101)(?=[\s\S]*browse/ABC-102)'

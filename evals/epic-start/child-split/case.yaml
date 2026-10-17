@@ -1,0 +1,44 @@
+schema_version: "1.1"
+name: epic-start-child-split
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+  history_file: history.jsonl
+execution:
+  prompt: 'Yes, go ahead with that split.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 60
+  timeout_seconds: 600
+graders:
+  - name: no-second-epic
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: 'issueTypeName\W+Epic'
+    min: 0
+    max: 0
+  - name: parts-and-next-child
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: '^(?=[\s\S]*issueTypeName\W+Story)(?=[\s\S]*parent\W+ABC-60)'
+    min: 3
+    max: 3
+  - name: first-part-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
+  - name: second-part-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
+  - name: no-blocks-between-parts
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
+    min: 0
+    max: 0
+  - name: reply
+    type: regex
+    pattern: '^(?=[\s\S]*browse/ABC-101)(?=[\s\S]*browse/ABC-102)(?=[\s\S]*browse/ABC-103)'
