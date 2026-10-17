@@ -72,13 +72,14 @@ def problems(draft):
         found.append("decision: write one sentence under the question: the decision or doubt that prompted it and who waits on it")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    for name in ("Answer", "Method", "Next"):
-        if not paragraphs(sections[name]):
+    blocks = {name: paragraphs(sections[name]) for name in ("Answer", "Method", "Next")}
+    for name, paragraph_list in blocks.items():
+        if not paragraph_list:
             found.append(f"{name}: write at least one paragraph")
     if [line for line in sections["Findings"] if line.strip()]:
         found.append("Findings: write each line under a '#### n. Topic' heading")
 
-    sources = {}
+    sources = []
     for line in (line for line in sections["Sources"] if line.strip()):
         match = SOURCE.match(line)
         if not match:
@@ -86,14 +87,14 @@ def problems(draft):
         elif int(match.group(1)) != len(sources) + 1:
             found.append(f"Sources: number them from 1, in order: {line}")
         else:
-            sources[int(match.group(1))] = match.groups()[1:]
+            sources.append(match.groups()[1:])
     if not sources:
         found.append("Sources: write at least one source")
-    kinds = [source[1] for source in sources.values()]
+    kinds = [source[1] for source in sources]
     if "secondary" in kinds and any(kind in ("official", "spec") for kind in kinds[kinds.index("secondary"):]):
         found.append("Sources: a secondary source goes after every official and spec one")
 
-    topics, ids = [], []
+    topics = []
     for (section, topic), lines in subsections.items():
         number = TOPIC.match(topic)
         if section != "Findings" or not number or int(number.group(1)) != len(topics) + 1:
@@ -117,21 +118,20 @@ def problems(draft):
                 if not numbers:
                     found.append(f"Findings: {name} Documented needs the number of its source as [n]")
                 for n in numbers:
-                    if n not in sources:
+                    if not 1 <= n <= len(sources):
                         found.append(f"Findings: {name} cites the source {n}, which Sources does not have")
             elif state == "Inferred" and not FROM.search(text):
                 found.append(f"Findings: {name} Inferred names what it follows from, ending in (from n.m)")
             elif state == "Unverified" and numbers:
                 found.append(f"Findings: {name} Unverified cites no source")
-            ids.append(name)
             topics[-1][1].append((name, state, text))
         if not count:
             found.append(f"Findings: {topic} needs at least one finding")
     if not topics:
         found.append("Findings: write at least one '#### 1. Topic' with its findings")
 
-    answer = " ".join(paragraphs(sections["Answer"]))
-    cited = CITED.findall(answer)
+    ids = {name for _, items in topics for name, *_ in items}
+    cited = CITED.findall(" ".join(blocks["Answer"]))
     if not cited:
         found.append("Answer: cite at least one finding as [Finding n.m]")
     for name in cited:
@@ -139,9 +139,8 @@ def problems(draft):
             found.append(f"Answer: cites [Finding {name}], which Findings does not have")
     if found:
         return found, None
-    return found, {"title": title, "decision": decision[0], "answer": paragraphs(sections["Answer"]),
-                   "method": paragraphs(sections["Method"]), "topics": topics, "sources": sources,
-                   "next": paragraphs(sections["Next"])}
+    return found, {"title": title, "decision": decision[0], "answer": blocks["Answer"],
+                   "method": blocks["Method"], "topics": topics, "sources": sources, "next": blocks["Next"]}
 
 
 def paragraph(text):
@@ -154,7 +153,7 @@ def cited(text, sources):
     for i, part in enumerate(CITE.split(text)):
         if i % 2:
             nodes.append({"type": "text", "text": f"[{part}]",
-                          "marks": [{"type": "link", "attrs": {"href": sources[int(part)][0]}}]})
+                          "marks": [{"type": "link", "attrs": {"href": sources[int(part) - 1][0]}}]})
         elif part:
             nodes.extend(inline(part))
     return nodes
@@ -184,7 +183,7 @@ def body(content, site, key):
         heading("Findings", 2),
         *[node for topic, findings in content["topics"]
           for node in (heading(topic, 3), *[finding(*item, sources) for item in findings])],
-        heading("Sources", 2), *[source(n, *values) for n, values in sources.items()],
+        heading("Sources", 2), *[source(n, *values) for n, values in enumerate(sources, 1)],
         heading("Next", 2), *[paragraph(block) for block in content["next"]],
     ])
 
