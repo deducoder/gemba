@@ -31,8 +31,9 @@ After `merged` and `merged, not pushed` it lists the commits the push of develop
 one per line. On conflicts it aborts the merge, goes back to the branch it came from and names
 the files. `--worktree` creates the branch without tracking in `.claude/worktrees/<KEY>` and
 prints the branch and, on a second line, that folder; the working tree stays where it was. When
-the branch already exists it resumes it: it opens the folder again from the branch if the folder
-is gone, and changes nothing if it is there. It
+the branch already exists it resumes it: it opens the folder again from the branch, or from
+origin/<branch> when only that exists, if the folder is gone, and changes nothing if it is there;
+it refuses a folder that is not a worktree of the branch. It
 refuses, touching nothing, with uncommitted changes in files with tracking or without
 origin/develop. It never pushes: the push is a command of its own, visible to
 whoever gates it.
@@ -110,15 +111,20 @@ def switch_to(branch):
 
 def open_worktree(branch, key):
     """Opens the branch in `.claude/worktrees/<KEY>`, leaving the working tree where it is, and
-    prints the branch and the folder. A branch that exists keeps its commits: the folder is opened
-    again when it is gone, and left as it is when it is there. A branch that does not exist starts
-    from origin/develop without tracking it."""
+    prints the branch and the folder; returns the reason it refuses, or None. A folder that is
+    there must hold the branch and is left as it is. A branch without its folder is opened again
+    with its commits, from the local branch or from origin/<branch>; a branch that does not exist
+    starts from origin/develop. None of them tracks a branch."""
     folder = f".claude/worktrees/{key}"
-    if not has_ref(f"refs/heads/{branch}"):
-        git("worktree", "add", "-q", "--no-track", "-b", branch, folder, DEVELOP)
-    elif not os.path.isdir(folder):
+    if os.path.isdir(folder):
+        if git("-C", folder, "branch", "--show-current").stdout.strip() != branch:
+            return f"{folder} exists and is not a worktree of {branch}"
+    elif has_ref(f"refs/heads/{branch}"):
         git("worktree", "prune")
         git("worktree", "add", "-q", folder, branch)
+    else:
+        start = f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else DEVELOP
+        git("worktree", "add", "-q", "--no-track", "-b", branch, folder, start)
     print(branch)
     print(folder)
 

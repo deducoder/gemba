@@ -49,7 +49,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
    When it refuses, relay its reason and stop.
 
-5. **Find the folder of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`. Keep the page of the descendants whose parent is `Spikes` and whose title starts with the spike's key and a space: it is the live doc of this spike, when it exists. When either is missing, stop, writing nothing and naming which one is missing: the person creates them before the spike starts.
+5. **Find the folder of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`. Keep the page of the descendants whose parent is `Spikes` and whose title starts with the spike's key and a space: it is the live doc of this spike, when it exists; when more than one matches, stop and name them. When either is missing, stop, writing nothing and naming which one is missing: the person creates them before the spike starts.
 
 6. **Mark it Implement,** only when it is in Backlog: a spike already in Implement is resumed, so skip this step. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Implement: pick it by destination, never by id. This is the first write of the phase.
 
@@ -67,7 +67,7 @@ Until the Implement mark this skill only reads, apart from a drift comment, and 
 
 9. **Run the approved experiments inside the worktree,** working in `.claude/worktrees/<KEY>` only (`git -C` for git, the folder as the working directory for everything else), and commit the experimental work in the spike branch in the commit format of the Gemba Code context. Keep each command and its literal output for the findings.
 
-   The time worked starts at the last change into Implement: read it once with `getJiraIssue`, asking only for `status` and `expand: "changelog"`. Before each experiment run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>` and compare its `minutes` with the time-box: the `originalEstimateSeconds` of step 2, divided by 60. When `minutes` has reached it, run no more experiments and go on to step 10 with what you have; the Answer is Inconclusa unless what you have already answers the question.
+   The time worked starts at the last change into Implement: read it once with `getJiraIssue`, asking only for `status` and `expand: "changelog"`. Before each experiment run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>` and compare its `minutes` with the time-box: the `originalEstimateSeconds` of step 2, divided by 60; a spike without an original estimate has no time-box to reach. When `minutes` has reached it, run no more experiments and go on to step 10 with what you have; the Answer is Inconclusa unless what you have already answers the question.
 
    When an experiment contradicts a criterion of the Done when of the spike, leave a drift comment and stop: publish nothing.
 
