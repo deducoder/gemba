@@ -32,7 +32,7 @@ Until the Done mark this skill only reads: it writes nothing in Jira and deletes
 
    It deletes nothing. It prints the branch, then `on origin`, `local only` or `gone`, then the commits of the branch that `develop` lacks, one per line. It refuses, touching nothing, when the folder `.claude/worktrees/<KEY>` is not a worktree of the branch, has changes or files without tracking (it lists them) or `origin` cannot be asked: relay its reason and stop, so the spike is not marked and nothing is deleted. Keep the branch and the second line for step 6.
 
-   When the second line is `gone`, neither the folder nor the branch is left anywhere: when the spike is Done, say that there is nothing left to close, change nothing and stop. Otherwise say the branch and the commits before going on, because deleting the branch discards them.
+   When the second line is `gone`, neither the folder nor the branch is left anywhere: when the spike is Done, say that there is nothing left to close, change nothing and stop. When the spike is in Review, go on and mark it: there is nothing to delete, and the answer is in the findings. Otherwise say the branch and the commits before going on, because deleting the branch discards them.
 
 4. **Mark it Done,** only when it is in Review. Read the transitions with `getTransitionsForJiraIssue` and apply with `transitionJiraIssue` the one whose destination (`to.name`) is Done: pick it by destination, never by id.
 

@@ -37,5 +37,5 @@ graders:
     max: 0
   - name: says-so
     type: regex
-    pattern: 'nothing (is |was )?(left|to (close|delete|do))|already'
+    pattern: 'nothing (is |was )?(left|to (close|delete|do))'
     flags: i
