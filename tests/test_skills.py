@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "plugins" / "gemba"
 SKILLS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
-SIDE_EFFECTS = ["setup", "session-close"]
+SIDE_EFFECTS = ["gemba/setup", "gemba/session-close", "gemba-code/story-close", "gemba-code/bug-close", "gemba-code/spike-close"]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 PLUGIN_SCRIPT = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/(scripts/[\w./-]+)")
@@ -120,7 +120,8 @@ class SkillStructure(unittest.TestCase):
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
         for name in SIDE_EFFECTS:
             with self.subTest(skill=name):
-                fields = read(PLUGIN / "skills" / name / "SKILL.md")[0]
+                plugin, skill = name.split("/")
+                fields = read(ROOT / "plugins" / plugin / "skills" / skill / "SKILL.md")[0]
                 self.assertEqual(fields.get("disable-model-invocation"), "true")
 
     def test_setup_template_has_the_gemba_and_language_headings(self):
