@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 from draft import FENCE, TRAIL, check_sections, check_summary, doc, heading, inline, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Evidence", "Next"]
-VERDICT = re.compile(r"^(sí|si|no|inconclusa)\b[.,:;]?", re.IGNORECASE)
+VERDICT = re.compile(r"^(sí|no|inconclusa)[.,:;]", re.IGNORECASE)
 
 
 def paragraphs(lines):
@@ -51,6 +51,9 @@ def paragraphs(lines):
         elif fence is not None:
             code.append(line)
         elif line.strip():
+            if text and line.startswith(TRAIL):
+                blocks.append(" ".join(text))
+                text = []
             text.append(line.strip())
         elif text:
             blocks.append(" ".join(text))
@@ -115,7 +118,8 @@ def labelled(text):
 def evidence(block):
     if isinstance(block, tuple):
         language, code = block
-        return {"type": "codeBlock", "attrs": {"language": language} if language else {}, "content": [{"type": "text", "text": code}]}
+        return {"type": "codeBlock", "attrs": {"language": language} if language else {},
+                **({"content": [{"type": "text", "text": code}]} if code else {})}
     return labelled(block) if block.startswith(TRAIL) else paragraph(block)
 
 

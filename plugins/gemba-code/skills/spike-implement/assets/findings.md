@@ -14,7 +14,7 @@ ran: `<command>` <what it does>:
 <the script, when the command runs one>
 ```
 
-Salida (exit <status>):
+Output (exit <status>):
 
 ```
 <the output, literal>
