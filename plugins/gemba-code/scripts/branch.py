@@ -5,6 +5,7 @@ Usage: python3 branch.py <type> <KEY> '<Summary>'
        python3 branch.py --check [<type> <KEY> '<Summary>']   (from the project root)
        python3 branch.py --ready <type> <KEY> '<Summary>'
        python3 branch.py --merge <type> <KEY> '<Summary>'
+       python3 branch.py --worktree <type> <KEY> '<Summary>'
 
 The branch is `<type>/<KEY>/<summary>`, with the Summary in lowercase kebab-case.
 It starts from origin/develop after fetching, so a develop that is behind does not
@@ -28,7 +29,10 @@ lacks); otherwise `merged`: it updates develop (`git pull --ff-only`) and merges
 origin/<branch> with `--no-ff` and the message `Merge branch '<branch>' into develop`.
 After `merged` and `merged, not pushed` it lists the commits the push of develop sends,
 one per line. On conflicts it aborts the merge, goes back to the branch it came from and names
-the files. It never pushes: the push is a command of its own, visible to
+the files. `--worktree` creates the branch without tracking in `.claude/worktrees/<KEY>` and
+prints the branch and, on a second line, that folder; the working tree stays where it was. It
+refuses, touching nothing, with uncommitted changes in files with tracking or without
+origin/develop. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
 
@@ -99,6 +103,15 @@ def switch_to(branch):
     else:
         git("switch", "-q", "-c", branch, "--no-track", DEVELOP)
     print(branch)
+
+
+def open_worktree(branch, key):
+    """Creates the branch from origin/develop in `.claude/worktrees/<KEY>`, leaving the working tree
+    where it is, and prints the branch and the folder."""
+    folder = f".claude/worktrees/{key}"
+    git("worktree", "add", "-q", "--no-track", "-b", branch, folder, DEVELOP)
+    print(branch)
+    print(folder)
 
 
 def mergeable(branch):
@@ -177,12 +190,12 @@ def guarded(branch, action, verify=check):
 
 
 def main(argv):
-    mode = argv[0] if argv[:1] in (["--check"], ["--ready"], ["--merge"]) else None
+    mode = argv[0] if argv[:1] in (["--check"], ["--ready"], ["--merge"], ["--worktree"]) else None
     args = argv[1:] if mode else argv
     if mode == "--check" and not args:
         return guarded(None, lambda: None)
     if len(args) != 3:
-        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'  |  python3 branch.py --merge <type> <KEY> '<Summary>'", file=sys.stderr)
+        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'  |  python3 branch.py --merge <type> <KEY> '<Summary>'  |  python3 branch.py --worktree <type> <KEY> '<Summary>'", file=sys.stderr)
         return 2
     kind, key, summary = args
     if not slug(summary):
@@ -191,6 +204,8 @@ def main(argv):
     branch = f"{kind}/{key}/{slug(summary)}"
     if mode == "--merge":
         return guarded(branch, lambda: merge_into_develop(branch), mergeable)
+    if mode == "--worktree":
+        return guarded(branch, lambda: open_worktree(branch, key), lambda _: check(None))
     if mode == "--ready":
         return guarded(branch, lambda: None, ready)
     return guarded(branch, (lambda: None) if mode else (lambda: switch_to(branch)))

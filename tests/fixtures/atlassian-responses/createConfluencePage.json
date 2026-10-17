@@ -1,0 +1,35 @@
+{
+  "authorId": "712020:x",
+  "parentType": "folder",
+  "parentId": "1005",
+  "ownerId": "712020:x",
+  "subtype": "live",
+  "createdAt": "2026-10-17T01:46:54.580Z",
+  "lastOwnerId": null,
+  "position": 251317288,
+  "version": {
+    "number": 1,
+    "message": "",
+    "minorEdit": false,
+    "authorId": "712020:x",
+    "createdAt": "2026-10-17T01:46:54.580Z",
+    "ncsStepVersion": "1"
+  },
+  "spaceId": "1001",
+  "body": {
+    "storage": {
+      "representation": "storage",
+      "value": "<p>Probe.</p>"
+    }
+  },
+  "status": "current",
+  "title": "ABC-7 probe",
+  "id": "1006",
+  "_links": {
+    "editui": "/spaces/ABC/pages/1006/p",
+    "webui": "/spaces/ABC/pages/1006/p",
+    "edituiv2": "/spaces/ABC/pages/1006/p",
+    "tinyui": "/x/AbCdEf",
+    "base": "https://example.atlassian.net/wiki"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "spaceOwnerId": "712020:x",
+      "homepageId": "1002",
+      "authorId": "712020:x",
+      "createdAt": "2026-10-16T08:12:48.722Z",
+      "icon": null,
+      "description": null,
+      "status": "current",
+      "name": "ABC",
+      "key": "ABC",
+      "id": "1001",
+      "type": "knowledge_base",
+      "_links": {
+        "webui": "/spaces/ABC"
+      },
+      "currentActiveAlias": "ABC"
+    }
+  ],
+  "_links": {
+    "base": "https://example.atlassian.net/wiki"
+  }
+}
