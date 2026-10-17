@@ -5,6 +5,8 @@ Usage: python3 branch.py <type> <KEY> '<Summary>'
        python3 branch.py --check [<type> <KEY> '<Summary>']   (from the project root)
        python3 branch.py --ready <type> <KEY> '<Summary>'
        python3 branch.py --merge <type> <KEY> '<Summary>'
+       python3 branch.py --worktree <type> <KEY> '<Summary>'
+       python3 branch.py --discard [--dry-run] <type> <KEY> '<Summary>'
 
 The branch is `<type>/<KEY>/<summary>`, with the Summary in lowercase kebab-case.
 It starts from origin/develop after fetching, so a develop that is behind does not
@@ -28,10 +30,25 @@ lacks); otherwise `merged`: it updates develop (`git pull --ff-only`) and merges
 origin/<branch> with `--no-ff` and the message `Merge branch '<branch>' into develop`.
 After `merged` and `merged, not pushed` it lists the commits the push of develop sends,
 one per line. On conflicts it aborts the merge, goes back to the branch it came from and names
-the files. It never pushes: the push is a command of its own, visible to
-whoever gates it.
+the files. `--worktree` creates the branch without tracking in `.claude/worktrees/<KEY>` and
+prints the branch and, on a second line, that folder; the working tree stays where it was. When
+the branch already exists it resumes it: it opens the folder again from the branch, or from
+origin/<branch> when only that exists, if the folder is gone, and changes nothing if it is there;
+it refuses a folder that is not a worktree of the branch. It
+refuses, touching nothing, with uncommitted changes in files with tracking or without
+origin/develop. It never pushes: the push is a command of its own, visible to
+whoever gates it. `--discard` deletes the folder `.claude/worktrees/<KEY>` and the local branch of a work
+item that is never merged. It prints the branch, on a second line `on origin` or `local only` (whether
+origin has the branch) and then the commits of the branch (of origin/<branch> when only that is left)
+that origin/develop lacks, one per line, which the deletion discards; with `--dry-run` it only prints. The folder goes first, with `git worktree remove`
+and no `--force`, so git refuses a folder with changes or files without tracking and nothing is deleted.
+It refuses, in both modes, a folder that is not a worktree of the branch, a folder with changes or files
+without tracking (it lists them) and an origin it cannot ask; when there is no folder, no local branch and
+no branch on origin the second line is `gone`. It never merges and never pushes, and it leaves the branch
+of origin alone.
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -99,6 +116,69 @@ def switch_to(branch):
     else:
         git("switch", "-q", "-c", branch, "--no-track", DEVELOP)
     print(branch)
+
+
+def foreign_folder(folder, branch):
+    """Returns the reason a folder that exists is not a worktree of the branch, or None."""
+    if os.path.isdir(folder) and git("-C", folder, "branch", "--show-current").stdout.strip() != branch:
+        return f"{folder} exists and is not a worktree of {branch}"
+
+
+def dirty_folder(folder):
+    """Returns the reason a folder that exists cannot be deleted without losing work (it has changes or
+    files without tracking, which it lists), or None."""
+    if os.path.isdir(folder):
+        changes = git("-C", folder, "status", "--porcelain", "--untracked-files=all").stdout.rstrip()
+        if changes:
+            return f"{folder} has changes or files without tracking:\n{changes}"
+
+
+def open_worktree(branch, key):
+    """Opens the branch in `.claude/worktrees/<KEY>`, leaving the working tree where it is, and
+    prints the branch and the folder; returns the reason it refuses, or None. A folder that is
+    there must hold the branch and is left as it is. A branch without its folder is opened again
+    with its commits, from the local branch or from origin/<branch>; a branch that does not exist
+    starts from origin/develop. None of them tracks a branch."""
+    folder = f".claude/worktrees/{key}"
+    reason = foreign_folder(folder, branch)
+    if reason:
+        return reason
+    if not os.path.isdir(folder):
+        if has_ref(f"refs/heads/{branch}"):
+            git("worktree", "prune")
+            git("worktree", "add", "-q", folder, branch)
+        else:
+            start = f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else DEVELOP
+            git("worktree", "add", "-q", "--no-track", "-b", branch, folder, start)
+    print(branch)
+    print(folder)
+
+
+def discardable(folder, branch):
+    """Returns the first reason the folder of a work item cannot be discarded, or None."""
+    return foreign_folder(folder, branch) or dirty_folder(folder)
+
+
+def discard(branch, key, dry_run):
+    """Prints the branch, whether origin has it and the commits origin/develop lacks, and deletes the
+    folder `.claude/worktrees/<KEY>` and then the local branch unless it is a dry run; returns the reason
+    it refuses (a remote it cannot ask), or None. The second line is `gone` when neither the folder,
+    the local branch nor the branch of origin is there. A part that is already gone is skipped, and a folder
+    deleted by hand is pruned so the branch can go."""
+    folder = f".claude/worktrees/{key}"
+    local = has_ref(f"refs/heads/{branch}")
+    found = subprocess.run(["git", "ls-remote", "--exit-code", "--heads", "origin", branch], capture_output=True, text=True)
+    if found.returncode not in (0, 2):
+        return found.stderr.strip()
+    state = "on origin" if found.returncode == 0 else "local only" if local or os.path.isdir(folder) else "gone"
+    tip = branch if local else f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else None
+    print("\n".join(filter(None, (branch, state, tip and commits(f"{DEVELOP}..{tip}")))))
+    if not dry_run:
+        if os.path.isdir(folder):
+            git("worktree", "remove", folder)
+        git("worktree", "prune")
+        if local:
+            git("branch", "-D", branch)
 
 
 def mergeable(branch):
@@ -177,12 +257,15 @@ def guarded(branch, action, verify=check):
 
 
 def main(argv):
-    mode = argv[0] if argv[:1] in (["--check"], ["--ready"], ["--merge"]) else None
+    mode = argv[0] if argv[:1] in (["--check"], ["--ready"], ["--merge"], ["--worktree"], ["--discard"]) else None
     args = argv[1:] if mode else argv
+    dry_run = mode == "--discard" and args[:1] == ["--dry-run"]
+    if dry_run:
+        args = args[1:]
     if mode == "--check" and not args:
         return guarded(None, lambda: None)
     if len(args) != 3:
-        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'  |  python3 branch.py --merge <type> <KEY> '<Summary>'", file=sys.stderr)
+        print("Usage: python3 branch.py <type> <KEY> '<Summary>'  |  python3 branch.py --check [<type> <KEY> '<Summary>']  |  python3 branch.py --ready <type> <KEY> '<Summary>'  |  python3 branch.py --merge <type> <KEY> '<Summary>'  |  python3 branch.py --worktree <type> <KEY> '<Summary>'  |  python3 branch.py --discard [--dry-run] <type> <KEY> '<Summary>'", file=sys.stderr)
         return 2
     kind, key, summary = args
     if not slug(summary):
@@ -191,6 +274,10 @@ def main(argv):
     branch = f"{kind}/{key}/{slug(summary)}"
     if mode == "--merge":
         return guarded(branch, lambda: merge_into_develop(branch), mergeable)
+    if mode == "--discard":
+        return guarded(branch, lambda: discard(branch, key, dry_run), lambda _: discardable(f".claude/worktrees/{key}", branch))
+    if mode == "--worktree":
+        return guarded(branch, lambda: open_worktree(branch, key), lambda _: check(None))
     if mode == "--ready":
         return guarded(branch, lambda: None, ready)
     return guarded(branch, (lambda: None) if mode else (lambda: switch_to(branch)))

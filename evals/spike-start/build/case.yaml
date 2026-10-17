@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: spike-start-build
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a spike: add a --csv option to invoices.py that prints the invoices of a customer as CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 120
+graders:
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+    match: not_contains
+  - name: story
+    type: regex
+    pattern: 'story-start'

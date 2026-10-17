@@ -19,3 +19,12 @@ What happens if it is not fixed?
 - **High:** it fails with no alternative in a flow the project exists for.
 - **Medium:** it fails, but an alternative exists.
 - **Low:** it does not affect results.
+
+## Spike
+
+What happens while it stays unanswered?
+
+- **Highest:** work under way is stopped.
+- **High:** a decision about the purpose of the project, or something with a date, waits on it.
+- **Medium:** a decision about an improvement waits on it, and the work goes on.
+- **Low:** nothing waits on it: it is exploration.

@@ -1,0 +1,45 @@
+schema_version: "1.1"
+name: spike-start-question
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a spike: can invoices.py fetch the invoices from the Acme Pay billing API instead of its INVOICES list? Whether the next story replaces the list depends on it.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 24
+  timeout_seconds: 180
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Spike'
+  - name: sections
+    type: regex
+    target: mock_calls
+    pattern: 'Done when.*Out of scope'
+  - name: question-first
+    type: regex
+    target: mock_calls
+    pattern: 'description\W+type\W+doc\W+version\W+1\W+content\W+type\W+paragraph\W+content[^?]{0,600}\?[^?]{0,600}Done when'
+  - name: evidence-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue.*Evidence.*(ran|read): '
+  - name: priority
+    type: regex
+    target: mock_calls
+    pattern: 'priority\W+name\W+(Highest|High|Medium|Low)'
+  - name: time-box
+    type: regex
+    target: mock_calls
+    pattern: 'timetracking\W*\{\W*originalEstimate\W+\d+[mhd]'
+  - name: reply
+    type: regex
+    pattern: 'https://example\.atlassian\.net/browse/ABC-60'

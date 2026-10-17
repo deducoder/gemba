@@ -542,6 +542,228 @@
           "timeSpent"
         ]
       }
+    },
+    {
+      "name": "getConfluenceSpaces",
+      "description": "Get spaces",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "keys": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Space keys"
+          },
+          "ids": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ],
+            "description": "Space IDs"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default: 25, max: 250)"
+          }
+        },
+        "required": [
+          "cloudId"
+        ]
+      }
+    },
+    {
+      "name": "getConfluencePageDescendants",
+      "description": "Get child pages of specified page",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "pageId": {
+            "type": "string",
+            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
+          },
+          "depth": {
+            "type": "number",
+            "description": "Max depth"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max descendants"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor"
+          }
+        },
+        "required": [
+          "cloudId",
+          "pageId"
+        ]
+      }
+    },
+    {
+      "name": "createConfluencePage",
+      "description": "Create a Confluence page or blog post.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "spaceId": {
+            "type": "string",
+            "description": "Numeric space ID (a Long, e.g. \"131073\"). A space key (e.g. \"ENG\") or personal-space key (e.g. \"~712020abc\") is also accepted and resolved to the numeric ID automatically."
+          },
+          "title": {
+            "type": "string",
+            "description": "Page or blog post title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Page body."
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "html",
+              "markdown",
+              "adf"
+            ],
+            "description": "Body format."
+          },
+          "parentId": {
+            "type": "string",
+            "description": "ID of the parent to nest the new page under. Accepts the ID of any container that can hold a page, including a folder."
+          },
+          "subtype": {
+            "type": "string",
+            "enum": [
+              "live"
+            ],
+            "description": "Page subtype (pages only, ignored for blogs)"
+          }
+        },
+        "required": [
+          "cloudId",
+          "spaceId",
+          "body"
+        ]
+      }
+    },
+    {
+      "name": "updateConfluencePage",
+      "description": "Update a Confluence page or blog post.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "pageId": {
+            "type": "string",
+            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
+          },
+          "title": {
+            "type": "string",
+            "description": "New title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Replacement page body."
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "html",
+              "markdown",
+              "adf"
+            ],
+            "description": "Body format."
+          },
+          "versionMessage": {
+            "type": "string",
+            "description": "Version message"
+          }
+        },
+        "required": [
+          "cloudId",
+          "pageId",
+          "body"
+        ]
+      }
+    },
+    {
+      "name": "getConfluencePage",
+      "description": "Get a Confluence page or blog post by ID, including body content.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "pageId": {
+            "type": "string",
+            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "html",
+              "markdown",
+              "adf"
+            ],
+            "description": "Content format for page/comment body."
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "page",
+              "blog"
+            ],
+            "description": "Type of content: page or blog post"
+          }
+        },
+        "required": [
+          "cloudId",
+          "pageId"
+        ]
+      }
     }
   ]
 }

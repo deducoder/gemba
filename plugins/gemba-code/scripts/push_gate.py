@@ -60,13 +60,28 @@ def forced(arguments):
     )
 
 
+def uncommented(words):
+    """Returns the words before the first comment: one that starts with # outside a quote."""
+    for index, word in enumerate(words):
+        if word.startswith("#"):
+            try:
+                shlex.split(" ".join(words[:index]))
+            except ValueError:  # the quote is still open: the # is part of its text
+                continue
+            return words[:index]
+    return words
+
+
 def decide(command):
     """Returns ("ask" | "deny", reason) for a command that pushes, else None."""
     try:
         pushes = [a for a in map(push_arguments, segments(command)) if a is not None]
-    except ValueError:  # unbalanced quotes: read the words as they are written
-        words = command.split()
-        pushes = [words[words.index("push") + 1:]] if "git" in map(os.path.basename, words) and "push" in words else []
+    except ValueError:  # unbalanced quotes: read the words of each line as they are written
+        pushes = []
+        for line in command.replace("\\\n", " ").splitlines():
+            words = uncommented(line.split())
+            if "git" in map(os.path.basename, words) and "push" in words:
+                pushes.append(words[words.index("push") + 1:])
     if not pushes:
         return None
     if any(forced(arguments) for arguments in pushes):

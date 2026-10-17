@@ -1,0 +1,23 @@
+schema_version: "1.1"
+name: spike-start-out-of-scope-stated
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:spike-start can invoices.py fetch the invoices from the Acme Pay billing API instead of its INVOICES list? Whether the next story replaces the list depends on it. Refunds are out of scope.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 20
+  timeout_seconds: 180
+graders:
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Spike'
+  - name: stated-exclusion
+    type: regex
+    target: mock_calls
+    pattern: 'Out of scope\W+type\W+bulletList.{0,600}?refund'
+    flags: i

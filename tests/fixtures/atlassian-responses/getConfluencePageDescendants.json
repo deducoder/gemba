@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "id": "1003",
+      "status": "current",
+      "title": "Template - How-to guide",
+      "parentId": "1002",
+      "depth": 1,
+      "childPosition": 767,
+      "type": "page",
+      "lastModified": "2026-10-16T08:12:50.431Z"
+    },
+    {
+      "id": "1004",
+      "status": "current",
+      "title": "Work",
+      "parentId": "1002",
+      "depth": 1,
+      "childPosition": 2563,
+      "type": "folder",
+      "lastModified": "2026-10-17T01:26:10.302Z"
+    },
+    {
+      "id": "1005",
+      "status": "current",
+      "title": "Spikes",
+      "parentId": "1004",
+      "depth": 2,
+      "childPosition": 373570085,
+      "type": "folder",
+      "lastModified": "2026-10-17T01:26:20.262Z"
+    }
+  ],
+  "_links": {
+    "base": "https://example.atlassian.net/wiki"
+  }
+}

@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: spike-start-natural-language
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Investiga si invoices.py puede traer las facturas de la API de facturación de Acme Pay en lugar de su lista INVOICES. De eso depende si la siguiente historia reemplaza la lista.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 24
+  timeout_seconds: 180
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-start
+  - name: created
+    type: regex
+    target: mock_calls
+    pattern: 'issueTypeName\W+Spike'

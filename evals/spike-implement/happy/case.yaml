@@ -1,0 +1,64 @@
+schema_version: "1.1"
+name: spike-implement-happy
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement the spike ABC-30.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 25
+  timeout_seconds: 150
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-30'
+  - name: revalidated-before-the-mark
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'invoices\.py acme'
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: folder-found-before-the-mark
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: checked-before-the-mark
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'scripts/branch\.py --check spike'
+    after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+  - name: mark-by-destination
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue[\s\S]*id\W+31'
+  - name: only-reads-before-the-mark
+    type: regex
+    target: mock_calls
+    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createConfluencePage)[\s\S]*transitionJiraIssue'
+    match: not_contains
+  - name: mark-before-worktree
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
+    after:
+      tool: Bash
+      input_match: 'scripts/branch\.py --worktree spike ABC-30'
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0
+  - name: nothing-published-before-the-plan-is-approved
+    type: regex
+    target: mock_calls
+    pattern: 'createConfluencePage|addWorklogToJiraIssue'
+    match: not_contains

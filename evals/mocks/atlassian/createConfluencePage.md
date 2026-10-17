@@ -1,0 +1,12 @@
+---
+expect:
+  cloudId: string
+  spaceId: string
+  parentId: "1005"
+  subtype: live
+  contentFormat: adf
+  title: string
+  body: string
+---
+
+{"parentType": "folder", "parentId": "1005", "subtype": "live", "spaceId": "1001", "status": "current", "title": "ABC-30 Check", "id": "1006", "_links": {"webui": "/spaces/ABC/pages/1006/p", "base": "https://example.atlassian.net/wiki"}}
