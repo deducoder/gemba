@@ -124,6 +124,18 @@ class SkillStructure(unittest.TestCase):
             with self.subTest(skill=path.parent.name):
                 self.assertEqual(read(path)[0].get("disable-model-invocation"), "true")
 
+    def test_implement_skills_cancel_with_the_cancellation_comment(self):
+        for name in ("story-implement", "bug-implement", "spike-implement"):
+            with self.subTest(skill=name):
+                text = read(ROOT / "plugins/gemba-code/skills" / name / "SKILL.md")[1]
+                self.assertIn("cat ${CLAUDE_PLUGIN_ROOT}/references/cancelled.md", INJECTED.findall(text))
+                self.assertIn("python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site>", text)
+
+    def test_the_cancellation_comment_has_its_heading_and_lines(self):
+        lines = (ROOT / "plugins/gemba-code/references/cancelled.md").read_text(encoding="utf-8").splitlines()
+        self.assertIn("### Cancelled", lines)
+        self.assertEqual([line.split(":")[0] for line in lines if line.startswith("* ")], ["* Reason", "* Found", "* Replaced by"])
+
     def test_setup_template_has_the_gemba_and_language_headings(self):
         lines = (PLUGIN / "skills/setup/assets/CLAUDE.md").read_text(encoding="utf-8").splitlines()
         for heading in ("# Gemba", "## Language"):
