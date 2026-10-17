@@ -26,7 +26,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
 
    When `transitionJiraIssue` returns an error, stop right there: relay Jira's reason and review no code.
 
-5. **Warn about the due date.** When the epic has a `duedate` and today is later than it, say that the epic reached Review after its due date, naming the date, and go on: it does not stop the skill.
+5. **Warn about the due date.** When step 4 marked the epic, it has a `duedate` and today is later than it, say that the epic reached Review after its due date, naming the date, and go on: it does not stop the skill.
 
 6. **Review the code of each story.** Update the remote with `git fetch -q origin`, and for each child that is a Story in Done find its merges into `develop` with:
 
