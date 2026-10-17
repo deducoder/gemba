@@ -44,8 +44,6 @@ def problems(summary, intro, sections, subsections, repeated):
         check_unmarked(name, text, found)
     if subsections:
         found.append("sections: write no #### headings")
-    if "Evidence" in sections:
-        found.append("Evidence: an epic has no Evidence; each of its children carries its own")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     criteria, scope = (items(name, sections[name], found) for name in SECTIONS)
