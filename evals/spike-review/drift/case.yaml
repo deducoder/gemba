@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: spike-review-drift
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the spike ABC-36.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 32
+  timeout_seconds: 220
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-36'
+  - name: drift-comment
+    type: regex
+    target: mock_calls
+    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(999\.00|116\.00)'
+  - name: no-worklog
+    type: regex
+    target: mock_calls
+    pattern: 'addWorklogToJiraIssue|createConfluencePage|updateConfluencePage'
+    match: not_contains
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0

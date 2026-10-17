@@ -1,0 +1,7 @@
+---
+expect:
+  cloudId: string
+  pageId: "1006"
+---
+
+{"content": {"totalCount": 1, "nodes": [{"id": "1006", "type": "page", "subtype": "live", "status": "current", "title": "ABC-30 Check whether invoices can be listed as JSON", "lastModified": "1 minute ago", "summary": "Findings.", "space": {"key": "ABC", "name": "ABC"}, "_links": {"webui": "/spaces/ABC/pages/1006/p"}, "author": {"displayName": "", "avatarUrls": {"48x48": ""}}, "body": "[ABC-30](https://example.atlassian.net/browse/ABC-30)\n\n\u00bfPuede la biblioteca est\u00e1ndar de Python imprimir una lista de facturas como JSON? De la respuesta depende si la historia de exportar facturas usa JSON o CSV.\n\n## Answer\n\n**S\u00ed.** El m\u00f3dulo `json` de la biblioteca est\u00e1ndar imprime una lista de facturas como JSON v\u00e1lido, con los totales como n\u00fameros.\n\n## Evidence\n\n**ran: **`python3 invoices.py acme`:\n\n```\nF-001      116.00\nF-002      290.00\n```\n\n**ran: **`python3 probe.py` con este script, en un directorio temporal fuera del repositorio:\n\n```python\nimport json\nfacturas = [{\"number\": \"F-001\", \"total\": 116.0}, {\"number\": \"F-002\", \"total\": 290.0}]\nprint(json.dumps(facturas))\n```\n\nOutput (exit 0):\n\n```\n[{\"number\": \"F-001\", \"total\": 116.0}, {\"number\": \"F-002\", \"total\": 290.0}]\n```\n\n**read: **`invoices.py:5` \u2192 `TAX = 0.16`\n\n## Next\n\nLa historia de exportar facturas puede usar JSON.\n", "webUrl": "https://example.atlassian.net/wiki/spaces/ABC/pages/1006/p"}]}}
