@@ -70,7 +70,7 @@
         "webUrl": "https://deducoder.atlassian.net/browse/ABC-60"
       }
     ],
-    "webUrl": "https://deducoder.atlassian.net/issues?jql=key%20in%20(ABC-60%2C%20GEMBA-62)",
+    "webUrl": "https://deducoder.atlassian.net/issues?jql=key%20in%20(ABC-60%2C%20ABC-62)",
     "pageInfo": {
       "hasNextPage": false,
       "endCursor": null
