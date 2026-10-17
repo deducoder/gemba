@@ -30,12 +30,15 @@ origin/<branch> with `--no-ff` and the message `Merge branch '<branch>' into dev
 After `merged` and `merged, not pushed` it lists the commits the push of develop sends,
 one per line. On conflicts it aborts the merge, goes back to the branch it came from and names
 the files. `--worktree` creates the branch without tracking in `.claude/worktrees/<KEY>` and
-prints the branch and, on a second line, that folder; the working tree stays where it was. It
+prints the branch and, on a second line, that folder; the working tree stays where it was. When
+the branch already exists it resumes it: it opens the folder again from the branch if the folder
+is gone, and changes nothing if it is there. It
 refuses, touching nothing, with uncommitted changes in files with tracking or without
 origin/develop. It never pushes: the push is a command of its own, visible to
 whoever gates it.
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -106,10 +109,16 @@ def switch_to(branch):
 
 
 def open_worktree(branch, key):
-    """Creates the branch from origin/develop in `.claude/worktrees/<KEY>`, leaving the working tree
-    where it is, and prints the branch and the folder."""
+    """Opens the branch in `.claude/worktrees/<KEY>`, leaving the working tree where it is, and
+    prints the branch and the folder. A branch that exists keeps its commits: the folder is opened
+    again when it is gone, and left as it is when it is there. A branch that does not exist starts
+    from origin/develop without tracking it."""
     folder = f".claude/worktrees/{key}"
-    git("worktree", "add", "-q", "--no-track", "-b", branch, folder, DEVELOP)
+    git("worktree", "prune")
+    if not has_ref(f"refs/heads/{branch}"):
+        git("worktree", "add", "-q", "--no-track", "-b", branch, folder, DEVELOP)
+    elif not os.path.isdir(folder):
+        git("worktree", "add", "-q", folder, branch)
     print(branch)
     print(folder)
 
