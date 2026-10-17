@@ -94,8 +94,10 @@ DENY = [
     "git status\ngit push --force origin main",
     "git push --force origin 'main",
     "git push --force origin main  # it's",
+    "git push origin 'feat #1 --force",
+    "git push origin main \\\n  --force 'x",
 ]
-NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx", "echo 'x"]
+NONE = ["git status", 'echo "git push"', "git log --grep=push", "git pushx", "echo 'x", "# git push --force is blocked\necho 'x"]
 
 
 def gate(command):
