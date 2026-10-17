@@ -7,15 +7,11 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: 'Close the bug ABC-30.'
+  prompt: '/gemba-code:bug-close ABC-30'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 20
   timeout_seconds: 120
 graders:
-  - name: skill
-    type: tool_used
-    tool: Skill
-    input_match: bug-close
   - name: read
     type: regex
     target: mock_calls

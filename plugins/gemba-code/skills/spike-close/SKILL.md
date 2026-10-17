@@ -1,6 +1,7 @@
 ---
 name: spike-close
 description: Closes a reviewed spike from Jira. Shows the commits of its branch that closing discards, marks the spike Done, deletes its worktree folder and its local branch, and deletes the branch on the remote only when it exists there. A spike is never merged: it merges and pushes nothing, and it writes no comment and no worklog, because the answer is in the findings and each phase already registered its time. It stops, writing nothing, when the spike is not ready or its folder has changes, and it resumes a close that stopped after the Done mark. Use when the user asks to close or finish a spike, or gives a spike key whose review is done ("close the spike…", "cierra el spike…").
+disable-model-invocation: true
 argument-hint: "[spike key]"
 allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
