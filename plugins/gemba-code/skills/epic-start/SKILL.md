@@ -1,6 +1,6 @@
 ---
 name: epic-start
-description: Declares an epic in Jira from a deliverable. Reads the code the deliverable touches, proposes in plan mode the epic with its Done when, the stories and spikes that cover each criterion and a due date within its fix version, creates the epic in Backlog once the plan is approved and declares each child under it with story-start or spike-start. Use when the user asks to declare, plan, define or write an epic, or describes a deliverable too big for one story that commits to a date or a version. Not for one story, an open question to research, or something that is broken. It starts no work and assigns no one.
+description: Declares an epic in Jira from a deliverable. Reads the code the deliverable touches, proposes in plan mode the epic with its Done when, the stories and spikes that cover each criterion and a due date within its fix version, creates the epic in Backlog once the plan is approved and declares each child under it with story-start or spike-start, linking their Blocks. Use when the user asks to declare, plan, define or write an epic, or describes a deliverable too big for one story that commits to a date or a version. Not for one story, an open question to research, or something that is broken. It starts no work and assigns no one.
 argument-hint: "[deliverable]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -65,4 +65,6 @@ The epic and its children stay in Backlog: this skill changes no status, creates
     - A child its start does not create, because it names a bug, a spike, another story or an answer instead, is kept with what its start proposed, and the next child follows.
     - A start's reply ends that child, not this skill: keep the key and the link of each work item it created.
 
-12. **Reply** with the key and the link of the epic and of each child created, and each child of the plan that was not created with what its start proposed, and nothing else.
+12. **Link the blocks** of the plan with `createIssueLink`, type `Blocks`, between the keys created: the blocking child as `inwardIssue` and the blocked one as `outwardIssue`. A child its start split into stories takes its `Blocks` to each part, both as the blocking and as the blocked child. A `Blocks` whose other child was not created is not linked.
+
+13. **Reply** with the key and the link of the epic and of each child created, the `Blocks` linked, each child of the plan that was not created with what its start proposed, and each `Blocks` left without a link, and nothing else.
