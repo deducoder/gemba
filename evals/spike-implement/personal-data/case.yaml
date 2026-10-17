@@ -29,8 +29,3 @@ graders:
     input_match: '[\w.+-]+@[\w-]+\.[\w.-]+'
     min: 0
     max: 0
-  - name: publishes-no-email
-    type: regex
-    target: mock_calls
-    pattern: '[\w.+-]+@[\w-]+\.[\w.-]+'
-    match: not_contains
