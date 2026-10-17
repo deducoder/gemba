@@ -390,6 +390,39 @@ class Branch(unittest.TestCase):
         git(self.work, "commit", "-qm", "feat(local): only here")
         self.refused_merge("develop", "fast-forward")
 
+    def test_worktree_opens_the_branch_from_origin_develop_in_a_folder_named_by_the_key(self):
+        self.push_a_commit_to_develop_from_another_clone()
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        branch, path = result.stdout.split("\n")[:2]
+        self.assertEqual(branch, "spike/ABC-5/check-a-partial-unique-index")
+        self.assertEqual(path, ".claude/worktrees/ABC-5")
+        worktree = self.work / path
+        self.assertEqual(git(worktree, "branch", "--show-current"), branch)
+        self.assertEqual(git(worktree, "rev-parse", "HEAD"), git(self.other, "rev-parse", "HEAD"))
+
+    def test_worktree_leaves_the_working_tree_where_it_was(self):
+        run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+        self.assertEqual(git(self.work, "status", "--porcelain", "--untracked-files=no"), "")
+
+    def test_worktree_neither_pushes_nor_sets_an_upstream(self):
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        branch = result.stdout.split("\n")[0]
+        self.assertEqual(git(self.work, "ls-remote", "--heads", "origin", "spike/*"), "")
+        upstream = subprocess.run(["git", "rev-parse", "--abbrev-ref", "@{upstream}"], cwd=self.work / ".claude/worktrees/ABC-5", capture_output=True, text=True)
+        self.assertNotEqual(upstream.returncode, 0)
+        self.assertEqual(subprocess.run(["git", "config", f"branch.{branch}.remote"], cwd=self.work, capture_output=True, text=True).stdout, "")
+
+    def test_worktree_refuses_uncommitted_changes_in_files_with_tracking(self):
+        (self.work / "a").write_text("changed")
+        result = run(self.work, "--worktree", "spike", "ABC-5", "Check a partial unique index")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("Uncommitted changes", result.stderr)
+        self.assertFalse((self.work / ".claude/worktrees/ABC-5").exists())
+        self.assertEqual(git(self.work, "branch", "--list", "spike/*"), "")
+
 
 if __name__ == "__main__":
     unittest.main()
