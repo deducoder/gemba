@@ -31,4 +31,8 @@ graders:
   - name: relates
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*Relates)(?=[\s\S]*ABC-101)(?=[\s\S]*ABC-102)'
+    input_match: '^(?=[\s\S]*type\W+Relates)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
+  - name: agreed-blocks
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-103\b)(?=[\s\S]*outwardIssue\W+ABC-104\b)'
