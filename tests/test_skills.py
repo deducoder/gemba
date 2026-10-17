@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "plugins" / "gemba"
 SKILLS = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
-SIDE_EFFECTS = ["gemba/setup", "gemba/session-close", "gemba-code/story-close", "gemba-code/bug-close", "gemba-code/spike-close"]
+SIDE_EFFECTS = [path for path in SKILLS if path.parent.name == "setup" or path.parent.name.endswith("-close")]
 FRONTMATTER = re.compile(r"---\n(.*?)\n---\n", re.DOTALL)
 REFERENCE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([\w./-]+)")
 PLUGIN_SCRIPT = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/(scripts/[\w./-]+)")
@@ -118,11 +118,11 @@ class SkillStructure(unittest.TestCase):
                 self.assertEqual(allowed, run)
 
     def test_skills_with_side_effects_are_invoked_only_by_the_user(self):
-        for name in SIDE_EFFECTS:
-            with self.subTest(skill=name):
-                plugin, skill = name.split("/")
-                fields = read(ROOT / "plugins" / plugin / "skills" / skill / "SKILL.md")[0]
-                self.assertEqual(fields.get("disable-model-invocation"), "true")
+        names = {path.parent.name for path in SIDE_EFFECTS}
+        self.assertLessEqual({"setup", "session-close", "story-close", "bug-close", "spike-close"}, names)
+        for path in SIDE_EFFECTS:
+            with self.subTest(skill=path.parent.name):
+                self.assertEqual(read(path)[0].get("disable-model-invocation"), "true")
 
     def test_setup_template_has_the_gemba_and_language_headings(self):
         lines = (PLUGIN / "skills/setup/assets/CLAUDE.md").read_text(encoding="utf-8").splitlines()
