@@ -98,8 +98,7 @@ def problems(summary, intro, sections, subsections, repeated):
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     if list(subsections) != EVIDENCE or filled(sections["Evidence"]):
-        subsections_named = " and ".join(f"#### {name}" for _, name in EVIDENCE)
-        found.append(f"Evidence: write the subsections {subsections_named}, in that order, and nothing else")
+        found.append("Evidence: write the subsections #### Reproduction and #### Cause trail, in that order, and nothing else")
         return found, None
 
     cause = filled(sections["Root cause"])
