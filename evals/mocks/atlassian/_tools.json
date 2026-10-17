@@ -724,6 +724,46 @@
           "body"
         ]
       }
+    },
+    {
+      "name": "getConfluencePage",
+      "description": "Get a Confluence page or blog post by ID, including body content.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "pageId": {
+            "type": "string",
+            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
+          },
+          "contentFormat": {
+            "type": "string",
+            "enum": [
+              "html",
+              "markdown",
+              "adf"
+            ],
+            "description": "Content format for page/comment body."
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "page",
+              "blog"
+            ],
+            "description": "Type of content: page or blog post"
+          }
+        },
+        "required": [
+          "cloudId",
+          "pageId"
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: spike-review-folder-missing
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Review the spike ABC-33.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 12
+  timeout_seconds: 90
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-review
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-33'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue|createConfluencePage|updateConfluencePage'
+    match: not_contains
+  - name: nothing-run
+    type: tool_used
+    tool: Bash
+    input_match: 'invoices\.py|mktemp'
+    min: 0
+    max: 0
+  - name: reason
+    type: regex
+    pattern: 'Spikes'
+    flags: i
