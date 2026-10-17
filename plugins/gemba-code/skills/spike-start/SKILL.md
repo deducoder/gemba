@@ -23,7 +23,7 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/priority.md`
 
-!`cat ${CLAUDE_SKILL_DIR}/references/estimate.md`
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/estimate.md`
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
@@ -52,7 +52,7 @@ A request with two questions or more is one spike per question. **Observe before
    - The Evidence holds the `ran:` and `read:` lines of **Observe before drafting**. It reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. The decision that waits on the answer, and the work that follows it, are why the spike exists, not something it excludes. Add `→ <KEY>` only when another work item already covers it; read that key first.
 
-6. **Give it a priority and a time-box** with the Spike rules of the priority above and the time-box rules above.
+6. **Give it a priority and a time-box** with the Spike rules of the priority above and the Spike rules of the estimate above: they set the time-box.
 
 7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 

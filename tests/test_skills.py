@@ -131,6 +131,18 @@ class SkillStructure(unittest.TestCase):
                 self.assertIn("cat ${CLAUDE_PLUGIN_ROOT}/references/cancelled.md", INJECTED.findall(text))
                 self.assertIn("python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site>", text)
 
+    def test_one_estimate_reference_is_injected_by_the_four_start_skills(self):
+        lines = (ROOT / "plugins/gemba-code/references/estimate.md").read_text(encoding="utf-8").splitlines()
+        for heading in ("## Story", "## Bug", "## Spike"):
+            self.assertIn(heading, lines)
+        listed = subprocess.run(["git", "ls-files", "*estimate.md"], cwd=ROOT, capture_output=True, text=True, check=True)
+        self.assertEqual(listed.stdout.split(), ["plugins/gemba-code/references/estimate.md"])
+        for name in ("story-start", "bug-start", "spike-start", "epic-start"):
+            with self.subTest(skill=name):
+                text = read(ROOT / "plugins/gemba-code/skills" / name / "SKILL.md")[1]
+                injected = [c for c in INJECTED.findall(text) if "estimate" in c]
+                self.assertEqual(injected, ["cat ${CLAUDE_PLUGIN_ROOT}/references/estimate.md"])
+
     def test_the_cancellation_comment_has_its_heading_and_lines(self):
         lines = (ROOT / "plugins/gemba-code/references/cancelled.md").read_text(encoding="utf-8").splitlines()
         self.assertIn("### Cancelled", lines)
