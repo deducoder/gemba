@@ -1,6 +1,6 @@
 ---
 name: spike-start
-description: Declares a spike in Jira from a closed question whose answer a decision waits on. Checks that the project does not answer it already, drafts the spike with the question, its decision, its Done when and its time-box, and creates it in Backlog with the evidence in a comment. Use when the user asks to declare, open or write a spike or a research, or asks to research or find out whether something nobody has verified works ("can X do Y?", "find out whether…", "investiga si…"). It declares the question and does not answer it. Not for something to build or something that is broken.
+description: Declares a spike in Jira from a closed question whose answer a decision waits on. Checks that the project does not answer it already, sends a question answered by reading sources to research, drafts the spike with the question, its decision, its Done when and its time-box, and creates it in Backlog with the evidence in a comment. Use when the user asks to declare, open or write a spike or a research, or asks to research or find out whether something nobody has verified works ("can X do Y?", "find out whether…", "investiga si…"). It declares the question and does not answer it. Not for a question answered by reading sources, something to build or something that is broken.
 argument-hint: "[question]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -29,7 +29,7 @@ Template:
 
 The spike stays in Backlog: this skill answers nothing, changes no status, creates no branch and creates no work item other than a spike. The research belongs to the spike once it is implemented, so declaring it runs no experiment. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
 
-A request with two questions or more is one spike per question. **Observe before drafting** decides each question on its own, so one can be answered or be a story while another becomes a spike; **Ask** is one message for all of them; from **Draft the spike** on, each question that is a spike goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question, and the epic of step 2 as the parent of each. Do not wait for an agreement to split them.
+A request with two questions or more is one spike per question. **Observe before drafting** decides each question on its own, so one can be answered, be a research or be a story while another becomes a spike; **Ask** is one message for all of them; from **Draft the spike** on, each question that is a spike goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question, and the epic of step 2 as the parent of each. Do not wait for an agreement to split them.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -41,6 +41,7 @@ A request with two questions or more is one spike per question. **Observe before
 
 3. **Observe before drafting.** Read the documentation, code and history of the project the question touches, only to check that they do not answer it already, and keep each file you read as a `read:` line with its path and line and each command you ran as a `ran:` line with its output. Do not answer the question: search outside the project, try the service or build a prototype only when the spike is implemented. Then decide whether the request is a spike at all; when it is not, create nothing for it and reply with what it is instead:
    - **Answered** when the documentation, the code or the history of the project already answer the question: the answer with its source, as a `read:` line with its path and line.
+   - **A research** when sources outside the project (official documentation, specifications, public code) answer the question and nothing has to be run: to answer with `/gemba-code:research`, naming the question. What a service or tool offers is read in its documentation, so it is a research; whether this project's code can use it, and anything to try, build or measure, needs an experiment, so it is a spike. Decide it from the wording of the question and from the project: do not call `WebSearch` or `WebFetch`.
    - **A story** when it describes something to build, not a question: to declare with `/gemba-code:story-start`.
    - **A bug** when it describes a failure of something that already exists: to declare with `/gemba-code:bug-start`.
 
@@ -64,4 +65,4 @@ A request with two questions or more is one spike per question. **Observe before
 
 8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as ADF.
 
-9. **Reply** with the key and link of each spike it created, the answer and its source for each question the project already answers, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
+9. **Reply** with the key and link of each spike it created, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
