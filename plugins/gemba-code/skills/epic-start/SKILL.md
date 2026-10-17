@@ -65,6 +65,6 @@ The epic and its children stay in Backlog: this skill changes no status, creates
     - A child its start does not create, because it names a bug, a spike, another story or an answer instead, is kept with what its start proposed, and the next child follows.
     - A start's reply ends that child, not this skill: keep the key and the link of each work item it created.
 
-12. **Link the blocks** of the plan with `createIssueLink`, type `Blocks`, between the keys created: the blocking child as `inwardIssue` and the blocked one as `outwardIssue`. A child its start split into stories takes its `Blocks` to each part, both as the blocking and as the blocked child. A `Blocks` whose other child was not created is not linked.
+12. **Link the blocks** of the plan with `createIssueLink`, type `Blocks`, between the keys created: the blocking child as `inwardIssue` and the blocked one as `outwardIssue`. A child its start split into several stories or spikes takes its `Blocks` to each part, both as the blocking and as the blocked child. A `Blocks` whose other child was not created is not linked.
 
 13. **Reply** with the key and the link of the epic and of each child created, the `Blocks` linked, each child of the plan that was not created with what its start proposed, and each `Blocks` left without a link, and nothing else.
