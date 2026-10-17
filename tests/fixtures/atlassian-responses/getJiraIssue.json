@@ -231,8 +231,10 @@
           "timetracking": {
             "originalEstimate": "2h",
             "remainingEstimate": "2h",
+            "timeSpent": "",
             "originalEstimateSeconds": 7200,
-            "remainingEstimateSeconds": 7200
+            "remainingEstimateSeconds": 7200,
+            "timeSpentSeconds": 0
           }
         },
         "descriptionEditable": true,
