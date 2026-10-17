@@ -37,5 +37,5 @@ graders:
     pattern: '^(?=[\s\S]*browse/ABC-60)(?=[\s\S]*browse/ABC-101)'
   - name: reply-not-created
     type: regex
-    pattern: '(not (been )?(created|declared)|already answer|answered|no spike)'
+    pattern: '^(?=[\s\S]*\btax)(?=[\s\S]*(\bnot (been )?(created|declared)\b|\balready answer|\banswered\b|\bno spike\b))'
     flags: i

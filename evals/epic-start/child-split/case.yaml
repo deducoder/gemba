@@ -24,6 +24,7 @@ graders:
     tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
     input_match: '^(?=[\s\S]*issueTypeName\W+Story)(?=[\s\S]*parent\W+ABC-60)'
     min: 3
+    max: 3
   - name: first-part-blocks
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
