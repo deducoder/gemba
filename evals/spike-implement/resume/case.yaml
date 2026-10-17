@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: spike-implement-resume
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Implement the spike ABC-39.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 22
+  timeout_seconds: 150
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: spike-implement
+  - name: read
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssue.*ABC-39'
+  - name: no-mark
+    type: regex
+    target: mock_calls
+    pattern: 'transitionJiraIssue|addWorklogToJiraIssue|createConfluencePage'
+    match: not_contains
+  - name: resumed
+    type: tool_used
+    tool: Bash
+    input_match: 'branch\.py --worktree spike ABC-39'
+  - name: no-push
+    type: tool_used
+    tool: Bash
+    input_match: 'git push'
+    min: 0
+    max: 0
