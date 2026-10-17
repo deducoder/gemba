@@ -7,7 +7,7 @@ plugins:
 context:
   scaffold_script: setup.sh
 execution:
-  prompt: '/gemba-code:epic-close ABC-61'
+  prompt: '/gemba-code:epic-close ABC-60'
   allowed_tools: [Read, Glob, Grep, Skill]
   max_turns: 8
   timeout_seconds: 120
@@ -15,7 +15,7 @@ graders:
   - name: read
     type: regex
     target: mock_calls
-    pattern: 'getJiraIssue.*ABC-61'
+    pattern: 'getJiraIssue.*ABC-60'
   - name: no-write
     type: regex
     target: mock_calls
