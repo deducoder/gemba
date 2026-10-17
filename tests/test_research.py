@@ -94,6 +94,15 @@ class ResearchDraft(unittest.TestCase):
                  if t["type"] == "text" and t.get("marks") == [{"type": "link", "attrs": {"href": URL_ONE}}]]
         self.assertEqual([t["text"] for t in links], ["[1]"])
 
+    def test_a_number_inside_a_code_span_is_code_and_not_a_citation(self):
+        draft = DRAFT.replace("su `WHERE`,", "su `WHERE`, como `arr[1]`,")
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        nodes = [t for n in json.loads(result.stdout)["body"]["content"] if n["type"] == "paragraph" for t in n["content"]
+                 if t["type"] == "text"]
+        self.assertIn({"type": "text", "text": "arr[1]", "marks": [{"type": "code"}]}, nodes)
+        self.assertEqual([t["text"] for t in nodes if any(m["type"] == "link" for m in t.get("marks", []))], ["[1]"])
+
     def test_the_state_of_each_finding_is_bold(self):
         states = [t["text"] for n in self.body if n["type"] == "paragraph" for t in n["content"]
                   if t["type"] == "text" and t.get("marks") == [{"type": "strong"}]]
@@ -142,6 +151,12 @@ class ResearchRejects(unittest.TestCase):
 
     def test_an_inferred_finding_that_does_not_say_what_it_follows_from(self):
         rejected(DRAFT.replace(" (from 1.1)", ""), "1.2", "Inferred")
+
+    def test_an_inferred_finding_that_cites_a_source_that_does_not_exist(self):
+        rejected(DRAFT.replace("los índices parciales (from 1.1)", "los índices parciales [5] (from 1.1)"), "1.2", "5")
+
+    def test_an_inferred_finding_that_follows_a_finding_that_does_not_exist(self):
+        rejected(DRAFT.replace("(from 1.1)", "(from 9.9)"), "1.2", "9.9")
 
     def test_an_unverified_finding_with_a_source(self):
         rejected(DRAFT.replace("millones de filas", "millones de filas [1]"), "1.3", "Unverified")
