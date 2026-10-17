@@ -1,6 +1,6 @@
 ---
 name: epic-implement
-description: Starts a declared epic from Jira. Checks that it is an Epic in Backlog or Implement with children, marks it in Implement, and lists its children ready to start, in Backlog and not blocked, by priority and with their assignee, together with its due date and the days left. It stops, writing nothing, when the epic is not ready, resumes one already in Implement, creates no branch and writes no worklog. Use when the user asks to start, implement or work on an epic, or gives an epic key to begin, or asks which child of an epic comes next.
+description: Starts a declared epic from Jira. Checks that it is an Epic in Backlog or Implement with children, marks it in Implement, and lists its children ready to start, in Backlog and not blocked, by priority and with their assignee, together with its due date and the days left. It stops, writing nothing, when the epic is not ready, resumes one already in Implement, creates no branch and writes no worklog. Use when the user asks to start, implement or work on an epic, or gives an epic key to begin.
 argument-hint: "[epic key]"
 ---
 
