@@ -39,8 +39,8 @@ refuses, touching nothing, with uncommitted changes in files with tracking or wi
 origin/develop. It never pushes: the push is a command of its own, visible to
 whoever gates it. `--discard` deletes the folder `.claude/worktrees/<KEY>` and the local branch of a work
 item that is never merged. It prints the branch, on a second line `on origin` or `local only` (whether
-origin has the branch) and then the commits of the branch that origin/develop lacks, one per line, which
-the deletion discards; with `--dry-run` it only prints. The folder goes first, with `git worktree remove`
+origin has the branch) and then the commits of the branch (of origin/<branch> when only that is left)
+that origin/develop lacks, one per line, which the deletion discards; with `--dry-run` it only prints. The folder goes first, with `git worktree remove`
 and no `--force`, so git refuses a folder with changes or files without tracking and nothing is deleted.
 It refuses, in both modes, a folder that is not a worktree of the branch, a folder with changes or files
 without tracking (it lists them) and an origin it cannot ask; when there is no folder, no local branch and
@@ -171,7 +171,8 @@ def discard(branch, key, dry_run):
     if found.returncode not in (0, 2):
         return found.stderr.strip()
     state = "on origin" if found.returncode == 0 else "local only" if local or os.path.isdir(folder) else "gone"
-    print("\n".join(filter(None, (branch, state, local and commits(f"{DEVELOP}..{branch}")))))
+    tip = branch if local else f"origin/{branch}" if has_ref(f"refs/remotes/origin/{branch}") else None
+    print("\n".join(filter(None, (branch, state, tip and commits(f"{DEVELOP}..{tip}")))))
     if not dry_run:
         if os.path.isdir(folder):
             git("worktree", "remove", folder)
