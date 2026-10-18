@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Checks the roadmap of a product before its first version against the template and
-converts it to the live doc that Confluence takes: the title and the body as an ADF document.
+"""Checks the roadmap of a product against the template and converts it to the live doc
+that Confluence takes: the title and the body as an ADF document.
 
 Usage: python3 roadmap.py < draft.md
 
 The draft comes on stdin with the `### Now`, `### Next`, `### Later` and `### Released`
-sections, in that order. Now and Released are one paragraph each, since no version exists
-yet. Next holds at least one entry and Later any number, each a bullet
-`* **Unnumbered** goal`.
+sections, in that order. Now is one paragraph while no version is in progress, or the
+versions in progress, each a bullet
+`* [<Product> vX.Y.Z](<link to its page>) [Planned|In progress|Released] · YYYY-MM-DD goal Target: measurable goal`.
+Released is one paragraph. Next holds at least one entry, or none once its entry became
+the version in Now, and Later any number, each a bullet `* **Unnumbered** goal`.
 
 Prints {"title": "Roadmap", "body": <ADF>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
@@ -16,15 +18,19 @@ Otherwise prints one line per problem to stderr, prints nothing to stdout and ex
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split, strong  # noqa: E402
+from draft import FENCE, bullets, check_sections, date_node, doc, filled, heading, inline, items, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
+VERSION = re.compile(r"^\[(.+ v\d+\.\d+\.\d+)\]\((https?://\S+)\) \[([^\]]+)\] · (\S+) (.+)$")
+STATES = {"Planned": "neutral", "In progress": "blue", "Released": "green"}
+VERSION_FORM = "'* [<Product> vX.Y.Z](<link>) [Planned] · YYYY-MM-DD goal Target: measurable goal'"
 
 
 def entries(name, lines, found, optional=False):
@@ -36,6 +42,31 @@ def entries(name, lines, found, optional=False):
         else:
             found.append(f"{name}: write each entry as '* **Unnumbered** goal'; versions are added by version-start: {item}")
     return goals
+
+
+def versions(lines, found):
+    """Returns the versions in progress, each (name, link, state, day, goal, target)."""
+    listed = []
+    for item in items("Now", lines, found):
+        match = VERSION.match(item)
+        if not match:
+            found.append(f"Now: write each version as {VERSION_FORM}: {item}")
+            continue
+        name, link, state, day, rest = match.groups()
+        if state not in STATES:
+            found.append(f"Now: {name} is {state}; use one of {', '.join(STATES)}")
+            continue
+        try:
+            date.fromisoformat(day)
+        except ValueError:
+            found.append(f"Now: {name} has {day}, which is not a date")
+            continue
+        if " Target: " not in rest:
+            found.append(f"Now: {name} needs its goal and then 'Target: measurable goal'")
+            continue
+        goal, target = rest.split(" Target: ", 1)
+        listed.append((name, link, state, day, goal, target))
+    return listed
 
 
 def problems(draft):
@@ -51,12 +82,16 @@ def problems(draft):
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     content = {}
+    if any(line.startswith("* ") for line in sections["Now"]):
+        content["Now"] = versions(sections["Now"], found)
     for name in ("Now", "Released"):
+        if name in content:
+            continue
         text = paragraphs(sections[name])
         if len(text) != 1:
             found.append(f"{name}: write one paragraph saying there is no version yet")
         content[name] = text[0] if text else ""
-    content["Next"] = entries("Next", sections["Next"], found)
+    content["Next"] = entries("Next", sections["Next"], found, optional=isinstance(content["Now"], list))
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
     return (found, None) if found else (found, content)
 
@@ -65,12 +100,20 @@ def entry(goal):
     return [strong("Unnumbered"), {"type": "hardBreak"}, *inline(goal)]
 
 
+def version(name, link, state, day, goal, target):
+    return [{"type": "text", "text": name, "marks": [{"type": "link", "attrs": {"href": link}}]}, space(),
+            status(state, STATES[state]), {"type": "text", "text": " · "}, date_node(day), {"type": "hardBreak"},
+            *inline(goal), {"type": "hardBreak"}, strong("Target:"), space(), *inline(target)]
+
+
 def body(content):
     """Returns the live doc as an ADF document."""
     nodes = []
     for name in SECTIONS:
         nodes.append(heading(name, 2))
-        if name in ("Now", "Released"):
+        if name == "Now" and isinstance(content[name], list):
+            nodes.append(bullets([version(*entry) for entry in content[name]]))
+        elif name in ("Now", "Released"):
             nodes.append({"type": "paragraph", "content": inline(content[name])})
         elif content[name]:
             nodes.append(bullets([entry(goal) for goal in content[name]]))
