@@ -53,6 +53,8 @@ def main():
         page, draft = data["page"], data["draft"]
         if not isinstance(page, dict) or not isinstance(draft, str):
             raise TypeError
+        if not isinstance(page.get("content", []), list) or not all(isinstance(node, dict) for node in page.get("content", [])):
+            raise TypeError
     except (ValueError, KeyError, TypeError):
         print('input: write {"page": <ADF>, "draft": "* lesson"} as JSON', file=sys.stderr)
         return 1
