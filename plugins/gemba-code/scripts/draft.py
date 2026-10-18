@@ -61,6 +61,20 @@ def filled(lines):
     return [line for line in lines if line.strip()]
 
 
+def paragraphs(lines):
+    """Groups the lines into paragraphs, separated by blank lines."""
+    blocks, text = [], []
+    for line in lines:
+        if line.strip():
+            text.append(line.strip())
+        elif text:
+            blocks.append(" ".join(text))
+            text = []
+    if text:
+        blocks.append(" ".join(text))
+    return blocks
+
+
 def prose(line):
     """Returns a line without its `code`, where == and → are literal."""
     return CODE.sub("", line)
