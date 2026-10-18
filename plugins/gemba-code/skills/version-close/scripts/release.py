@@ -7,14 +7,17 @@ It fetches origin, brings main and develop up to date with origin (fast-forward 
 merges develop into main with `--no-ff` and the message `Merge branch 'develop' into main`,
 creates the annotated tag on that merge and brings develop level with main, ending on
 develop. It prints the tag and, on a second line, `released`, then the commits the push of
-main sends, one per line. When the tag is already on main and develop is level with it, an
-earlier run released it: it does nothing again and prints `already released` instead.
+main sends, one per line. When the tag is already on main and develop is level with it or
+behind it, an earlier run released it: it only brings develop level with main and prints
+`already released` instead. When the tag or that last step fails, it undoes the merge and the
+tag and goes back where it was.
 
 It refuses, touching nothing, with the first reason that fails: a tag that is not
 v<X.Y.Z>, uncommitted changes in files with tracking (untracked files do not count),
 origin/main or origin/develop missing, local commits of main or develop that origin lacks,
 the tag already on another commit, or a develop with nothing main lacks. On conflicts it
-aborts the merge, goes back to the branch it came from and names the files. It never pushes:
+aborts the merge, goes back where it was (a branch or a detached HEAD) and names the files;
+main and develop stay brought up to date with origin. It never pushes:
 each push is a command of its own, visible to whoever gates it.
 """
 
@@ -36,18 +39,19 @@ def rev(ref):
     return git("rev-parse", ref).stdout.strip()
 
 
+def dirty():
+    return git("status", "--porcelain", "--untracked-files=no").stdout.strip()
+
+
 def already_released(tag):
-    """True when the tag is on main and develop is level with it."""
+    """True when the tag is on main and develop is level with it or behind it: an earlier
+    run tagged the merge."""
     return (has_ref(f"refs/tags/{tag}") and has_ref("main") and has_ref("develop")
-            and rev(f"{tag}^{{commit}}") == rev("main") == rev("develop"))
+            and rev(f"{tag}^{{commit}}") == rev("main") and is_ancestor("develop", "main"))
 
 
 def refusal(tag):
     """Returns why the release cannot run, or None."""
-    if not TAG.match(tag):
-        return f"The tag {tag} is not a version: write it as v<X.Y.Z>."
-    if git("status", "--porcelain", "--untracked-files=no").stdout.strip():
-        return "There are uncommitted changes in files with tracking: commit or discard them first."
     git("fetch", "-q", "origin")
     for branch in ("main", "develop"):
         if not has_ref(f"origin/{branch}"):
@@ -69,24 +73,39 @@ def update(branch):
         git("switch", "-q", "-c", branch, f"origin/{branch}")
 
 
+def level_develop():
+    git("switch", "-q", "develop")
+    git("merge", "-q", "--ff-only", "main")
+
+
 def release(tag):
-    current = current_branch()
+    branch, head = current_branch(), rev("HEAD")
+
+    def go_back():
+        succeeds("switch", "-q", *((branch,) if branch else ("--detach", head)))
+
     update("develop")
     update("main")
+    before = rev("main")
     try:
         git("merge", "-q", "--no-ff", "-m", MESSAGE, "develop")
     except subprocess.CalledProcessError:
         conflicts = git("diff", "--name-only", "--diff-filter=U").stdout.split()
         if conflicts:
             git("merge", "--abort")
-        if current:
-            succeeds("switch", "-q", current)
+        go_back()
         if conflicts:
             return f"Merge conflicts in: {', '.join(conflicts)}"
         raise
-    git("tag", "-a", tag, "-m", tag)
-    git("switch", "-q", "develop")
-    git("merge", "-q", "--ff-only", "main")
+    try:
+        git("tag", "-a", tag, "-m", tag)
+        level_develop()
+    except subprocess.CalledProcessError:
+        succeeds("tag", "-d", tag)
+        succeeds("switch", "-q", "main")
+        succeeds("reset", "-q", "--hard", before)
+        go_back()
+        raise
     return None
 
 
@@ -95,10 +114,16 @@ def main(argv):
         print(__doc__.splitlines()[2], file=sys.stderr)
         return 1
     tag = argv[0]
+    if not TAG.match(tag):
+        print(f"The tag {tag} is not a version: write it as v<X.Y.Z>.", file=sys.stderr)
+        return 1
     try:
+        if dirty():
+            print("There are uncommitted changes in files with tracking: commit or discard them first.", file=sys.stderr)
+            return 1
         if already_released(tag):
             state = "already released"
-            git("switch", "-q", "develop")
+            level_develop()
         else:
             reason = refusal(tag) or release(tag)
             if reason:
