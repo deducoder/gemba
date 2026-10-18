@@ -34,7 +34,7 @@ def minutes(estimate):
     return sum(int(part[:-1]) * MINUTES[part[-1]] for part in estimate.split())
 
 
-def longest(requirements, found):
+def longest(requirements):
     """Returns the longest chain of `after` as (minutes, ids), or None on a cycle."""
     memo, visiting = {}, set()
 
@@ -49,7 +49,7 @@ def longest(requirements, found):
             sub = chain(before)
             if sub is None:
                 return None
-            best = max(best, sub, key=lambda c: c[0])
+            best = max(best, sub)
         visiting.discard(rid)
         memo[rid] = (best[0] + requirements[rid]["minutes"], best[1] + [rid])
         return memo[rid]
@@ -58,14 +58,14 @@ def longest(requirements, found):
     for rid in requirements:
         current = chain(rid)
         if current is None:
-            found.append(f"requirements: the after of {rid} makes a cycle")
             return None
-        best = max(best, current, key=lambda c: c[0])
+        best = max(best, current)
     return best
 
 
 def problems(data):
-    """Returns what is wrong with the input, and the start, people and requirements when nothing is."""
+    """Returns what is wrong with the input, and the start, people, requirements and longest
+    chain when nothing is."""
     if not isinstance(data, dict):
         return ["input: write an object with start, people and requirements"], None
     found = []
@@ -104,7 +104,10 @@ def problems(data):
                 found.append(f"requirements: {rid} comes after {before}, which is not in the version")
     if found:
         return found, None
-    return found, (start, people, requirements)
+    chain = longest(requirements)
+    if chain is None:
+        return ["requirements: their after makes a cycle"], None
+    return found, (start, people, requirements, chain)
 
 
 def release(start, days):
@@ -127,13 +130,10 @@ def main():
         print(f"input: not valid JSON: {error}", file=sys.stderr)
         return 1
     found, content = problems(data)
-    chain = None
-    if content:
-        start, people, requirements = content
-        chain = longest(requirements, found)
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
+    start, people, requirements, chain = content
     total = sum(item["minutes"] for item in requirements.values())
     days = max(1, math.ceil(max(total / people, chain[0]) / DAY))
     print(json.dumps({"workingDays": days, "releaseDate": release(start, days).isoformat(), "longestChain": chain[1]}))
