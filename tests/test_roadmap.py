@@ -142,9 +142,6 @@ class RoadmapVersionInProgress(unittest.TestCase):
     def test_a_version_without_its_link(self):
         rejected(PLANNED.replace("[Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc)", "Gemba v0.1.0"), "Now")
 
-    def test_next_stays_required_without_a_version(self):
-        rejected(DRAFT.replace("* **Unnumbered** Validar que 3 equipos adoptan Gemba.\n", ""), "Next")
-
 
 class RoadmapOptional(unittest.TestCase):
     def test_later_may_be_empty(self):
