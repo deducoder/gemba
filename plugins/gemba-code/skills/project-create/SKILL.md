@@ -1,6 +1,6 @@
 ---
 name: project-create
-description: Frames a new product with the person, discovers its requirements and writes its Vision at the root of the Confluence space, with Requirements and Roadmap under it as live docs and its Purpose in CLAUDE.md. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material, frames problem, users, success and constraints one decision at a time, orders the risks, proposes the requirements in batches (functional, business rules, the eight Volere non-functional types, constraints, then what the person did not say), turns what cannot be measured into open questions, records the go or no-go decision and checks each page against its template. Use when the user wants to start a product from scratch, frame an idea before building it, or write its vision and requirements. It writes only what the person accepted, assigns no version and creates no work item or fix version.
+description: Frames a new product with the person, discovers its requirements and writes its Vision at the root of the Confluence space, with Requirements and Roadmap under it as live docs and its Purpose in CLAUDE.md. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material, frames problem, users, success and constraints one decision at a time, orders the risks, proposes the requirements in batches (functional, business rules, the Volere non-functional types, constraints, then the unsaid), turns what cannot be measured into open questions, records the go or no-go decision and checks each page against its template; with a framed product it reviews the three pages and changes only the sections that moved. Use when the user wants to start a product from scratch, frame an idea before building it, write its vision and requirements, or bring them up to date. It writes only what the person accepted, assigns no version and creates no work item or fix version.
 argument-hint: "[idea or path to shared material]"
 disable-model-invocation: true
 allowed-tools:
@@ -8,6 +8,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py *)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py *)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/roadmap.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/merge.py *)
 ---
 
 # Project create
@@ -42,13 +43,13 @@ Roadmap template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/roadmap.md`
 ```
 
-This skill writes three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages.
+This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages.
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first. A fact about the world carries its source or is a hypothesis. Never present your own opinion, desk research or synthetic users as evidence that someone needs or would pay for the product.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Confluence.
 
-2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. When one of them is titled `Vision`, stop, writing nothing and giving its link: reviewing a framed product is not done here.
+2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. When one of them is titled `Vision`, the product is framed: follow **Review a framed product** below instead of the steps that follow.
 
 3. **Ask who originates the demand,** as the first question, offering always these four options, even one that seems not to apply, with the recommended one first:
    - `Client`: a client commissions and pays for it.
@@ -119,3 +120,33 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
 15. **Reply** with the links to the three pages and what was written.
+
+## Review a framed product
+
+A framed product is reviewed, never framed again: only what moved changes, and only what the person accepts is written.
+
+1. **Read the pages** with `getConfluencePage` and `contentFormat: "adf"`: `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover it as steps 7 to 9 and 11 to 13 say, creating it under `Vision`, before going on.
+
+2. **Walk the pages in order,** `Vision`, `Requirements`, `Roadmap`, and for each one ask what moved since it was written, section by section, offering the sections as options. Propose a change only for a section where something moved, with the same rules as the framing: a new requirement takes the number above the highest of the page, withdrawn ones included, and is never reused; a withdrawn requirement moves to `Withdrawn` with its reason and today's date, and is never deleted; a new decision rewrites the panel with its color, `Decided by` and today's date. A section where nothing moved is left out of the proposal.
+
+3. **Write the drafts** of the pages that change, whole, from the page as published plus the accepted changes, and check each one with its command from step 11. Check the requirements with the IDs the published page has, run alone and exactly in this form:
+
+   ```
+   python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py --existing <the published IDs, comma separated> <<'REQUIREMENTS'
+   <the requirements draft>
+   REQUIREMENTS
+   ```
+
+4. **Ask the person to accept** each change, shown with the section as it is and as it would be. With nothing accepted, write nothing.
+
+5. **Merge each page** that changes, run alone and exactly in this form, with its published body, the body its script printed and the headings of the accepted sections, `""` for the text above the first heading of `Vision`:
+
+   ```
+   python3 ${CLAUDE_SKILL_DIR}/scripts/merge.py <<'MERGE'
+   {"live": <the published body>, "new": <the body the script printed>, "replace": [<the accepted sections>]}
+   MERGE
+   ```
+
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`), then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
+
+6. **Reply** with each page that changed, the sections changed in it and its link.
