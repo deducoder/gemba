@@ -112,6 +112,41 @@ class Release(unittest.TestCase):
         self.assertEqual(lines[:2], ["v0.1.0", "already released"])
         self.assertEqual(git(self.work, "rev-parse", "main"), main)
 
+    def test_it_finishes_a_run_that_stopped_after_the_tag(self):
+        self.released()
+        git(self.work, "switch", "-q", "develop")
+        git(self.work, "reset", "-q", "--hard", "origin/develop")
+        lines = self.released()
+        self.assertEqual(lines[:2], ["v0.1.0", "already released"])
+        self.assertEqual(git(self.work, "rev-parse", "develop"), git(self.work, "rev-parse", "main"))
+
+    def test_a_tag_that_fails_leaves_main_as_origin_has_it(self):
+        git(self.work, "config", "tag.gpgSign", "true")
+        git(self.work, "config", "gpg.program", "false")
+        result = run(self.work, "v0.1.0")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertEqual(git(self.work, "rev-parse", "main"), git(self.work, "rev-parse", "origin/main"))
+        self.assertEqual(git(self.work, "tag", "--list"), "")
+        self.assertEqual(git(self.work, "branch", "--show-current"), "develop")
+
+    def test_a_rerun_refuses_uncommitted_changes_too(self):
+        self.released()
+        (self.work / "b").write_text("changed")
+        result = run(self.work, "v0.1.0")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("uncommitted", result.stderr)
+
+    def test_it_goes_back_to_a_detached_head_after_a_conflict(self):
+        self.clone_other()
+        git(self.other, "switch", "-q", "main")
+        self.commit(self.other, "b", "from main", "fix: hotfix")
+        git(self.other, "push", "-q", "origin", "main")
+        head = git(self.work, "rev-parse", "HEAD")
+        git(self.work, "switch", "-q", "--detach", head)
+        self.assertEqual(run(self.work, "v0.1.0").returncode, 1)
+        self.assertEqual(git(self.work, "rev-parse", "HEAD"), head)
+        self.assertEqual(git(self.work, "branch", "--show-current"), "")
+
     def test_it_refuses_uncommitted_changes_in_files_with_tracking(self):
         (self.work / "b").write_text("changed")
         self.refused("uncommitted")

@@ -188,6 +188,13 @@ class RoadmapReleasedVersions(unittest.TestCase):
     def test_a_released_entry_that_is_not_a_version(self):
         rejected(RELEASED.replace(RELEASED_ENTRY, "* **Unnumbered** algo", 1), "Released")
 
+    def test_next_may_be_empty_once_the_version_of_now_is_released(self):
+        start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
+        self.assertEqual(page(RELEASED[:start] + RELEASED[end:])[-1]["type"], "bulletList")
+
+    def test_a_released_version_with_a_date(self):
+        rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")
+
     def test_a_version_moves_from_now_to_released(self):
         moved = PLANNED.replace("Ninguna versión liberada.", RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
         self.assertEqual(page(moved)[-1]["type"], "bulletList")

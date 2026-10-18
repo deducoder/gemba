@@ -39,6 +39,7 @@ def rejected(payload, *words):
     assert result.stdout == ""
     for word in words:
         assert word in result.stderr, result.stderr
+    return result
 
 
 class Released(unittest.TestCase):
@@ -59,6 +60,11 @@ class Released(unittest.TestCase):
         self.assertEqual(self.doc["content"][0]["attrs"], {"localId": "p1"})
         self.assertEqual({k: v for k, v in self.doc.items() if k != "content"}, {"type": "doc", "version": 1})
 
+    def test_text_after_the_date_stays(self):
+        page = copy.deepcopy(PAGE)
+        page["content"][0]["content"].append({"type": "text", "text": " (movida del 15)"})
+        self.assertEqual(released(page)["content"][0]["content"][3], {"type": "text", "text": " (movida del 15)"})
+
     def test_a_version_in_progress_is_released_too(self):
         page = copy.deepcopy(PAGE)
         page["content"][0]["content"][0]["attrs"]["text"] = "In progress"
@@ -76,6 +82,10 @@ class ReleasedRejects(unittest.TestCase):
 
     def test_a_day_that_is_not_a_date(self):
         rejected({"page": PAGE, "day": "2026-13-40"}, "2026-13-40")
+
+    def test_a_page_that_is_not_an_adf_object(self):
+        result = rejected({"page": json.dumps(PAGE), "day": "2026-11-18"}, "input")
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_input_that_is_not_json(self):
         rejected("not json", "JSON")
