@@ -33,7 +33,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
    - A key that cannot be read stops the skill: create nothing, and reply with the key and Jira's reason.
-   - An Epic of the project in Backlog is the parent of the story: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, with their `timetracking`).
+   - An Epic of the project in Backlog is the parent of the story: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, every page, with their `status` and `timetracking`).
    - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
    - A work item the request asks to declare as a story, with no other idea described, stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
    - A key named for any other reason is context for the idea: the story is drafted with what it says, and gets no link and no parent.

@@ -34,7 +34,7 @@ A request with two questions or more is one spike per question. **Observe before
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
-   - An Epic of the project in Backlog is the parent of the spike: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, with their `timetracking`).
+   - An Epic of the project in Backlog is the parent of the spike: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, every page, with their `status` and `timetracking`).
    - An Epic in another status, or of another project, is not: the spike goes without a parent, and the reply says why, with the epic's status.
    - A Spike stops the skill: create and edit nothing, and reply that it is already declared, with its key and its link.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link.
