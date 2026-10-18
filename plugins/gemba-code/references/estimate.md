@@ -12,7 +12,7 @@ Its due date is the working time of the requirement the epic delivers: what its 
 
 ## Window of an epic
 
-A story or a spike whose parent is an epic with a `duedate` reads the `originalEstimate` of the children the epic already has. The window it leaves is the working time from today to the `duedate`, minus those estimates. The window is a reference for the estimate, never a limit: when the estimate the work item needs does not fit in it, the work item keeps that estimate and the reply says that the children no longer fit the date of the epic.
+A story or a spike whose parent is an epic with a `duedate` reads the `originalEstimate` of the children the epic already has that are not Done or Cancelled: the time of a finished child is already spent. The window it leaves is the working time from today to the `duedate`, minus those estimates. A child without `originalEstimate` counts for nothing, a `duedate` already past leaves no window, and an epic without `duedate` gives none. The window is a reference for the estimate, never a limit: when the estimate the work item needs does not fit in it, the work item keeps that estimate and the reply says that the children no longer fit the date of the epic.
 
 ## Bug
 
