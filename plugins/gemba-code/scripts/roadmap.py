@@ -7,8 +7,10 @@ Usage: python3 roadmap.py < draft.md
 The draft comes on stdin with the `### Now`, `### Next`, `### Later` and `### Released`
 sections, in that order. Now is one paragraph while no version is in progress, or the
 versions in progress, each a bullet
-`* [<Product> vX.Y.Z](<link to its page>) [Planned|In progress|Released] · YYYY-MM-DD goal Target: measurable goal`.
-Released is one paragraph. Next holds at least one entry, or none once its entry became
+`* [<Product> vX.Y.Z](<link to its page>) [Planned|In progress] · YYYY-MM-DD goal Target: measurable goal`.
+Released is one paragraph while no version is released, or the released versions, newest
+first, each a bullet `* [<Product> vX.Y.Z](<link to its page>) [Released] goal Target: measurable goal`,
+without a date. Next holds at least one entry, or none once its entry became
 the version in Now, and Later any number, each a bullet `* **Unnumbered** goal`.
 
 Prints {"title": "Roadmap", "body": <ADF>} as JSON when the draft follows the template.
@@ -23,13 +25,15 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
+from draft import FENCE, STATES, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, status, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
 VERSION = re.compile(rf"^\[({VERSION_NAME})\]\((https?://\S+)\) \[([^\]]+)\] · (\S+) (.+)$")
+RELEASED = re.compile(rf"^\[({VERSION_NAME})\]\((https?://\S+)\) \[([^\]]+)\] (.+)$")
 CURRENT = ("Planned", "In progress")
 VERSION_FORM = "'* [<Product> vX.Y.Z](<link>) [Planned] · YYYY-MM-DD goal Target: measurable goal'"
+RELEASED_FORM = "'* [<Product> vX.Y.Z](<link>) [Released] goal Target: measurable goal'"
 
 
 def entries(name, lines, found, optional=False):
@@ -66,6 +70,30 @@ def versions(lines, found):
     return listed
 
 
+def released(lines, found):
+    """Returns the released versions, each (name, link, state, None, goal, target)."""
+    listed = []
+    for item in items("Released", lines, found):
+        match = RELEASED.match(item)
+        if not match:
+            found.append(f"Released: write each version as {RELEASED_FORM}: {item}")
+            continue
+        name, link, state, rest = match.groups()
+        if state != "Released":
+            found.append(f"Released: {name} is {state}; a version in Released is Released, and one in progress goes to Now")
+            continue
+        if " Target: " not in rest:
+            found.append(f"Released: {name} needs its goal and then 'Target: measurable goal'")
+            continue
+        goal, target = rest.split(" Target: ", 1)
+        listed.append((name, link, state, None, goal, target))
+    return listed
+
+
+def listed(lines):
+    return any(line.startswith("* ") for line in lines)
+
+
 def single(name, lines, found):
     """Returns the one paragraph of a section that has no version."""
     text = paragraphs(lines)
@@ -86,10 +114,10 @@ def problems(draft):
         found.append(f"{section}: write no '####' headings: {sub}")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    in_progress = any(line.startswith("* ") for line in sections["Now"])
+    in_progress = listed(sections["Now"])
     content = {
         "Now": versions(sections["Now"], found) if in_progress else single("Now", sections["Now"], found),
-        "Released": single("Released", sections["Released"], found),
+        "Released": released(sections["Released"], found) if listed(sections["Released"]) else single("Released", sections["Released"], found),
         "Next": entries("Next", sections["Next"], found, optional=in_progress),
     }
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
@@ -101,8 +129,9 @@ def entry(goal):
 
 
 def version(name, link, state, day, goal, target):
+    lozenge = stamp(state, day) if day else [status(state, STATES[state])]
     return [{"type": "text", "text": name, "marks": [{"type": "link", "attrs": {"href": link}}]}, space(),
-            *stamp(state, day), {"type": "hardBreak"},
+            *lozenge, {"type": "hardBreak"},
             *inline(goal), {"type": "hardBreak"}, strong("Target:"), space(), *inline(target)]
 
 
@@ -113,7 +142,7 @@ def body(content):
         nodes.append(heading(name, 2))
         if isinstance(content[name], str):
             nodes.append(paragraph(*inline(content[name])))
-        elif name == "Now":
+        elif name in ("Now", "Released"):
             nodes.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
             nodes.append(bullets([entry(goal) for goal in content[name]]))
