@@ -36,7 +36,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`. When one of them is titled `Vision`, stop, writing nothing and giving its link: reviewing a framed product is not done here.
 
-3. **Ask who originates the demand,** as the first question, with these four options:
+3. **Ask who originates the demand,** as the first question, offering always these four options, even one that seems not to apply, with the recommended one first:
    - `Client`: a client commissions and pays for it.
    - `Market`: the person builds it to sell it, as their own product or a SaaS.
    - `Internal`: it is for the person's own organization.
@@ -71,6 +71,6 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 10. **Publish the page** with `createConfluencePage`: the `id` of the space as `spaceId`, its `homepageId` as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
 
-11. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and on its own line `Vision: <the link to the page>`.
+11. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
 12. **Reply** with the link to the page and what was written.
