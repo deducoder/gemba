@@ -30,13 +30,13 @@ import argparse
 import json
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong  # noqa: E402
+from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong, timestamp  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -208,12 +208,6 @@ def linked(text, url):
             elif part:
                 nodes.extend(inline(part))
     return nodes
-
-
-def timestamp(day):
-    """Returns the date as the milliseconds of its midnight in UTC, as a date node takes it."""
-    moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
-    return str(int(moment.timestamp() * 1000))
 
 
 def body(content, requirements=None):
