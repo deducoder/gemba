@@ -18,9 +18,9 @@ graders:
   - name: requirements-carry-their-source
     type: regex
     pattern: 'Source'
-  - name: first-batch-is-functional
+  - name: first-requirement-is-functional
     type: regex
-    pattern: 'Functional'
+    pattern: 'R-01[^\n]*\[Functional\]'
   - name: no-business-rule-before-the-functional
     type: regex
     pattern: '^((?!Functional)[\s\S])*Business rule'
