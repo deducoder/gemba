@@ -217,6 +217,28 @@ class VisionRejects(unittest.TestCase):
         rejected(DRAFT[:start] + DRAFT[end:], "Risks")
 
 
+class VisionReview(unittest.TestCase):
+    def test_an_empty_bullet_in_success(self):
+        rejected(DRAFT.replace("* El tiempo", "*\n* El tiempo"), "Success", "empty bullet")
+
+    def test_an_indented_metric_is_still_a_metric(self):
+        body = page(DRAFT.replace("* El tiempo", "  * El tiempo"))
+        start = next(i for i, n in enumerate(body) if n["type"] == "heading" and flat(n) == "Success")
+        self.assertEqual(body[start + 2]["type"], "bulletList")
+
+    def test_text_after_today(self):
+        rejected(DRAFT.replace("mensajes de WhatsApp.\n", "mensajes de WhatsApp.\nY correos.\n"), "Today")
+
+    def test_code_in_the_decision_is_a_code_mark(self):
+        body = page(DRAFT.replace("construir Tours v0.1.0", "construir `tours` v0.1.0"))
+        marks = [n.get("marks") for n in body[-1]["content"][0]["content"]]
+        self.assertIn([{"type": "code"}], marks)
+
+    def test_a_malformed_risk_is_reported_once(self):
+        errors = rejected(DRAFT.replace("* **Ventas sigue armando las hojas fuera del sistema** [Value]", "* Ventas sigue armando las hojas fuera del sistema [Value]"), "Risks")
+        self.assertEqual(len(errors.strip().splitlines()), 1, errors)
+
+
 class VisionOptional(unittest.TestCase):
     def test_without_constraints_the_page_has_no_constraints_heading(self):
         body = page(DRAFT.replace("* Los montos van en MXN.\n", ""))
