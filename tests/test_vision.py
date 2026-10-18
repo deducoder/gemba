@@ -10,7 +10,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "plugins/gemba-code/skills/project-create/scripts/vision.py"
-SITE = "example.atlassian.net"
 ACCOUNT = "712020:4aaa7bc9-95d7-410b-af7f-956435d83f8f"
 FIRST = "Tours reúne en un solo lugar la venta de tours, su agenda y la hoja de servicio."
 
@@ -57,7 +56,7 @@ Decided by: {ACCOUNT} · 2026-10-18
 
 
 def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
+    return subprocess.run([sys.executable, str(SCRIPT)], input=draft, capture_output=True, text=True)
 
 
 def page(draft):
