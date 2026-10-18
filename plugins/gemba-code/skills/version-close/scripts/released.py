@@ -22,13 +22,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 from draft import CURRENT, is_day, stamp  # noqa: E402
 
 
+def stamp_state(page):
+    """Returns the state of the lozenge that opens the first paragraph of a version page, or None."""
+    first = (page.get("content") or [{}])[0]
+    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
+    return lozenge.get("attrs", {}).get("text") if lozenge.get("type") == "status" else None
+
+
 def problem(page, day):
     """Returns what keeps the page from being released, or None."""
     if not is_day(day):
         return f"day: {day} is not a date YYYY-MM-DD"
     first = (page.get("content") or [{}])[0]
-    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
-    state = lozenge.get("attrs", {}).get("text") if lozenge.get("type") == "status" else None
+    state = stamp_state(page)
     dated = [node.get("type") for node in first.get("content", [])[1:3]] == ["text", "date"]
     if state == "Released":
         return "page: the version is already Released"
