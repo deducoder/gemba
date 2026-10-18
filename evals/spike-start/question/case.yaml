@@ -43,3 +43,9 @@ graders:
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-60'
+  - name: no-fix-version
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: fixVersions
+    min: 0
+    max: 0
