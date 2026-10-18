@@ -33,6 +33,12 @@ def run(draft):
     return subprocess.run([sys.executable, str(SCRIPT)], input=draft, capture_output=True, text=True)
 
 
+def page(draft):
+    result = run(draft)
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)["body"]["content"]
+
+
 def rejected(draft, *words):
     result = run(draft)
     assert result.returncode == 1, result.stdout
@@ -91,9 +97,7 @@ class RoadmapRejects(unittest.TestCase):
 class RoadmapOptional(unittest.TestCase):
     def test_later_may_be_empty(self):
         start, end = DRAFT.index("* **Unnumbered** Soporte para otros"), DRAFT.index("### Released")
-        result = run(DRAFT[:start] + DRAFT[end:])
-        self.assertEqual(result.returncode, 0, result.stderr)
-        body = json.loads(result.stdout)["body"]["content"]
+        body = page(DRAFT[:start] + DRAFT[end:])
         self.assertEqual([flat(n) for n in body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
 
 
