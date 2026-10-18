@@ -119,7 +119,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
-15. **Reply** with the links to the three pages and what was written.
+15. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
 ## Review a framed product
 
