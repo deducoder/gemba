@@ -33,7 +33,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
    - A key that cannot be read stops the skill: create nothing, and reply with the key and Jira's reason.
-   - An Epic of the project in Backlog is the parent of the story.
+   - An Epic of the project in Backlog is the parent of the story: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, every page, with their `status` and `timetracking`).
    - An Epic in another status, or of another project, is not: the story goes without a parent, and the reply says why, with the epic's status.
    - A work item the request asks to declare as a story, with no other idea described, stops the skill: create and edit nothing, and reply with its key, its type and its link. When it is a Story, say it is already declared.
    - A key named for any other reason is context for the idea: the story is drafted with what it says, and gets no link and no parent.
@@ -49,7 +49,7 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
    - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it; read that key first, unless step 2 already did.
 
-6. **Give it a priority and an original estimate** with the Story rules of the priority above and the Story rules of the estimate above.
+6. **Give it a priority and an original estimate** with the Story rules of the priority above and the Story rules of the estimate above, and with the Window of an epic rule of the estimate above when the story has an epic as parent.
 
 7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
@@ -63,4 +63,4 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
 8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
 
-9. **Reply** with the key and link of each story it created, the spikes or bugs it named instead, and why an epic it named is not the parent, and nothing else.
+9. **Reply** with the key and link of each story it created, the spikes or bugs it named instead, why an epic it named is not the parent and, when the estimate does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.
