@@ -34,7 +34,7 @@ from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, space, split, status, strong, date_node  # noqa: E402
 
