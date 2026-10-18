@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Checks the page of a product version against the template and converts it to the live
+doc that Confluence takes: the title and the body as an ADF document.
+
+Usage: python3 version.py --project <KEY> --requirements <url> < draft.md
+
+The draft comes on stdin: the version name `<Product> vX.Y.Z` on the first line, then the
+paragraph `[Planned] · YYYY-MM-DD` with its release date and the paragraph of its goal,
+then these sections, in this order:
+
+- `### MVP criterion`, only in the first version: `Risk validated: <Kind>, «risk». why`,
+  with a Kind among Value, Usability, Feasibility and Viability.
+- `### Outcome`: the statement, then `Baseline: <...> Target: <...>`.
+- `### Requirements`: a bullet `* **R-nn** requirement` for each one of the version.
+- `### Open questions`: one paragraph with the numbers of the questions that blocked the
+  version; each `Question n` links to the Requirements page given in --requirements.
+
+The page ends with `## Work items`: the Jira macro of the first level of the version, its
+epics and the work items without a parent of the project given in --project. The draft does
+not write it, nor `Learned`, which version-close adds.
+
+Prints {"title": "<Product> vX.Y.Z", "body": <ADF>} as JSON when the draft follows the
+template. Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
+"""
+
+import argparse
+import json
+import re
+import sys
+from datetime import date
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
+
+from draft import FENCE, bullets, check_sections, date_node, doc, heading, inline, items, linked, paragraphs, space, split, status, strong  # noqa: E402
+
+TITLE = re.compile(r"^.+ v\d+\.\d+\.\d+$")
+STATUS = re.compile(r"^\[([^\]]+)\] · (\S+)$")
+KINDS = ("Value", "Usability", "Feasibility", "Viability")
+RISK = re.compile(r"^Risk validated: (\w+), «(.+?)»\.? ?(.*)$")
+BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
+REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
+SECTIONS = ["Outcome", "Requirements", "Open questions"]
+COLUMNS = "type,key,summary,priority,status,duedate"
+
+
+def intro(lines, found):
+    """Returns the release date and the goal of the version."""
+    text = paragraphs(lines)
+    match = STATUS.match(text[0]) if text else None
+    if not match:
+        found.append("draft: after the title write '[Planned] · YYYY-MM-DD' with the release date")
+        return None
+    state, day = match.groups()
+    if state != "Planned":
+        found.append(f"draft: a version starts Planned, not {state}")
+    try:
+        date.fromisoformat(day)
+    except ValueError:
+        found.append(f"draft: the release date {day} is not a date")
+    if len(text) != 2:
+        found.append("draft: write the goal of the version in one paragraph after the release date")
+        return None
+    return day, text[1]
+
+
+def mvp(lines, found):
+    text = paragraphs(lines)
+    match = RISK.match(text[0]) if len(text) == 1 else None
+    if not match:
+        found.append("MVP criterion: write one paragraph 'Risk validated: <Kind>, «risk». why'")
+        return None
+    if match.group(1) not in KINDS:
+        found.append(f"MVP criterion: the Kind is one of {', '.join(KINDS)}, not {match.group(1)}")
+        return None
+    return text[0][len("Risk validated: "):]
+
+
+def outcome(lines, found):
+    text = paragraphs(lines)
+    match = BASELINE.match(text[1]) if len(text) == 2 else None
+    if not match:
+        found.append("Outcome: write the statement, then 'Baseline: <...> Target: <...>'")
+        return None
+    return text[0], *match.groups()
+
+
+def requirements(lines, found):
+    listed = []
+    for item in items("Requirements", lines, found):
+        match = REQUIREMENT.match(item)
+        if match:
+            listed.append(match.groups())
+        else:
+            found.append(f"Requirements: write each as '* **R-nn** requirement': {item}")
+    return listed
+
+
+def problems(draft):
+    """Returns what doesn't follow the template, and the content of the draft when it does."""
+    if any(FENCE.match(line) for line in draft.splitlines()):
+        return ["draft: write no code blocks"], None
+    title, lines, sections, subsections, repeated = split(draft)
+    found = []
+    if not TITLE.match(title):
+        found.append(f"title: write the version name '<Product> vX.Y.Z' on the first line: {title}")
+    for section, sub in subsections:
+        found.append(f"{section}: write no '####' headings: {sub}")
+    for name in ("Work items", "Learned"):
+        if name in sections:
+            found.append(f"{name}: leave it out; " + ("the script writes the Jira macro" if name == "Work items" else "version-close writes it"))
+            sections.pop(name)
+    expected = (["MVP criterion"] if "MVP criterion" in sections else []) + SECTIONS
+    if not check_sections(sections, expected, repeated, found):
+        return found, None
+    content = {
+        "title": title,
+        "intro": intro(lines, found),
+        "mvp": mvp(sections["MVP criterion"], found) if "MVP criterion" in sections else None,
+        "outcome": outcome(sections["Outcome"], found),
+        "requirements": requirements(sections["Requirements"], found),
+    }
+    questions = paragraphs(sections["Open questions"])
+    if len(questions) != 1:
+        found.append("Open questions: write one paragraph with the numbers of the questions that blocked the version, or say none did")
+    content["questions"] = questions[0] if questions else ""
+    return (found, None) if found else (found, content)
+
+
+def macro(project, version):
+    jql = f'project = {project} AND fixVersion = "{version}" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key'
+    return {"type": "extension", "attrs": {
+        "layout": "default",
+        "extensionType": "com.atlassian.confluence.macro.core",
+        "extensionKey": "jira",
+        "parameters": {
+            "macroParams": {"jqlQuery": {"value": jql}, "columns": {"value": COLUMNS}},
+            "macroMetadata": {"schemaVersion": {"value": "1"}, "title": "Jira"},
+        },
+    }}
+
+
+def paragraph(*content):
+    return {"type": "paragraph", "content": list(content)}
+
+
+def body(content, project, requirements):
+    """Returns the live doc as an ADF document."""
+    day, goal = content["intro"]
+    nodes = [paragraph(status("Planned", "neutral"), {"type": "text", "text": " · "}, date_node(day)),
+             paragraph(*inline(goal))]
+    if content["mvp"]:
+        nodes += [heading("MVP criterion", 2), paragraph(strong("Risk validated:"), space(), *inline(content["mvp"]))]
+    statement, baseline, target = content["outcome"]
+    nodes += [heading("Outcome", 2), paragraph(*inline(statement)),
+              paragraph(strong("Baseline:"), space(), *inline(baseline), space(), strong("Target:"), space(), *inline(target))]
+    nodes += [heading("Requirements", 2), bullets([[strong(rid), space(), *inline(text)] for rid, text in content["requirements"]])]
+    nodes += [heading("Open questions", 2), paragraph(*linked(content["questions"], requirements))]
+    nodes += [heading("Work items", 2), macro(project, content["title"])]
+    return doc(nodes)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--project", required=True, help="the key of the Jira project")
+    parser.add_argument("--requirements", required=True, help="the URL of the Requirements page")
+    args = parser.parse_args()
+    found, content = problems(sys.stdin.read())
+    if found:
+        print("\n".join(found), file=sys.stderr)
+        return 1
+    print(json.dumps({"title": content["title"], "body": body(content, args.project, args.requirements)}, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
