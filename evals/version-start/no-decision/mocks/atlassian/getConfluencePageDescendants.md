@@ -1,0 +1,7 @@
+---
+expect:
+  cloudId: string
+  pageId: string
+---
+
+{"results": [{"id": "1004", "status": "current", "title": "Work", "parentId": "1002", "depth": 1, "type": "folder"}, {"id": "1010", "status": "current", "title": "Vision", "parentId": "1002", "depth": 1, "type": "page"}, {"id": "1011", "status": "current", "title": "Requirements", "parentId": "1010", "depth": 2, "type": "page"}, {"id": "1012", "status": "current", "title": "Roadmap", "parentId": "1010", "depth": 2, "type": "page"}], "_links": {"base": "https://example.atlassian.net/wiki"}}
