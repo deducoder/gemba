@@ -18,9 +18,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import is_day, stamp  # noqa: E402
-
-CURRENT = ("Planned", "In progress")
+from draft import CURRENT, is_day, stamp  # noqa: E402
 
 
 def problem(page, day):
