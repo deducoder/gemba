@@ -44,7 +44,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 3. **Check the decision.** The decision is the `panel` after the `Decision` heading of `Vision`. Without that panel, or with `panelType` `error` (no-go), reply that the product has no go decision, name which case it is, suggest deciding it with `/gemba-code:project-create` and stop, writing nothing. With `warning` (go to validate), the first version validates the greatest risk, the first of `Risks`; with `success` (go to build), it is the cut the person chooses.
 
-4. **Name the version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata` and read the `allowedValues` of `fixVersions` with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. The versions of the product are those named `<Product> vX.Y.Z`. Without any, the version is the first one: `<Product>` is the `name` in the `allowedValues` of the field `project` of the same response, and the version `<Product> v0.1.0`. With versions, it is their `<Product>` with the highest minor plus one and patch `0`. Propose that name; the person accepts it or gives another of the same form.
+4. **Name the version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata` and read the `allowedValues` of `fixVersions` with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. The versions of the product are those named `<Product> vX.Y.Z`. Without any, the version is the first one: `<Product>` is the `name` in the `allowedValues` of the field `project` of the same response, and the version `<Product> v0.1.0`. With versions, take the highest of them by major and then minor, and the version is its `<Product>` with that major, its minor plus one and patch `0`: after `v1.0.0` and `v0.7.0` comes `v1.1.0`. Propose that name; the person accepts it or gives another of the same form.
 
 5. **Choose the goal.** Offer the entries of `Next` in `Roadmap`, the one the argument names first: the chosen one is the goal of the version and moves to `Now`.
 
@@ -91,7 +91,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
     Each command runs alone, as its own Bash call; the three can go in one message. Fix each problem a command names until it passes.
 
-11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4: the version exists, is neither released nor archived, and its `releaseDate` is the one of step 9. When one of them fails, say which and ask again; write nothing until it holds.
+11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4: the version exists, is not released, and its `releaseDate` is the one of step 9. These values leave out archived versions, so a version not listed is missing or archived: say both. When one of them fails, say which and ask again; write nothing until it holds.
 
 12. **Ask the person to accept** the three drafts, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
