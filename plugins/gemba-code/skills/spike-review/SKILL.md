@@ -29,7 +29,7 @@ Until the Review mark this skill only reads: it writes nothing in Jira and nothi
    - it is not a Spike: say its type;
    - its status is not Implement or Review: say its status.
 
-3. **Find the live doc of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `homepageId`) and the descendants of its home with `getConfluencePageDescendants`, which lists every depth. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`, and the live doc is the page whose parent is `Spikes` and whose title starts with the spike's key and a space. Stop, writing nothing, when `Work`, `Spikes` or the page is missing, and say which one; when more than one page matches, stop and name them.
+3. **Find the live doc of the findings.** Read the space of `atlassian.json` above with `getConfluenceSpaces` (its `homepageId`) and the descendants of its home with `getConfluencePageDescendants` and `depth: 3`, which reaches the pages inside `Spikes`; without `depth` it stops at depth 2. The folder is the `Spikes` of type `folder` whose parent is the `Work` of type `folder`, and the live doc is the page whose parent is `Spikes` and whose title starts with the spike's key and a space. Stop, writing nothing, when `Work`, `Spikes` or the page is missing, and say which one; when more than one page matches, stop and name them.
 
 4. **Read the findings.** Read the live doc with `getConfluencePage` and `contentFormat: "markdown"`: its `Answer`, its `Evidence` and its `Next`. Stop, writing nothing, when it has no `Answer` or no `Evidence`, and say which one.
 
