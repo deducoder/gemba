@@ -30,7 +30,7 @@ graders:
     match: not_contains
   - name: children
     type: regex
-    pattern: '\b(Story|Spike)\b[\s\S]*\b(Highest|High|Medium|Low)\b[\s\S]*\b\d+[hd]\b'
+    pattern: '\b([Ss]tor(y|ies)|[Ss]pikes?)\b[\s\S]*\b(Highest|High|Medium|Low)\b[\s\S]*\b\d+[hd]\b'
   - name: release-date
     type: regex
     pattern: '2026-11-30|Nov(ember)? 30'
