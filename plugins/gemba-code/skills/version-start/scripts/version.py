@@ -2,14 +2,15 @@
 """Checks the page of a product version against the template and converts it to the live
 doc that Confluence takes: the title and the body as an ADF document.
 
-Usage: python3 version.py --project <KEY> --requirements <url> < draft.md
+Usage: python3 version.py --project <KEY> --requirements <url> [--first] < draft.md
 
 The draft comes on stdin: the version name `<Product> vX.Y.Z` on the first line, then the
 paragraph `[Planned] · YYYY-MM-DD` with its release date and the paragraph of its goal,
 then these sections, in this order:
 
-- `### MVP criterion`, only in the first version: `Risk validated: <Kind>, «risk». why`,
-  with a Kind among Value, Usability, Feasibility and Viability.
+- `### MVP criterion`, in the first version, given with --first, and in no other:
+  `Risk validated: <Kind>, «risk». why`, with a Kind among Value, Usability, Feasibility
+  and Viability.
 - `### Outcome`: the statement, then `Baseline: <...> Target: <...>`.
 - `### Requirements`: a bullet `* **R-nn** requirement` for each one of the version.
 - `### Open questions`: one paragraph with the numbers of the questions that blocked the
@@ -42,6 +43,7 @@ REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 SECTIONS = ["Outcome", "Requirements", "Open questions"]
 LEFT_OUT = {"Work items": "the script writes the Jira macro", "Learned": "version-close writes it"}
 COLUMNS = "type,key,summary,priority,status,duedate"
+PROJECT = re.compile(r"^[A-Z][A-Z0-9_]+$")
 
 
 def intro(lines, found):
@@ -94,7 +96,7 @@ def requirements(lines, found):
     return listed
 
 
-def problems(draft):
+def problems(draft, first=False):
     """Returns what doesn't follow the template, and the content of the draft when it does."""
     if any(FENCE.match(line) for line in draft.splitlines()):
         return ["draft: write no code blocks"], None
@@ -108,6 +110,11 @@ def problems(draft):
         if name in sections:
             found.append(f"{name}: leave it out; {why}")
             sections.pop(name)
+    if first and "MVP criterion" not in sections:
+        found.append("MVP criterion: the first version names the risk it validates")
+    elif not first and "MVP criterion" in sections:
+        found.append("MVP criterion: only the first version has it; leave it out")
+        sections.pop("MVP criterion")
     expected = (["MVP criterion"] if "MVP criterion" in sections else []) + SECTIONS
     if not check_sections(sections, expected, repeated, found):
         return found, None
@@ -126,7 +133,8 @@ def problems(draft):
 
 
 def macro(project, version):
-    jql = f'project = {project} AND fixVersion = "{version}" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key'
+    quoted = version.replace("\\", "\\\\").replace('"', '\\"')
+    jql = f'project = {project} AND fixVersion = "{quoted}" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key'
     return {"type": "extension", "attrs": {
         "layout": "default",
         "extensionType": "com.atlassian.confluence.macro.core",
@@ -158,8 +166,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--project", required=True, help="the key of the Jira project")
     parser.add_argument("--requirements", required=True, help="the URL of the Requirements page")
+    parser.add_argument("--first", action="store_true", help="the version is the first of the product")
     args = parser.parse_args()
-    found, content = problems(sys.stdin.read())
+    if not PROJECT.match(args.project):
+        print(f"--project: {args.project} is not the key of a Jira project, like ABC", file=sys.stderr)
+        return 1
+    found, content = problems(sys.stdin.read(), args.first)
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
