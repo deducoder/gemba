@@ -5,6 +5,7 @@ and the Out of scope arrows, and the conversion of their lines to ADF for Jira.
 a work item key after `→` becomes a link to the issue on the site."""
 
 import re
+from datetime import date, datetime, timezone
 
 ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
 KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
@@ -14,15 +15,16 @@ FENCE = re.compile(r"^(`{3,}|~{3,})")
 TRAIL = ("ran:", "read:")
 
 
-def split(text):
+def split(text, titled=True):
     """Returns the Summary, the lines before the first `###` section, the lines of each
     section, the lines of each `####` subsection keyed by (section, subsection) and the
-    headings written twice. A heading inside a fenced block is part of the block."""
+    headings written twice. A heading inside a fenced block is part of the block. A draft
+    that is not titled has no Summary line: it is returned empty."""
     lines = text.strip("\n").splitlines()
-    summary = lines[0].strip() if lines else ""
+    summary = lines[0].strip() if lines and titled else ""
     intro, sections, subsections, repeated = [], {}, {}, []
     target, current, fence = intro, None, None
-    for line in lines[1:]:
+    for line in lines[1:] if titled else lines:
         heading = HEADING.match(line) if fence is None else None
         if heading and len(heading.group(1)) == 3:
             current = heading.group(2)
@@ -61,6 +63,20 @@ def filled(lines):
     return [line for line in lines if line.strip()]
 
 
+def paragraphs(lines):
+    """Groups the lines into paragraphs, separated by blank lines."""
+    blocks, text = [], []
+    for line in lines:
+        if line.strip():
+            text.append(line.strip())
+        elif text:
+            blocks.append(" ".join(text))
+            text = []
+    if text:
+        blocks.append(" ".join(text))
+    return blocks
+
+
 def prose(line):
     """Returns a line without its `code`, where == and → are literal."""
     return CODE.sub("", line)
@@ -88,10 +104,11 @@ def check_sections(sections, expected, repeated, found):
     return True
 
 
-def items(name, lines, found):
-    """Returns the bullets of a section and reports the lines that are not bullets."""
+def items(name, lines, found, optional=False):
+    """Returns the bullets of a section and reports the lines that are not bullets, and an
+    empty section unless it is optional."""
     lines = filled(lines)
-    if not lines:
+    if not lines and not optional:
         found.append(f"{name}: write at least one item")
     bullets = []
     for line in lines:
@@ -153,6 +170,25 @@ def excluded(line, site):
         return inline(line)
     what, key = (part.strip() for part in line.rsplit("→", 1))
     return inline(f"{what} → ") + [{"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}]
+
+
+def strong(text):
+    return {"type": "text", "text": text, "marks": [{"type": "strong"}]}
+
+
+def space():
+    return {"type": "text", "text": " "}
+
+
+def status(text, color):
+    """Returns a lozenge."""
+    return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
+
+
+def date_node(day):
+    """Returns a YYYY-MM-DD day as a date node, at the milliseconds of its midnight in UTC."""
+    moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
+    return {"type": "date", "attrs": {"timestamp": str(int(moment.timestamp() * 1000))}}
 
 
 def heading(name, level=3):

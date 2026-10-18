@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, KEY, check_sections, doc, heading, inline, split, unclosed  # noqa: E402
+from draft import CODE, FENCE, KEY, check_sections, doc, heading, inline, paragraphs, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -40,20 +40,6 @@ CITE = re.compile(r"\[(\d+)\]")
 FROM = re.compile(r"\(from \d+\.\d+(, \d+\.\d+)*\)\s*$")
 CITED = re.compile(r"\[Finding (\d+\.\d+)\]")
 TOPIC = re.compile(r"^(\d+)\. \S")
-
-
-def paragraphs(lines):
-    """Groups the lines into paragraphs, separated by blank lines."""
-    blocks, text = [], []
-    for line in lines:
-        if line.strip():
-            text.append(line.strip())
-        elif text:
-            blocks.append(" ".join(text))
-            text = []
-    if text:
-        blocks.append(" ".join(text))
-    return blocks
 
 
 def problems(draft):

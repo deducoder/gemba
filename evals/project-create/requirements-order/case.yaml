@@ -1,0 +1,32 @@
+schema_version: "1.1"
+name: project-create-requirements-order
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:project-create a dog walking app. These are already accepted, ask nothing about them: the demand is Market; the idea is "Independent dog walkers book and get paid in one app instead of WhatsApp threads and cash"; the problem is that walkers lose bookings in WhatsApp threads; Today is WhatsApp and cash; success is fewer lost bookings, Baseline unknown, Target zero per week; the constraint is liability insurance for every walker, required by city law; the greatest risk is Value: walkers keep booking by WhatsApp [Hypothesis], validated by 5 walkers using the app for 2 weeks, Threshold 4 of 5 stop using WhatsApp for bookings. Go on with the requirements.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 12
+  timeout_seconds: 150
+graders:
+  - name: first-id-of-the-series
+    type: regex
+    pattern: 'R-01'
+  - name: requirements-carry-their-source
+    type: regex
+    pattern: 'Source'
+  - name: first-requirement-is-functional
+    type: regex
+    pattern: 'R-01[^\n]*\[Functional\]'
+  - name: no-business-rule-before-the-functional
+    type: regex
+    pattern: '^((?!Functional)[\s\S])*Business rule'
+    match: not_contains
+  - name: no-page-yet
+    type: regex
+    target: mock_calls
+    pattern: 'createConfluencePage|updateConfluencePage'
+    match: not_contains
