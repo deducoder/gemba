@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: epic-start-same-day
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare an epic: customers can print their invoices as CSV from invoices.py with a --csv option.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 30
+  timeout_seconds: 300
+graders:
+  - name: no-create
+    type: regex
+    target: mock_calls
+    pattern: createJiraIssue
+    match: not_contains
+  - name: template
+    type: regex
+    pattern: 'Done when[\s\S]*Out of scope'
+  - name: due-date-is-today
+    type: llm
+    criteria: >-
+      The plan proposes a due date for the epic and that date is the same working day the plan is written. The date is today, and the plan says it is today or the same day or gives today's date. A date that the plan itself presents as the next working day, because the requirement fits in one working day and today is not a working day, is also accepted. A due date any later than that, such as the day after or several days later, fails. A plan with no due date fails.
