@@ -36,7 +36,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong, date_node  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, linked, paragraphs, space, split, status, strong, date_node  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -190,24 +190,6 @@ def panel(kind, *content):
 
 def label(name, text):
     return paragraph(strong(f"{name}:"), space(), *inline(text))
-
-
-def linked(text, url):
-    """Returns the text as ADF nodes, with each `Question n` outside code linking to the
-    Requirements page."""
-    if not url:
-        return inline(text)
-    nodes = []
-    for i, chunk in enumerate(CODE.split(text)):
-        if i % 2:
-            nodes.extend(inline(f"`{chunk}`"))
-            continue
-        for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
-            if j % 2:
-                nodes.append({"type": "text", "text": part, "marks": [{"type": "link", "attrs": {"href": url}}]})
-            elif part:
-                nodes.extend(inline(part))
-    return nodes
 
 
 def body(content, requirements=None):

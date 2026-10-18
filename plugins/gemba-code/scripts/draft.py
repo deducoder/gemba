@@ -161,6 +161,24 @@ def inline(text, marks=()):
     return nodes
 
 
+def linked(text, url):
+    """Returns the text as ADF nodes, with each `Question n` outside code linking to the
+    Requirements page."""
+    if not url:
+        return inline(text)
+    nodes = []
+    for i, chunk in enumerate(CODE.split(text)):
+        if i % 2:
+            nodes.extend(inline(f"`{chunk}`"))
+            continue
+        for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
+            if j % 2:
+                nodes.append({"type": "text", "text": part, "marks": [{"type": "link", "attrs": {"href": url}}]})
+            elif part:
+                nodes.extend(inline(part))
+    return nodes
+
+
 def criterion(line):
     return inline(line[2:-2], [ORANGE]) if wrapped(line) else inline(line)
 
