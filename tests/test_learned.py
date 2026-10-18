@@ -88,7 +88,7 @@ class LearnedRejects(unittest.TestCase):
         rejected({"page": page, "draft": DRAFT}, "release it first")
 
     def test_a_page_that_already_has_learned(self):
-        page = Learned.doc
+        page = learned(PAGE)
         rejected({"page": page, "draft": DRAFT}, "Learned")
 
     def test_a_draft_without_lessons(self):
@@ -104,6 +104,11 @@ class LearnedRejects(unittest.TestCase):
     def test_a_page_that_is_not_an_adf_object(self):
         result = rejected({"page": json.dumps(PAGE), "draft": DRAFT}, "input")
         self.assertNotIn("Traceback", result.stderr)
+
+    def test_content_that_is_not_a_list_of_nodes(self):
+        for content in (["x"], None):
+            result = rejected({"page": {"type": "doc", "version": 1, "content": content}, "draft": DRAFT}, "input")
+            self.assertNotIn("Traceback", result.stderr)
 
     def test_input_that_is_not_json(self):
         rejected("not json", "JSON")
