@@ -26,7 +26,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, split  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, space, split, status, strong  # noqa: E402
 
 GREY = {"type": "textColor", "attrs": {"color": "#97a0af"}}
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
@@ -63,7 +63,7 @@ def requirements(lines, found):
 
 def questions(lines, ids, found):
     listed = []
-    for item in items(QUESTIONS, lines, found) if filled(lines) else []:
+    for item in items(QUESTIONS, lines, found, optional=True):
         match = QUESTION.match(item)
         if not match:
             found.append(f"{QUESTIONS}: write each as '* **Question n.** question Assumption: assumption [Open|Answered]': {item}")
@@ -86,8 +86,7 @@ def problems(draft):
     """Returns what doesn't follow the template, and the content of the draft when it does."""
     if any(FENCE.match(line) for line in draft.splitlines()):
         return ["draft: write no code blocks"], None
-    # split() takes the first line as a title, which this draft does not have.
-    _, intro, sections, subsections, repeated = split("Requirements\n" + draft)
+    _, intro, sections, subsections, repeated = split(draft, titled=False)
     found = []
     if filled(intro):
         found.append("draft: start with the '### Unassigned' section")
@@ -98,18 +97,6 @@ def problems(draft):
     catalog = requirements(sections["Unassigned"], found)
     listed = questions(sections[QUESTIONS], {rid for rid, *_ in catalog}, found)
     return (found, None) if found else (found, {"catalog": catalog, "questions": listed})
-
-
-def status(text, color):
-    return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
-
-
-def strong(text):
-    return {"type": "text", "text": text, "marks": [{"type": "strong"}]}
-
-
-def space():
-    return {"type": "text", "text": " "}
 
 
 def body(content):

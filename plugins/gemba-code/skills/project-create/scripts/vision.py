@@ -36,7 +36,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -173,23 +173,11 @@ def problems(draft):
         "problem": problem(sections["Problem"], found),
         "users": users(sections["Users"], found),
         "success": success(sections["Success"], found),
-        "constraints": items("Constraints", sections["Constraints"], found) if filled(sections["Constraints"]) else [],
+        "constraints": items("Constraints", sections["Constraints"], found, optional=True),
     }
     content["risks"] = risks(sections["Risks"], found)
     content["decision"] = decision(sections["Decision"], content["risks"], found) if "Decision" in sections else None
     return (found, None) if found else (found, content)
-
-
-def status(text, color):
-    return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
-
-
-def strong(text):
-    return {"type": "text", "text": text, "marks": [{"type": "strong"}]}
-
-
-def space():
-    return {"type": "text", "text": " "}
 
 
 def paragraph(*content):

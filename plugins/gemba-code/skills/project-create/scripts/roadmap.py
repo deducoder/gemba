@@ -21,15 +21,15 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
 
 
-def entries(name, lines, found):
+def entries(name, lines, found, optional=False):
     goals = []
-    for item in items(name, lines, found):
+    for item in items(name, lines, found, optional):
         match = ENTRY.match(item)
         if match:
             goals.append(match.group(1))
@@ -42,8 +42,7 @@ def problems(draft):
     """Returns what doesn't follow the template, and the content of the draft when it does."""
     if any(FENCE.match(line) for line in draft.splitlines()):
         return ["draft: write no code blocks"], None
-    # split() takes the first line as a title, which this draft does not have.
-    _, intro, sections, subsections, repeated = split("Roadmap\n" + draft)
+    _, intro, sections, subsections, repeated = split(draft, titled=False)
     found = []
     if filled(intro):
         found.append("draft: start with the '### Now' section")
@@ -58,12 +57,12 @@ def problems(draft):
             found.append(f"{name}: write one paragraph saying there is no version yet")
         content[name] = text[0] if text else ""
     content["Next"] = entries("Next", sections["Next"], found)
-    content["Later"] = entries("Later", sections["Later"], found) if filled(sections["Later"]) else []
+    content["Later"] = entries("Later", sections["Later"], found, optional=True)
     return (found, None) if found else (found, content)
 
 
 def entry(goal):
-    return [{"type": "text", "text": "Unnumbered", "marks": [{"type": "strong"}]}, {"type": "hardBreak"}, *inline(goal)]
+    return [strong("Unnumbered"), {"type": "hardBreak"}, *inline(goal)]
 
 
 def body(content):
