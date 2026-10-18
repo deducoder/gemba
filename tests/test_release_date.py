@@ -58,6 +58,10 @@ class ReleaseDate(unittest.TestCase):
         out = result(plan(3, R_01="1d", R_02="3d", R_03=("1d", ["R-01", "R-02"])))
         self.assertEqual((out["workingDays"], out["longestChain"]), (4, ["R-02", "R-03"]))
 
+    def test_requirements_waiting_on_one_cannot_start_before_it(self):
+        out = result(plan(2, R_01="1d", R_02=("1d", ["R-01"]), R_03=("1d", ["R-01"]), R_04=("1d", ["R-01"])))
+        self.assertEqual((out["workingDays"], out["releaseDate"]), (3, "2026-10-21"))
+
     def test_part_of_a_day_takes_the_whole_day(self):
         self.assertEqual(result(plan(R_01="1d 4h"))["workingDays"], 2)
         self.assertEqual(result(plan(R_01="30m"))["workingDays"], 1)
@@ -81,6 +85,12 @@ class ReleaseDateRejects(unittest.TestCase):
 
     def test_a_cycle(self):
         rejected(plan(R_01=("1d", ["R-02"]), R_02=("1d", ["R-01"])), "cycle")
+
+    def test_an_after_that_is_not_an_id(self):
+        rejected(plan(R_01=("1d", [{"id": "R-02"}])), "R-01", "after")
+
+    def test_a_start_in_another_iso_form(self):
+        rejected(plan(start="20261019", R_01="1d"), "start")
 
     def test_no_people(self):
         rejected(plan(0, R_01="1d"), "people")

@@ -130,6 +130,12 @@ class RoadmapVersionInProgress(unittest.TestCase):
         self.assertEqual([flat(n) for n in self.body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
         self.assertEqual(self.body[3]["type"], "heading")
 
+    def test_a_released_version_is_not_in_now(self):
+        rejected(PLANNED.replace("[Planned]", "[Released]"), "Now", "Released")
+
+    def test_a_release_date_in_another_iso_form(self):
+        rejected(PLANNED.replace("2026-11-20", "20261120"), "Now", "20261120")
+
     def test_a_status_outside_the_list(self):
         rejected(PLANNED.replace("[Planned]", "[Soon]"), "Now", "Planned")
 

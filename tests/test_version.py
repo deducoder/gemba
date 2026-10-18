@@ -38,13 +38,17 @@ Question 2 y Question 3, ya respondidas.
 """
 
 
+LATER = ("--project", "ABC", "--requirements", REQUIREMENTS)
+FIRST = LATER + ("--first",)
+
+
 def run(draft, *args):
-    args = args or ("--project", "ABC", "--requirements", REQUIREMENTS)
+    args = args or FIRST
     return subprocess.run([sys.executable, str(SCRIPT), *args], input=draft, capture_output=True, text=True)
 
 
-def page(draft):
-    result = run(draft)
+def page(draft, *args):
+    result = run(draft, *args)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -114,9 +118,14 @@ class VersionPage(unittest.TestCase):
 
 
 class VersionOptional(unittest.TestCase):
+    def test_quotes_in_the_version_name_are_escaped_in_the_jql(self):
+        body = page(DRAFT.replace("Gemba v0.1.0", 'Ga"b v0.1.0'))["body"]["content"]
+        jql = body[-1]["attrs"]["parameters"]["macroParams"]["jqlQuery"]["value"]
+        self.assertIn('fixVersion = "Ga\\"b v0.1.0"', jql)
+
     def test_a_later_version_has_no_mvp_criterion(self):
         start, end = DRAFT.index("### MVP criterion"), DRAFT.index("### Outcome")
-        body = page(DRAFT[:start] + DRAFT[end:].replace("Gemba v0.1.0", "Gemba v0.2.0"))["body"]["content"]
+        body = page(DRAFT[:start] + DRAFT[end:].replace("Gemba v0.1.0", "Gemba v0.2.0"), *LATER)["body"]["content"]
         self.assertEqual([flat(n) for n in body if n["type"] == "heading"][0], "Outcome")
 
 
@@ -158,6 +167,19 @@ class VersionRejects(unittest.TestCase):
 
     def test_open_questions_without_a_paragraph(self):
         rejected(DRAFT.replace("Question 2 y Question 3, ya respondidas.\n", ""), "Open questions")
+
+    def test_a_release_date_in_another_iso_form(self):
+        rejected(DRAFT.replace("2026-11-20", "20261120"), "20261120")
+
+    def test_a_project_that_is_not_a_jira_key(self):
+        rejected(DRAFT, "--project", args=("--project", 'ABC" OR project = X', "--requirements", REQUIREMENTS))
+
+    def test_the_first_version_needs_its_mvp_criterion(self):
+        start, end = DRAFT.index("### MVP criterion"), DRAFT.index("### Outcome")
+        rejected(DRAFT[:start] + DRAFT[end:], "MVP criterion")
+
+    def test_a_later_version_has_none(self):
+        rejected(DRAFT, "MVP criterion", args=LATER)
 
     def test_without_project_or_requirements_link(self):
         rejected(DRAFT, "--project", args=("--requirements", REQUIREMENTS))
