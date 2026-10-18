@@ -121,7 +121,7 @@ class Release(unittest.TestCase):
         self.released()
 
     def test_it_refuses_a_tag_that_already_exists_elsewhere(self):
-        git(self.work, "tag", "-a", "v0.1.0", "-m", "v0.1.0", "main")
+        git(self.work, "tag", "-a", "v0.1.0", "-m", "v0.1.0", "develop")
         self.refused("v0.1.0", "exists")
 
     def test_it_refuses_a_develop_with_nothing_main_lacks(self):
