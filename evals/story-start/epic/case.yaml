@@ -20,6 +20,10 @@ graders:
     type: regex
     target: mock_calls
     pattern: 'createJiraIssue.*parent\W+ABC-7'
+  - name: fix-version
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: 'fixVersions\W+name\W+ABC v1\.1\.0'
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-42'
