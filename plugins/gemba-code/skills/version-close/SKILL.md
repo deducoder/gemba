@@ -34,7 +34,7 @@ Until the push of step 7 this skill only reads and works locally: it writes noth
 
 4. **Check the work items.** Read with `searchJiraIssuesUsingJql` the work items of the version not finished (`project = <jira.project> AND fixVersion = "<the version>" AND status not in (Done, Cancelled)`, every page, with their `summary`, `issuetype` and `status`). With any, stop, writing nothing, and name each one with its key, type, Summary and status.
 
-5. **Review the security.** Bring `develop` up to date (`git switch develop` and `git pull --ff-only`) and invoke `/security-review` with the Skill tool, from `develop`: it reviews the changes of the version, what `develop` has and `main` lacks. With a finding, stop without releasing: name each finding with its file and its severity, suggest declaring it with `/gemba-code:bug-start` and running this skill again once it is fixed.
+5. **Review the security.** Bring `develop` up to date (`git switch develop` and `git pull --ff-only`) and invoke `/security-review` with the Skill tool, from `develop`. It reviews the diff against `origin/HEAD`, and the changes of the version are what `develop` has and `origin/main` lacks: when `git rev-parse --abbrev-ref origin/HEAD` is not `origin/main`, run `git remote set-head origin main` first and say so in the reply. With a finding, stop without releasing: name each finding with its file and its severity, suggest declaring it with `/gemba-code:bug-start` and running this skill again once it is fixed.
 
 6. **Release in git** with this command, run alone and exactly in this form, with the number of the version:
 
