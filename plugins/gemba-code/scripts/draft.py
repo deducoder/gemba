@@ -13,6 +13,10 @@ CODE = re.compile(r"`([^`]+)`")
 HEADING = re.compile(r"^(#{3,4}) (.+?)\s*$")
 FENCE = re.compile(r"^(`{3,}|~{3,})")
 TRAIL = ("ran:", "read:")
+VERSION_NAME = r".+ v\d+\.\d+\.\d+"
+STATES = {"Planned": "neutral", "In progress": "blue", "Released": "green"}
+CURRENT = ("Planned", "In progress")
+BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
 
 
 def split(text, titled=True):
@@ -161,6 +165,24 @@ def inline(text, marks=()):
     return nodes
 
 
+def linked(text, url):
+    """Returns the text as ADF nodes, with each `Question n` outside code linking to the
+    Requirements page."""
+    if not url:
+        return inline(text)
+    nodes = []
+    for i, chunk in enumerate(CODE.split(text)):
+        if i % 2:
+            nodes.extend(inline(f"`{chunk}`"))
+            continue
+        for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
+            if j % 2:
+                nodes.append({"type": "text", "text": part, "marks": [{"type": "link", "attrs": {"href": url}}]})
+            elif part:
+                nodes.extend(inline(part))
+    return nodes
+
+
 def criterion(line):
     return inline(line[2:-2], [ORANGE]) if wrapped(line) else inline(line)
 
@@ -207,3 +229,36 @@ def section(name, items):
 
 def doc(content):
     return {"type": "doc", "version": 1, "content": content}
+
+
+DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def is_day(day):
+    """Tells whether a text is a day written YYYY-MM-DD, the only ISO form the templates take."""
+    if not isinstance(day, str) or not DAY.match(day):
+        return False
+    try:
+        date.fromisoformat(day)
+    except ValueError:
+        return False
+    return True
+
+
+def paragraph(*content):
+    return {"type": "paragraph", "content": list(content)}
+
+
+def label(name, text):
+    """Returns a paragraph with the label in bold, then its text."""
+    return paragraph(strong(f"{name}:"), space(), *inline(text))
+
+
+def dated(day):
+    """Returns ` · ` and the day as a date node."""
+    return [{"type": "text", "text": " · "}, date_node(day)]
+
+
+def stamp(state, day):
+    """Returns the lozenge of a version state, ` · ` and its release date."""
+    return [status(state, STATES[state]), *dated(day)]

@@ -1,0 +1,26 @@
+schema_version: "1.1"
+name: version-close-open-work-items
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:version-close'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 14
+  timeout_seconds: 180
+graders:
+  - name: reads-the-work-items-of-the-version
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql.*ABC v0\.2\.0'
+  - name: writes-nothing
+    type: regex
+    target: mock_calls
+    pattern: 'manageJiraProjectVersion|updateConfluencePage|createConfluencePage'
+    match: not_contains
+  - name: names-the-work-item
+    type: regex
+    pattern: 'ABC-71'

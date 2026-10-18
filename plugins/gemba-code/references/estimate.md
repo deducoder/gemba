@@ -10,6 +10,10 @@ What the story builds and what shows each of its Done when criteria. A story tha
 
 Its due date is the working time of the requirement the epic delivers: what its Done when criteria ask to have working, answered with the same two questions, never the sum of the estimates of its children. The children are cut from the requirement afterwards, within that date. A requirement that fits in one working day gets the same day as its due date.
 
+## Due date
+
+Only an epic and a loose story or spike get a due date. An epic always gets one, from its requirement as above. A story or a spike without an epic gets one only when the request states the external commitment behind the date (a contract, an event, a third party's date): a date without one is no due date, and a child of an epic never gets one.
+
 ## Window of an epic
 
 A story or a spike whose parent is an epic with a `duedate` reads the `originalEstimate` of the children the epic already has that are not Done or Cancelled: the time of a finished child is already spent. The window it leaves is the working time from today to the `duedate`, minus those estimates. A child without `originalEstimate` counts for nothing, a `duedate` already past leaves no window, and an epic without `duedate` gives none. The window is a reference for the estimate, never a limit: when the estimate the work item needs does not fit in it, the work item keeps that estimate and the reply says that the children no longer fit the date of the epic.

@@ -1,0 +1,128 @@
+---
+name: version-start
+description: Defines the next version of a framed product with the person (its requirements and the questions that block them, the stack, the release date in working days, the check of the fix version the person created and its live doc under Roadmap) and declares its work items through epic-start, story-start and spike-start, only those the person accepts. Stops without a go decision in the Vision. Use to plan the next version or MVP of a product framed with project-create, or to declare the work items of a defined version. It creates no fix version.
+argument-hint: "[Next entry of the roadmap, or a version in Now]"
+disable-model-invocation: true
+allowed-tools:
+  - Read(/${CLAUDE_SKILL_DIR}/assets/*)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/release_date.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/version.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
+---
+
+# Version start
+
+.gemba/project/atlassian.json:
+
+```
+!`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
+```
+
+CLAUDE.md:
+
+```
+!`cat "${CLAUDE_PROJECT_DIR}/CLAUDE.md" 2>/dev/null || echo "(missing)"`
+```
+
+Version template:
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/version.md`
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/estimate.md`
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/declare-through-start.md`
+
+This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates work items only through `epic-start`, `story-start` and `spike-start`, and only those the person accepted; it creates no fix version: the person creates it in Jira. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages.
+
+The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first.
+
+1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Atlassian.
+
+2. **Read the product.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. Without a page titled `Vision`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Vision` with `getConfluencePage` and `contentFormat: "adf"` and, in the same message, its children with `getConfluencePageDescendants` on it; then `Requirements` and `Roadmap` the same way, both in one message.
+
+3. **Check the decision.** The decision is the `panel` after the `Decision` heading of `Vision`. Without that panel, or with `panelType` `error` (no-go), reply that the product has no go decision, name which case it is, suggest deciding it with `/gemba-code:project-create` and stop, writing nothing. With `warning` (go to validate), the first version validates the greatest risk, the first of `Risks`; with `success` (go to build), it is the cut the person chooses. When the argument names a version that `Now` in `Roadmap` holds as `Planned`, the version is defined: take its requirements from its section of `Requirements`, its `releaseDate` and its link from its entry in `Now`, check its fix version as step 11 does, with the id of Epic from `getJiraProjectIssueTypesMetadata`, propose which requirements each one comes after and ask how many people build it, as step 9 does, and go on from step 14.
+
+4. **Name the version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata` and read the `allowedValues` of `fixVersions` with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. The versions of the product are those named `<Product> vX.Y.Z`. Without any, the version is the first one: `<Product>` is the `name` in the `allowedValues` of the field `project` of the same response, and the version `<Product> v0.1.0`. With versions, take the highest of them by major and then minor, and the version is its `<Product>` with that major, its minor plus one and patch `0`: after `v1.0.0` and `v0.7.0` comes `v1.1.0`. Propose that name; the person accepts it or gives another of the same form.
+
+5. **Choose the goal.** Offer the entries of `Next` in `Roadmap`, the one the argument names first: the chosen one is the goal of the version and moves to `Now`.
+
+6. **Choose the requirements.** Propose the `Unassigned` requirements of `Requirements` that reach the goal, in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four requirements, each option one requirement with its ID and `Type`. The person keeps what enters the version. A new requirement the person names gets the number above the highest of the page, withdrawn ones included.
+
+7. **Resolve the questions that block it.** Each `Open` question whose `Affects` names a requirement of the version, or that the person says changes it, blocks it: add `Blocks <the version>.` after its `Affects`, ask it one at a time, and with the answer add `Answer: <the answer>.` after it and mark it `[Answered]`. What the answer changes is written in the requirements it affects, which keep their IDs. A question the person cannot answer yet keeps the version from going on: say which one and stop, writing nothing. Nothing goes on to the date while a blocking question is `Open`.
+
+8. **Choose the stack,** only in the first version and when `CLAUDE.md` above has no `## Stack`. Run `/gemba-code:research` with the question of which stacks meet the requirements of the version and the constraints of `Vision`, then offer two or three of the stacks its answer supports, each with its reason and the recommended one first. Write the chosen one with Edit, without retyping the rest, as a `## Stack` section inside the `# Gemba` block, right after its `## Purpose` section or, without one, after `## Language`: one bullet per layer, `- <layer>: <choice>`, and after a blank line `Research: <the link to the research page>`.
+
+9. **Compute the release date.** Estimate each requirement of the version with the `## Epic` rule of the estimate above, the working time of the requirement, and propose which requirements of the version each one comes after. Ask how many people build the version. Run, alone and exactly in this form, with today as `start`:
+
+   ```
+   python3 ${CLAUDE_SKILL_DIR}/scripts/release_date.py <<'PLAN'
+   {"start": "<YYYY-MM-DD>", "people": <n>, "requirements": [{"id": "R-nn", "estimate": "<1d 4h>", "after": ["R-nn"]}]}
+   PLAN
+   ```
+
+   Show the person its `workingDays`, `releaseDate` and `longestChain`, with each estimate. With a correction, run it again.
+
+10. **Write the drafts** in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none; headings, labels and lozenges stay in English.
+    - The version page, with the template above: `[Planned]` and the `releaseDate`, the goal, the `MVP criterion` only in the first version (the risk it validates, from `Vision`, why this cut and what it leaves out), the `Outcome` with its `Baseline` and `Target`, the requirements of the version as the catalog writes them without their `Source` or `Type`, and the numbers of the questions of step 7, or one sentence saying none blocked it. Check it, alone and exactly in this form, with the link to `Requirements` and `--first` only in the first version:
+
+      ```
+      python3 ${CLAUDE_SKILL_DIR}/scripts/version.py --project <jira.project> --requirements <the link to Requirements> [--first] <<'VERSION'
+      <the version draft>
+      VERSION
+      ```
+
+    - `Requirements`, whole, from the page as published: a `### <the version>` section before `### Unassigned`, with the requirements of the version moved out of `Unassigned` in ascending order, and the questions of step 7 as they were answered. Check it, alone and exactly in this form, with the IDs the published page has:
+
+      ```
+      python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py --existing <the published IDs, comma separated> <<'REQUIREMENTS'
+      <the requirements draft>
+      REQUIREMENTS
+      ```
+
+    - `Roadmap`, whole, from the page as published: `Now` with `* [<the version>](<the link to the version page>) [Planned] · <releaseDate> <goal> Target: <the Target of the Outcome>`, and `Next` without the entry of step 5. The link is not known before the version page exists, so check the draft with `https://<site>/wiki` in its place now, and again with the link before publishing it:
+
+      ```
+      python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py <<'ROADMAP'
+      <the roadmap draft>
+      ROADMAP
+      ```
+
+    Each command runs alone, as its own Bash call; the three can go in one message. Fix each problem a command names until it passes.
+
+11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4: the version exists, is not released, and its `releaseDate` is the one of step 9. These values leave out archived versions, so a version not listed is missing or archived: say both. When one of them fails, say which and ask again; write nothing until it holds.
+
+12. **Ask the person to accept** the three drafts, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
+
+13. **Publish,** in this order, and when a call fails, stop and say what was published and what was not, without creating again a page that exists:
+    1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "adf"`).
+    2. `Requirements` and `Roadmap`, the roadmap checked again with the link to the version page. Merge each one, alone and exactly in this form, with its published body, the body its script printed and the headings it changes: for `Requirements` the version, `Unassigned` and `Assumptions and open questions` when a question changed; for `Roadmap`, `Now` and `Next`:
+
+       ```
+       python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py <<'MERGE'
+       {"live": <the published body>, "new": <the body the script printed>, "replace": [<the changed sections>]}
+       MERGE
+       ```
+
+       Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`).
+
+    The two merges can go in one message, and then the two updates. A live doc saves late: read each page until it has the change, up to three times, and retry the update once when it still does not; then say which page did not save.
+
+14. **Propose the work items.** First read the work items the version already has with `searchJiraIssuesUsingJql` (`project = <jira.project> AND fixVersion = "<the version>"`, every page, with their `summary`, `issuetype` and `description`): a requirement a description cites as `(R-nn)` is already covered, and is shown as such and not proposed again. For each requirement left, propose its shape with its reason:
+    - an **epic**, when several requirements are usable only together: one epic for them, declared with `epic-start`;
+    - a loose **story**, declared with `story-start`, when it is usable alone;
+    - a loose **spike**, declared with `spike-start`, when building it depends on how something outside the project works and nobody has verified it;
+    - **no work item** for a `Non-functional` requirement that cuts across the version: it enters as a Done when criterion of each story it touches, which cites it.
+
+    Propose them in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four work items, each option one work item with its type, its Summary and the requirements it covers. The person keeps what they accept and corrects with a note. A requirement left uncovered, because the person removed what covered it, is proposed again: do not go on while one is uncovered.
+
+15. **Ask for the commitments.** Ask which of the accepted loose stories and spikes have an external commitment, in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four. For each one checked, ask its date and the commitment behind it.
+
+16. **Declare the accepted work items** in the order of the batches, following the declaration through a start above, with `gemba-code:epic-start`, `gemba-code:story-start` or `gemba-code:spike-start`. The request names the fix version of the version, the requirements it covers by their ID and text, that each Done when criterion covering a requirement cites it as `(R-nn)`, the cross-cutting criteria of step 14 it carries, and for a loose story or spike the date and the commitment of step 15; for an epic, that each child carries the `(R-nn)` of what it covers and the cross-cutting criteria. Never declare a work item the person did not accept. Then link with `createIssueLink`, type `Blocks`, each pair of loose work items whose requirements step 9 put one after the other: the one covering the earlier requirement as `inwardIssue` and the later one as `outwardIssue`.
+
+17. **Check that they fit.** Read with `searchJiraIssuesUsingJql` the work items of the version still to do (`project = <jira.project> AND fixVersion = "<the version>" AND issuetype != Epic AND statusCategory != Done`, every page, with their `timetracking` and `issuelinks`), and run the release date of step 9 again with their keys as `id`, their `originalEstimate` as `estimate` and as `after` the keys of those that block them (`Blocks`) among them, and the people of step 9; a work item without `originalEstimate` counts for nothing and is left out, and the reply names it. When its `releaseDate` falls after the one of the version, say that the work items do not fit, with both dates, so the person can cut work items or move the version.
+
+18. **Reply** with the links to the version page, `Requirements` and `Roadmap`, the `releaseDate` with its working days and the chain that sets it, the stack when it was written, each work item created with its type, its link and the requirements it covers, each cross-cutting requirement with the stories that cite it, each work item proposed and not created with the reason, and the warning of step 17 when they do not fit.

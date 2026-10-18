@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "plugins/gemba-code/skills/project-create/scripts/roadmap.py"
+SCRIPT = ROOT / "plugins/gemba-code/scripts/roadmap.py"
 
 DRAFT = """### Now
 
@@ -92,6 +92,112 @@ class RoadmapRejects(unittest.TestCase):
 
     def test_next_without_entries(self):
         rejected(DRAFT.replace("* **Unnumbered** Validar que 3 equipos adoptan Gemba.\n", ""), "Next")
+
+
+VERSION = "* [Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc) [Planned] · 2026-11-20 Validar que 3 equipos adoptan Gemba. Target: 3 equipos activos a 4 semanas."
+
+PLANNED = DRAFT.replace("Ninguna versión en curso.", VERSION).replace(
+    "* **Unnumbered** Validar que 3 equipos adoptan Gemba.\n", "")
+
+
+class RoadmapVersionInProgress(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.body = page(PLANNED)
+        cls.entry = cls.body[1]["content"][0]["content"][0]["content"]
+
+    def test_now_holds_the_version_as_an_entry(self):
+        self.assertEqual(self.body[1]["type"], "bulletList")
+
+    def test_the_entry_links_to_the_version_page(self):
+        self.assertEqual(self.entry[0]["text"], "Gemba v0.1.0")
+        self.assertEqual(self.entry[0]["marks"], [{"type": "link", "attrs": {"href": "https://example.atlassian.net/wiki/x/abc"}}])
+
+    def test_the_entry_carries_its_status_as_a_lozenge_and_its_release_date_as_a_date(self):
+        kinds = [node["type"] for node in self.entry]
+        self.assertIn("status", kinds)
+        self.assertEqual(next(n for n in self.entry if n["type"] == "status")["attrs"]["text"], "Planned")
+        self.assertEqual(next(n for n in self.entry if n["type"] == "date")["attrs"]["timestamp"], "1795132800000")
+
+    def test_the_goal_and_its_target_go_on_their_own_lines(self):
+        breaks = [i for i, node in enumerate(self.entry) if node["type"] == "hardBreak"]
+        self.assertEqual(len(breaks), 2)
+        self.assertEqual(self.entry[breaks[0] + 1]["text"], "Validar que 3 equipos adoptan Gemba.")
+        self.assertEqual(self.entry[breaks[1] + 1], {"type": "text", "text": "Target:", "marks": [{"type": "strong"}]})
+        self.assertEqual(self.entry[-1]["text"], "3 equipos activos a 4 semanas.")
+
+    def test_next_may_be_empty_once_its_entry_is_the_version(self):
+        self.assertEqual([flat(n) for n in self.body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
+        self.assertEqual(self.body[3]["type"], "heading")
+
+    def test_a_released_version_is_not_in_now(self):
+        rejected(PLANNED.replace("[Planned]", "[Released]"), "Now", "Released")
+
+    def test_a_release_date_in_another_iso_form(self):
+        rejected(PLANNED.replace("2026-11-20", "20261120"), "Now", "20261120")
+
+    def test_a_status_outside_the_list(self):
+        rejected(PLANNED.replace("[Planned]", "[Soon]"), "Now", "Planned")
+
+    def test_a_release_date_that_is_not_a_date(self):
+        rejected(PLANNED.replace("2026-11-20", "2026-13-40"), "Now", "2026-13-40")
+
+    def test_a_version_without_target(self):
+        rejected(PLANNED.replace(" Target: 3 equipos activos a 4 semanas.", ""), "Now", "Target")
+
+    def test_a_version_without_its_link(self):
+        rejected(PLANNED.replace("[Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc)", "Gemba v0.1.0"), "Now")
+
+
+RELEASED_ENTRY = "* [Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc) [Released] Validar que 3 equipos adoptan Gemba. Target: 3 equipos activos a 4 semanas."
+
+RELEASED = DRAFT.replace("Ninguna versión liberada.", RELEASED_ENTRY + "\n" + RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
+
+
+class RoadmapReleasedVersions(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.body = page(RELEASED)
+        cls.items = cls.body[-1]["content"]
+        cls.entry = cls.items[0]["content"][0]["content"]
+
+    def test_released_holds_each_version_as_an_entry_in_its_order(self):
+        self.assertEqual(self.body[-1]["type"], "bulletList")
+        self.assertEqual([item["content"][0]["content"][0]["text"] for item in self.items], ["Gemba v0.1.0", "Gemba v0.0.1"])
+
+    def test_the_entry_links_to_the_version_page(self):
+        self.assertEqual(self.entry[0]["marks"], [{"type": "link", "attrs": {"href": "https://example.atlassian.net/wiki/x/abc"}}])
+
+    def test_the_entry_carries_the_released_lozenge_and_no_date(self):
+        lozenges = [n["attrs"] for n in self.entry if n["type"] == "status"]
+        self.assertEqual([(s["text"], s["color"]) for s in lozenges], [("Released", "green")])
+        self.assertNotIn("date", [n["type"] for n in self.entry])
+
+    def test_the_goal_and_its_target_go_on_their_own_lines(self):
+        breaks = [i for i, node in enumerate(self.entry) if node["type"] == "hardBreak"]
+        self.assertEqual(len(breaks), 2)
+        self.assertEqual(self.entry[breaks[0] + 1]["text"], "Validar que 3 equipos adoptan Gemba.")
+        self.assertEqual(self.entry[breaks[1] + 1], {"type": "text", "text": "Target:", "marks": [{"type": "strong"}]})
+
+    def test_a_version_in_progress_is_not_in_released(self):
+        rejected(RELEASED.replace("[Released]", "[Planned]", 1), "Released", "Planned")
+
+    def test_a_released_version_without_target(self):
+        rejected(RELEASED.replace(" Target: 3 equipos activos a 4 semanas.", "", 1), "Released", "Target")
+
+    def test_a_released_entry_that_is_not_a_version(self):
+        rejected(RELEASED.replace(RELEASED_ENTRY, "* **Unnumbered** algo", 1), "Released")
+
+    def test_next_may_be_empty_once_the_version_of_now_is_released(self):
+        start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
+        self.assertEqual(page(RELEASED[:start] + RELEASED[end:])[-1]["type"], "bulletList")
+
+    def test_a_released_version_with_a_date(self):
+        rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")
+
+    def test_a_version_moves_from_now_to_released(self):
+        moved = PLANNED.replace("Ninguna versión liberada.", RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
+        self.assertEqual(page(moved)[-1]["type"], "bulletList")
 
 
 class RoadmapOptional(unittest.TestCase):

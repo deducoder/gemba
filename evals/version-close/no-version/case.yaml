@@ -1,0 +1,31 @@
+schema_version: "1.1"
+name: version-close-no-version
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:version-close'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 10
+  timeout_seconds: 120
+graders:
+  - name: reads-the-roadmap
+    type: regex
+    target: mock_calls
+    pattern: 'getConfluencePage[^D]'
+  - name: writes-nothing
+    type: regex
+    target: mock_calls
+    pattern: 'manageJiraProjectVersion|updateConfluencePage|createConfluencePage'
+    match: not_contains
+  - name: reads-no-work-items
+    type: regex
+    target: mock_calls
+    pattern: 'searchJiraIssuesUsingJql'
+    match: not_contains
+  - name: names-the-case
+    type: regex
+    pattern: '[Nn]o version (is )?(in progress|planned)|[Nn]o (Planned|planned) or (In progress|in progress) version'

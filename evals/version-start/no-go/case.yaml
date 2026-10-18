@@ -1,0 +1,31 @@
+schema_version: "1.1"
+name: version-start-no-go
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: '/gemba-code:version-start'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 10
+  timeout_seconds: 120
+graders:
+  - name: reads-the-vision
+    type: regex
+    target: mock_calls
+    pattern: 'getConfluencePage[^D]'
+  - name: writes-nothing
+    type: regex
+    target: mock_calls
+    pattern: 'createConfluencePage|updateConfluencePage'
+    match: not_contains
+  - name: reads-no-fix-version
+    type: regex
+    target: mock_calls
+    pattern: 'getJiraIssueTypeMetaWithFields'
+    match: not_contains
+  - name: names-the-case
+    type: regex
+    pattern: '[Nn]o-go'

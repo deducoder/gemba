@@ -6,9 +6,9 @@ disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py *)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py *)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/roadmap.py *)
-  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/merge.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
 ---
 
 # Project create
@@ -96,13 +96,13 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
     ```
 
     ```
-    python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py <<'REQUIREMENTS'
+    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py <<'REQUIREMENTS'
     <the requirements draft>
     REQUIREMENTS
     ```
 
     ```
-    python3 ${CLAUDE_SKILL_DIR}/scripts/roadmap.py <<'ROADMAP'
+    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py <<'ROADMAP'
     <the roadmap draft>
     ROADMAP
     ```
@@ -119,7 +119,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
-15. **Reply** with the links to the three pages and what was written.
+15. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
 ## Review a framed product
 
@@ -132,7 +132,7 @@ A framed product is reviewed, never framed again: only what moved changes, and o
 3. **Write the drafts** of the pages that change, whole, from the page as published plus the accepted changes, and check each one with its command from step 11, the vision with `--requirements <the link to Requirements>` as in step 13 so its questions keep their links. Check the requirements with the IDs the published page has, run alone and exactly in this form:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py --existing <the published IDs, comma separated> <<'REQUIREMENTS'
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py --existing <the published IDs, comma separated> <<'REQUIREMENTS'
    <the requirements draft>
    REQUIREMENTS
    ```
@@ -142,7 +142,7 @@ A framed product is reviewed, never framed again: only what moved changes, and o
 5. **Merge each page** that changes, run alone and exactly in this form, with its published body, the body its script printed and the headings of every section the accepted changes touch, `""` for the text above the first heading of `Vision`; a withdrawn requirement touches the section it leaves and `Withdrawn`, and a section the new body no longer has is removed:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/merge.py <<'MERGE'
+   python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py <<'MERGE'
    {"live": <the published body>, "new": <the body the script printed>, "replace": [<the accepted sections>]}
    MERGE
    ```

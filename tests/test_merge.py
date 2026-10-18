@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "plugins/gemba-code/skills/project-create/scripts/merge.py"
+SCRIPT = ROOT / "plugins/gemba-code/scripts/merge.py"
 
 
 def h2(name, local):
