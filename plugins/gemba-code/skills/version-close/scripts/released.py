@@ -19,7 +19,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CURRENT, is_day, stamp  # noqa: E402
+from draft import CURRENT, is_day, stamp, stamp_state  # noqa: E402
 
 
 def problem(page, day):
@@ -27,8 +27,7 @@ def problem(page, day):
     if not is_day(day):
         return f"day: {day} is not a date YYYY-MM-DD"
     first = (page.get("content") or [{}])[0]
-    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
-    state = lozenge.get("attrs", {}).get("text") if lozenge.get("type") == "status" else None
+    state = stamp_state(page)
     dated = [node.get("type") for node in first.get("content", [])[1:3]] == ["text", "date"]
     if state == "Released":
         return "page: the version is already Released"

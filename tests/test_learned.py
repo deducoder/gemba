@@ -88,7 +88,7 @@ class LearnedRejects(unittest.TestCase):
         rejected({"page": page, "draft": DRAFT}, "release it first")
 
     def test_a_page_that_already_has_learned(self):
-        page = learned(PAGE)
+        page = Learned.doc
         rejected({"page": page, "draft": DRAFT}, "Learned")
 
     def test_a_draft_without_lessons(self):

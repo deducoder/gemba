@@ -20,16 +20,9 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, HEADING, bullets, heading, inline, items  # noqa: E402
+from draft import FENCE, HEADING, bullets, heading, inline, items, stamp_state  # noqa: E402
 
 TITLE = "Learned"
-
-
-def released(page):
-    """Tells whether the first paragraph of the page is the stamp of a released version."""
-    first = (page.get("content") or [{}])[0]
-    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
-    return lozenge.get("type") == "status" and lozenge.get("attrs", {}).get("text") == "Released"
 
 
 def has_learned(page):
@@ -41,20 +34,17 @@ def has_learned(page):
 def problems(page, draft):
     """Returns what keeps the lessons from being written, and the lessons when nothing does."""
     found = []
-    if not released(page):
+    if stamp_state(page) != "Released":
         found.append("page: the version is not Released; release it first")
     elif has_learned(page):
         found.append(f"page: the version already has {TITLE}")
     lines = draft.splitlines()
-    for line in lines:
-        if FENCE.match(line):
-            found.append(f"{TITLE}: write no code blocks")
-            return found, []
-        if HEADING.match(line):
-            found.append(f"{TITLE}: write only the bullets, without headings: {line.strip()}")
-            return found, []
-    lessons = items(TITLE, lines, found)
-    return found, lessons
+    if any(FENCE.match(line) for line in lines):
+        return found + [f"{TITLE}: write no code blocks"], []
+    headings = [line.strip() for line in lines if HEADING.match(line)]
+    if headings:
+        return found + [f"{TITLE}: write only the bullets, without headings: {', '.join(headings)}"], []
+    return found, items(TITLE, lines, found)
 
 
 def main():
