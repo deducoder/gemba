@@ -34,7 +34,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Confluence.
 
-2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`. When one of them is titled `Vision`, stop, writing nothing and giving its link: reviewing a framed product is not done here.
+2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. When one of them is titled `Vision`, stop, writing nothing and giving its link: reviewing a framed product is not done here.
 
 3. **Ask who originates the demand,** as the first question, offering always these four options, even one that seems not to apply, with the recommended one first:
    - `Client`: a client commissions and pays for it.
