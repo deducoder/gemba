@@ -22,3 +22,6 @@ graders:
     input_match: duedate
     min: 0
     max: 0
+  - name: reply
+    type: regex
+    pattern: 'ABC v0\.5\.0'

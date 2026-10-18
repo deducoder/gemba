@@ -16,9 +16,3 @@ graders:
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
     input_match: 'fixVersions\W+name\W+ABC v0\.5\.0'
-  - name: no-due-date
-    type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
-    input_match: duedate
-    min: 0
-    max: 0
