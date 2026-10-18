@@ -1,7 +1,7 @@
 {
   "name": "gemba",
   "displayName": "Gemba",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Agentic development framework built on genchi genbutsu: go to the source, observe the facts, then act.",
   "author": {
     "name": "Daniel Efraín Domínguez Urbina",
