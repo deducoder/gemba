@@ -1,6 +1,6 @@
 ---
 name: version-start
-description: Defines the next version of a framed product with the person and writes its page under Roadmap in Confluence as a live doc. Stops when the Vision has no go decision, takes a Next entry of the Roadmap, proposes the Unassigned requirements of the version in batches and resolves the open questions that block them, proposes the stack in the first version with research and writes it in CLAUDE.md, estimates each requirement and computes the release date in working days from the people who build it and the longest chain of dependencies, proposes the version name, checks in Jira the fix version the person created, and moves the requirements to their version in Requirements and the entry from Next to Now in Roadmap. Use when the user wants to plan, start or define the next version, release or MVP of a product framed with project-create. It declares no work item and creates no fix version.
+description: Defines the next version of a framed product with the person, writes its page under Roadmap in Confluence as a live doc and declares its work items. Stops without a go decision in the Vision, takes a Next entry of the Roadmap, proposes the Unassigned requirements of the version in batches and resolves the questions that block them, proposes the stack in the first version with research, computes the release date in working days from the estimates, the people and the longest chain of dependencies, checks in Jira the fix version the person created, and moves the requirements and the roadmap entry to the version. Then proposes each requirement as an epic, a loose story or spike, or a criterion when it cuts across, declares only what the person accepts with epic-start, story-start or spike-start and warns when it does not fit the date. Use to plan or start the next version or MVP of a product framed with project-create, or to declare the work items of a defined version. It creates no fix version.
 argument-hint: "[Next entry of the roadmap]"
 disable-model-invocation: true
 allowed-tools:
@@ -34,7 +34,7 @@ Version template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/estimate.md`
 
-This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item and no fix version: the person creates the fix version in Jira. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages.
+This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates work items only through `epic-start`, `story-start` and `spike-start`, and only those the person accepted; it creates no fix version: the person creates it in Jira. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages.
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first.
 
@@ -109,4 +109,21 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
     The two merges can go in one message, and then the two updates. A live doc saves late: read each page until it has the change, up to three times, and retry the update once when it still does not; then say which page did not save.
 
-14. **Reply** with the links to the version page, `Requirements` and `Roadmap`, the `releaseDate` with its working days and the chain that sets it, and the stack when it was written.
+14. **Propose the work items.** For each requirement of the version, propose its shape with its reason:
+    - an **epic**, when several requirements are usable only together: one epic for them, declared with `epic-start`;
+    - a loose **story**, declared with `story-start`, when it is usable alone;
+    - a loose **spike**, declared with `spike-start`, when building it depends on how something outside the project works and nobody has verified it;
+    - **no work item** for a `Non-functional` requirement that cuts across the version: it enters as a Done when criterion of each story it touches, which cites it.
+
+    Propose them in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four work items, each option one work item with its type, its Summary and the requirements it covers. The person keeps what they accept and corrects with a note. Then show how each requirement is covered: by the work item that covers it, or as a criterion of the stories that cite it. A requirement left uncovered, because the person removed what covered it, is proposed again: do not go on while one is uncovered.
+
+15. **Ask for the due dates.** An epic gets its due date from `epic-start`, never after the `releaseDate`. For each loose story or spike, ask whether an external commitment (a contract, an event, a third party's date) fixes its date: only then does it get that date and the commitment behind it.
+
+16. **Declare the accepted work items,** one at a time, in the order of the batches. For each, invoke with the Skill tool `gemba-code:epic-start`, `gemba-code:story-start` or `gemba-code:spike-start` with a request that names the fix version of the version, the requirements it covers by their ID and text, that each Done when criterion covering a requirement cites it as `(R-nn)`, the cross-cutting criteria of step 14 it carries, and for a loose story or spike its due date with its commitment when step 15 gave one. Never declare a work item the person did not accept.
+    - What a start asks, such as an open decision, a split or the plan of an epic, goes to the person: relay it and wait for the answer, then let the start finish and go on with the next work item.
+    - A work item its start does not create, because it names a bug, a spike, another story or an answer instead, is kept with what its start proposed, and the next one follows.
+    - Keep the key and the link of each work item created.
+
+17. **Check that they fit.** Read with `searchJiraIssuesUsingJql` the work items of the version that are not epics (`project = <jira.project> AND fixVersion = "<the version>" AND issuetype != Epic`, every page, with their `timetracking`), and run the release date of step 9 again with their keys as `id`, their `originalEstimate` as `estimate`, no `after` and the people of step 9. When its `releaseDate` falls after the one of the version, say that the work items do not fit, with both dates, so the person can cut work items or move the version.
+
+18. **Reply** with the links to the version page, `Requirements` and `Roadmap`, the `releaseDate` with its working days and the chain that sets it, the stack when it was written, each work item created with its type, its link and the requirements it covers, each cross-cutting requirement with the stories that cite it, each work item proposed and not created with the reason, and the warning of step 17 when they do not fit.
