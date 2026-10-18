@@ -69,6 +69,10 @@ class Merge(unittest.TestCase):
         self.assertEqual(texts(doc), ["Primera línea publicada", "Problem", "Problema publicado", "Risks", "Riesgo publicado",
                                       "Withdrawn", "R-02 retirado", "Decision", "Decisión publicada"])
 
+    def test_an_accepted_section_the_new_page_drops_is_removed(self):
+        new = {"type": "doc", "version": 1, "content": NEW["content"][:5]}
+        self.assertEqual(texts(merged(["Decision"], new=new)), texts(LIVE)[:5])
+
     def test_a_section_neither_page_has(self):
         result = run(["Users"])
         self.assertEqual(result.returncode, 1)

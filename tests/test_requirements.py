@@ -173,6 +173,43 @@ class RequirementsReviewMode(unittest.TestCase):
         rejected(REVIEWED.replace(" · 2026-10-18", ""), "Withdrawn", "R-05")
 
 
+class RequirementsReviewEdges(unittest.TestCase):
+    def test_an_impossible_withdrawn_date_is_reported(self):
+        rejected(REVIEWED.replace("2026-10-18", "2026-13-45"), "Withdrawn", "2026-13-45")
+
+    def test_withdrawn_in_the_order_they_were_withdrawn(self):
+        draft = """### Unassigned
+
+* **R-01** Algo. Source: la persona [Functional]
+
+### Withdrawn
+
+* ~~**R-05** Otra cosa.~~ Ya no aplica. · 2026-10-01
+* ~~**R-02** Una más.~~ La cubre R-01. · 2026-10-18
+
+### Assumptions and open questions
+"""
+        page(draft, "--existing", "R-01,R-02,R-05")
+
+    def test_a_malformed_withdrawn_line_reports_once(self):
+        errors = rejected(REVIEWED.replace("* ~~**R-05** El operador", "* R-05 ~~El operador"), "Withdrawn", args=EXISTING)
+        self.assertEqual(len(errors.strip().splitlines()), 1, errors)
+
+    def test_an_empty_unassigned_with_withdrawn_requirements(self):
+        draft = """### Unassigned
+
+### Withdrawn
+
+* ~~**R-01** Algo.~~ Ya no aplica. · 2026-10-18
+
+### Assumptions and open questions
+"""
+        page(draft, "--existing", "R-01")
+
+    def test_existing_ids_that_are_not_ids(self):
+        rejected(REVIEWED, "existing", "Rx", args=("--existing", "R-01,Rx"))
+
+
 class RequirementsRejects(unittest.TestCase):
     def test_ids_out_of_order(self):
         rejected(DRAFT.replace("**R-02**", "**R-07**"), "R-03")
