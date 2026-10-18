@@ -21,7 +21,7 @@ graders:
     pattern: 'WhatsApp'
   - name: lists-the-card-point
     type: regex
-    pattern: '[Cc]ard'
+    pattern: '\b[Cc]ard\b'
   - name: lists-the-insurance-point
     type: regex
     pattern: '[Ii]nsurance'
