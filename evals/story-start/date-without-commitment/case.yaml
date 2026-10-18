@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: story-start-date-without-commitment
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a story for the fix version ABC v0.5.0, ideally done by 2026-11-20: add a --csv option to invoices.py that prints the customer''s invoices as CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 24
+  timeout_seconds: 150
+graders:
+  - name: fix-version
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: 'fixVersions\W+name\W+ABC v0\.5\.0'
+  - name: no-due-date
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__createJiraIssue
+    input_match: duedate
+    min: 0
+    max: 0
