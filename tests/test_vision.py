@@ -55,8 +55,8 @@ Decided by: {ACCOUNT} · 2026-10-18
 """
 
 
-def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT)], input=draft, capture_output=True, text=True)
+def run(draft, *args):
+    return subprocess.run([sys.executable, str(SCRIPT), *args], input=draft, capture_output=True, text=True)
 
 
 def page(draft):
@@ -237,6 +237,27 @@ class VisionReview(unittest.TestCase):
     def test_a_malformed_risk_is_reported_once(self):
         errors = rejected(DRAFT.replace("* **Ventas sigue armando las hojas fuera del sistema** [Value]", "* Ventas sigue armando las hojas fuera del sistema [Value]"), "Risks")
         self.assertEqual(len(errors.strip().splitlines()), 1, errors)
+
+
+class VisionRequirementsLink(unittest.TestCase):
+    URL = "https://example.atlassian.net/wiki/spaces/ABC/pages/1007/Requirements"
+    UNKNOWN = DRAFT.replace("Baseline: desconocido.", "Baseline: desconocido (Question 1).")
+
+    def baseline(self, *args):
+        result = run(self.UNKNOWN, *args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        body = json.loads(result.stdout)["body"]["content"]
+        return next(n for n in body if n["type"] == "paragraph" and flat(n).startswith("Baseline:"))
+
+    def test_a_question_in_the_baseline_links_to_the_requirements_page(self):
+        links = [n for n in self.baseline("--requirements", self.URL)["content"]
+                 if any(m["type"] == "link" for m in n.get("marks", []))]
+        self.assertEqual([(n["text"], n["marks"][0]["attrs"]["href"]) for n in links], [("Question 1", self.URL)])
+
+    def test_without_the_page_the_question_stays_text(self):
+        line = self.baseline()
+        self.assertIn("Question 1", flat(line))
+        self.assertFalse(any(m["type"] == "link" for n in line["content"] for m in n.get("marks", [])))
 
 
 class VisionOptional(unittest.TestCase):
