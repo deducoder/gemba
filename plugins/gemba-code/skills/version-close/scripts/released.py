@@ -19,7 +19,14 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CURRENT, is_day, stamp, stamp_state  # noqa: E402
+from draft import CURRENT, is_day, stamp  # noqa: E402
+
+
+def stamp_state(page):
+    """Returns the state of the lozenge that opens the first paragraph of a version page, or None."""
+    first = (page.get("content") or [{}])[0]
+    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
+    return lozenge.get("attrs", {}).get("text") if lozenge.get("type") == "status" else None
 
 
 def problem(page, day):

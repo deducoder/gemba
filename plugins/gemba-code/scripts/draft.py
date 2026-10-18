@@ -262,10 +262,3 @@ def dated(day):
 def stamp(state, day):
     """Returns the lozenge of a version state, ` · ` and its release date."""
     return [status(state, STATES[state]), *dated(day)]
-
-
-def stamp_state(page):
-    """Returns the state of the lozenge that opens the first paragraph of a version page, or None."""
-    first = (page.get("content") or [{}])[0]
-    lozenge = (first.get("content") or [{}])[0] if first.get("type") == "paragraph" else {}
-    return lozenge.get("attrs", {}).get("text") if lozenge.get("type") == "status" else None

@@ -20,7 +20,10 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, HEADING, bullets, heading, inline, items, stamp_state  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from draft import FENCE, HEADING, bullets, heading, inline, items  # noqa: E402
+from released import stamp_state  # noqa: E402
 
 TITLE = "Learned"
 
