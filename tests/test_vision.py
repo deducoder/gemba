@@ -254,6 +254,13 @@ class VisionRequirementsLink(unittest.TestCase):
                  if any(m["type"] == "link" for m in n.get("marks", []))]
         self.assertEqual([(n["text"], n["marks"][0]["attrs"]["href"]) for n in links], [("Question 1", self.URL)])
 
+    def test_a_question_inside_code_stays_code(self):
+        result = run(DRAFT.replace("Baseline: desconocido.", "Baseline: desconocido `(Question 1)`."), "--requirements", self.URL)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        body = json.loads(result.stdout)["body"]["content"]
+        line = next(n for n in body if n["type"] == "paragraph" and flat(n).startswith("Baseline:"))
+        self.assertIn({"type": "text", "text": "(Question 1)", "marks": [{"type": "code"}]}, line["content"])
+
     def test_without_the_page_the_question_stays_text(self):
         line = self.baseline()
         self.assertIn("Question 1", flat(line))

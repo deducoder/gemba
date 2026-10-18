@@ -111,9 +111,25 @@ class RequirementsOptional(unittest.TestCase):
         page(DRAFT.replace("unas 20. [Open]", "unas 20. [Answered]"))
 
 
+class RequirementsReview(unittest.TestCase):
+    def test_a_gap_left_by_a_removed_proposal_passes(self):
+        page(DRAFT.replace("**R-03**", "**R-05**").replace("**R-04**", "**R-06**").replace("Affects R-03.", "Affects R-05."))
+
+    def test_a_malformed_requirement_does_not_cascade(self):
+        errors = rejected(DRAFT.replace(" Source: notas, punto 2", ""), "R-01")
+        self.assertEqual(len(errors.strip().splitlines()), 1, errors)
+
+    def test_a_source_that_ends_in_brackets(self):
+        body = page(DRAFT.replace("Source: notas, punto 2 [Functional]", "Source: notas, punto [2] [Functional]"))
+        self.assertIn("Source: notas, punto [2]", flat(lines(body, "Unassigned")[0]))
+
+    def test_affects_with_any_separator_checks_every_id(self):
+        rejected(DRAFT.replace("Affects R-03.", "Affects R-03; R-09."), "R-09")
+
+
 class RequirementsRejects(unittest.TestCase):
-    def test_a_gap_in_the_ids(self):
-        rejected(DRAFT.replace("**R-03**", "**R-05**"), "R-05")
+    def test_ids_out_of_order(self):
+        rejected(DRAFT.replace("**R-02**", "**R-07**"), "R-03")
 
     def test_a_repeated_id(self):
         rejected(DRAFT.replace("**R-02**", "**R-01**"), "R-01")
