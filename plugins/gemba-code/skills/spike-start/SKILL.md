@@ -34,7 +34,7 @@ A request with two questions or more is one spike per question. **Observe before
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
 2. **Read each work item key the request names** with `getJiraIssue`, all in one batch, before anything else.
-   - An Epic of the project in Backlog is the parent of the spike.
+   - An Epic of the project in Backlog is the parent of the spike: ask `getJiraIssue` for its `duedate` too, and read the children it already has with `searchJiraIssuesUsingJql` (`parent = <KEY>`, with their `timetracking`).
    - An Epic in another status, or of another project, is not: the spike goes without a parent, and the reply says why, with the epic's status.
    - A Spike stops the skill: create and edit nothing, and reply that it is already declared, with its key and its link.
    - Any other work item stops the skill: create and edit nothing, and reply with its key, its type and its link.
@@ -53,7 +53,7 @@ A request with two questions or more is one spike per question. **Observe before
    - The Evidence holds the `ran:` and `read:` lines of **Observe before drafting**. It reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. The decision that waits on the answer, and the work that follows it, are why the spike exists, not something it excludes. Add `→ <KEY>` only when another work item already covers it; read that key first.
 
-6. **Give it a priority and a time-box** with the Spike rules of the priority above and the Spike rules of the estimate above: they set the time-box.
+6. **Give it a priority and a time-box** with the Spike rules of the priority above and the Spike rules of the estimate above, and with the Window of an epic rule of the estimate above when the spike has an epic as parent: they set the time-box.
 
 7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
 
@@ -65,4 +65,4 @@ A request with two questions or more is one spike per question. **Observe before
 
 8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as ADF.
 
-9. **Reply** with the key and link of each spike it created, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, and why an epic it named is not the parent, and nothing else.
+9. **Reply** with the key and link of each spike it created, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, why an epic it named is not the parent and, when the time-box does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.
