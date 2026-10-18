@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: research-happy
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Research this question and publish the answer: Can SQLite enforce a unique value only on some rows of a table? Use only these two facts and do not search the web: the official page https://www.sqlite.org/partialindex.html says that a partial index is an index over a subset of the rows of a table, chosen by a WHERE clause, and that a UNIQUE partial index enforces uniqueness only among the rows that satisfy the WHERE clause; the blog article https://example.com/blog/partial-indexes repeats the example.'
+  allowed_tools: [Read, Glob, Grep, Skill, Bash]
+  max_turns: 25
+  timeout_seconds: 180
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: research
+  - name: folder-found-before-the-page
+    type: tool_order
+    before: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    after: mcp__plugin_atlassian-stub_atlassian__createConfluencePage
+  - name: checked-before-the-page
+    type: tool_order
+    before:
+      tool: Bash
+      input_match: 'skills/research/scripts/research\.py'
+    after: mcp__plugin_atlassian-stub_atlassian__createConfluencePage
+  - name: live-doc-in-the-folder-titled-with-the-question
+    type: regex
+    target: mock_calls
+    pattern: 'createConfluencePage[\s\S]*live[\s\S]*Can SQLite enforce a unique value only on some rows of a table\?'
+  - name: no-work-item-and-no-update
+    type: regex
+    target: mock_calls
+    pattern: 'createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|updateConfluencePage'
+    match: not_contains

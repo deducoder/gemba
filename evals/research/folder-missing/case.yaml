@@ -1,0 +1,31 @@
+schema_version: "1.1"
+name: research-folder-missing
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Research this question and publish the answer: Can SQLite enforce a unique value only on some rows of a table? Use only these two facts and do not search the web: the official page https://www.sqlite.org/partialindex.html says that a partial index is an index over a subset of the rows of a table, chosen by a WHERE clause, and that a UNIQUE partial index enforces uniqueness only among the rows that satisfy the WHERE clause; the blog article https://example.com/blog/partial-indexes repeats the example.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 15
+  timeout_seconds: 90
+graders:
+  - name: skill
+    type: tool_used
+    tool: Skill
+    input_match: research
+  - name: looked-for-the-folder
+    type: regex
+    target: mock_calls
+    pattern: 'getConfluencePageDescendants'
+  - name: no-write
+    type: regex
+    target: mock_calls
+    pattern: 'createConfluencePage|updateConfluencePage|createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue'
+    match: not_contains
+  - name: names-the-missing-folder
+    type: regex
+    pattern: 'Researchs'
+    flags: i
