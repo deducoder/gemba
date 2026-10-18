@@ -17,7 +17,7 @@ Today: <what is used today in its place>
 
 <If current state, then signal for whom.> <Measured with:>
 * <metric>
-Baseline: <current value> Target: <measurable goal>
+Baseline: <current value, or unknown in the Content language and (Question n)> Target: <measurable goal>
 
 ### Constraints
 
