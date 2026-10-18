@@ -125,11 +125,11 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 A framed product is reviewed, never framed again: only what moved changes, and only what the person accepts is written.
 
-1. **Read the pages** with `getConfluencePage` and `contentFormat: "adf"`: `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover it as steps 7 to 9 and 11 to 13 say, creating it under `Vision`, before going on.
+1. **Read the pages** with `getConfluencePage` and `contentFormat: "adf"`: `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover only what it holds (steps 7 to 9 for `Requirements`, the goals of step 11 for `Roadmap`), check its draft with its command, ask the person to accept it and create it with `createConfluencePage` and the `id` of `Vision` as `parentId`, before going on; `Vision` is not created again.
 
 2. **Walk the pages in order,** `Vision`, `Requirements`, `Roadmap`, and for each one ask what moved since it was written, section by section, offering the sections as options. Propose a change only for a section where something moved, with the same rules as the framing: a new requirement takes the number above the highest of the page, withdrawn ones included, and is never reused; a withdrawn requirement moves to `Withdrawn` with its reason and today's date, and is never deleted; a new decision rewrites the panel with its color, `Decided by` and today's date. A section where nothing moved is left out of the proposal.
 
-3. **Write the drafts** of the pages that change, whole, from the page as published plus the accepted changes, and check each one with its command from step 11. Check the requirements with the IDs the published page has, run alone and exactly in this form:
+3. **Write the drafts** of the pages that change, whole, from the page as published plus the accepted changes, and check each one with its command from step 11, the vision with `--requirements <the link to Requirements>` as in step 13 so its questions keep their links. Check the requirements with the IDs the published page has, run alone and exactly in this form:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py --existing <the published IDs, comma separated> <<'REQUIREMENTS'
@@ -139,7 +139,7 @@ A framed product is reviewed, never framed again: only what moved changes, and o
 
 4. **Ask the person to accept** each change, shown with the section as it is and as it would be. With nothing accepted, write nothing.
 
-5. **Merge each page** that changes, run alone and exactly in this form, with its published body, the body its script printed and the headings of the accepted sections, `""` for the text above the first heading of `Vision`:
+5. **Merge each page** that changes, run alone and exactly in this form, with its published body, the body its script printed and the headings of every section the accepted changes touch, `""` for the text above the first heading of `Vision`; a withdrawn requirement touches the section it leaves and `Withdrawn`, and a section the new body no longer has is removed:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/merge.py <<'MERGE'
