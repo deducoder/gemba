@@ -25,3 +25,7 @@ graders:
     target: mock_calls
     pattern: 'createConfluencePage'
     match: not_contains
+  - name: descendants-down-to-the-pages
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    input_match: '"depth"\W+([3-9]|[1-9]\d)'
