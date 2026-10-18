@@ -53,10 +53,10 @@ class Merge(unittest.TestCase):
     def test_without_sections_the_page_stays_as_published(self):
         self.assertEqual(merged([]), LIVE)
 
-    def test_only_the_accepted_section_changes(self):
+    def test_only_the_body_of_the_accepted_section_changes(self):
         doc = merged(["Decision"])
         self.assertEqual(doc["content"][:6], LIVE["content"][:6])
-        self.assertEqual(texts(doc)[6:], ["Decision", "Decisión nueva"])
+        self.assertEqual(texts(doc)[6:], ["Decisión nueva"])
 
     def test_the_head_of_the_page_is_the_section_without_heading(self):
         doc = merged([""])
