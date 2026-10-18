@@ -230,8 +230,13 @@ def doc(content):
     return {"type": "doc", "version": 1, "content": content}
 
 
+DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
 def is_day(day):
-    """Tells whether a text is a YYYY-MM-DD day."""
+    """Tells whether a text is a day written YYYY-MM-DD, the only ISO form the templates take."""
+    if not isinstance(day, str) or not DAY.match(day):
+        return False
     try:
         date.fromisoformat(day)
     except ValueError:

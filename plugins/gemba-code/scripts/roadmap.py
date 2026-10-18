@@ -23,11 +23,12 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, STATES, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
+from draft import FENCE, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
 VERSION = re.compile(rf"^\[({VERSION_NAME})\]\((https?://\S+)\) \[([^\]]+)\] · (\S+) (.+)$")
+CURRENT = ("Planned", "In progress")
 VERSION_FORM = "'* [<Product> vX.Y.Z](<link>) [Planned] · YYYY-MM-DD goal Target: measurable goal'"
 
 
@@ -51,8 +52,8 @@ def versions(lines, found):
             found.append(f"Now: write each version as {VERSION_FORM}: {item}")
             continue
         name, link, state, day, rest = match.groups()
-        if state not in STATES:
-            found.append(f"Now: {name} is {state}; use one of {', '.join(STATES)}")
+        if state not in CURRENT:
+            found.append(f"Now: {name} is {state}; a version in Now is {' or '.join(CURRENT)}, and a released one goes to Released")
             continue
         if not is_day(day):
             found.append(f"Now: {name} has {day}, which is not a date")
