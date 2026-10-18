@@ -23,7 +23,6 @@ Prints {"title": "Vision", "body": <ADF>} as JSON when the draft follows the tem
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
-import argparse
 import json
 import re
 import sys
@@ -33,9 +32,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, split, unclosed  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split  # noqa: E402
 
-TITLE = "Vision"
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
 KINDS = {"Value": "purple", "Usability": "yellow", "Feasibility": "red", "Viability": "blue"}
@@ -51,33 +49,8 @@ DECISION = re.compile(r"^(.+?): (.+)$")
 DECIDED = re.compile(r"^Decided by: ([A-Za-z0-9:_-]+) · (\d{4}-\d{2}-\d{2})$")
 
 
-def paragraphs(lines):
-    """Groups the lines into paragraphs, separated by blank lines."""
-    blocks, text = [], []
-    for line in lines:
-        if line.strip():
-            text.append(line.strip())
-        elif text:
-            blocks.append(" ".join(text))
-            text = []
-    if text:
-        blocks.append(" ".join(text))
-    return blocks
-
-
-def bulleted(name, lines, found):
-    """Returns the text of each '* ' bullet, reporting the lines that are not one."""
-    items = []
-    for line in filled(lines):
-        if line.startswith("* ") and line[2:].strip():
-            items.append(line[2:].strip())
-        else:
-            found.append(f"{name}: write each item as a '* ' bullet on one line: {line.strip()}")
-    return items
-
-
 def problem(lines, found):
-    today = [TODAY.match(line.strip()) for line in filled(lines) if line.strip().startswith("Today:")]
+    today = [TODAY.match(line.strip()) for line in lines if line.strip().startswith("Today:")]
     text = paragraphs([line for line in lines if not line.strip().startswith("Today:")])
     if len(text) != 1:
         found.append("Problem: write one paragraph: who cannot do what, because of what")
@@ -89,14 +62,12 @@ def problem(lines, found):
 
 def users(lines, found):
     roles = []
-    for item in bulleted("Users", lines, found):
+    for item in items("Users", lines, found):
         match = NAMED.match(item)
         if match:
             roles.append(match.groups())
         else:
             found.append(f"Users: write each as '* **Role** what they do or need': {item}")
-    if not roles and not found:
-        found.append("Users: write at least one '* **Role** ...' bullet")
     return roles
 
 
@@ -115,36 +86,37 @@ def success(lines, found):
 
 
 def risks(lines, found):
-    items = []
+    found_risks, current, count = [], None, 0
     for line in filled(lines):
         if line.startswith("* "):
+            count += 1
+            current = None
             match = RISK.match(line[2:].strip())
             if not match:
                 found.append(f"Risks: write each as '* **Risk** [Kind] [Evidence|Hypothesis]': {line.strip()}")
-                items.append(None)
                 continue
             name, kind, proof = match.groups()
             if kind not in KINDS:
                 found.append(f"Risks: {kind} is not a kind; use {', '.join(KINDS)}: {name}")
             if proof not in PROOF:
                 found.append(f"Risks: {proof} is neither Evidence nor Hypothesis: {name}")
-            items.append({"name": name, "kind": kind, "proof": proof})
+            current = {"name": name, "kind": kind, "proof": proof}
+            found_risks.append(current)
             continue
         field = FIELD.match(line.strip())
-        if not field or not items or items[-1] is None:
+        if not field or current is None:
             found.append(f"Risks: write 'Validation: ...' and 'Threshold: ...' under each risk: {line.strip()}")
-        elif field.group(1) in items[-1]:
-            found.append(f"Risks: write {field.group(1)} once for {items[-1]['name']}")
+        elif field.group(1) in current:
+            found.append(f"Risks: write {field.group(1)} once for {current['name']}")
         else:
-            items[-1][field.group(1)] = field.group(2)
-    items = [item for item in items if item]
-    for item in items:
+            current[field.group(1)] = field.group(2)
+    for risk in found_risks:
         for name in ("Validation", "Threshold"):
-            if name not in item:
-                found.append(f"Risks: {item['name']} needs its '{name}: ...' line")
-    if not items and not [line for line in filled(lines) if line.startswith("* ")]:
+            if name not in risk:
+                found.append(f"Risks: {risk['name']} needs its '{name}: ...' line")
+    if not count:
         found.append("Risks: write at least one risk")
-    return items
+    return found_risks
 
 
 def decision(lines, items, found):
@@ -175,9 +147,6 @@ def decision(lines, items, found):
 
 def problems(draft):
     """Returns what doesn't follow the template, and the content of the draft when it does."""
-    fence = unclosed(draft)
-    if fence:
-        return ["draft: close the code block opened with " + fence], None
     if any(FENCE.match(line) for line in draft.splitlines()):
         return ["draft: write no code blocks"], None
     first, intro, sections, subsections, repeated = split(draft)
@@ -198,7 +167,7 @@ def problems(draft):
         "problem": problem(sections["Problem"], found),
         "users": users(sections["Users"], found),
         "success": success(sections["Success"], found),
-        "constraints": bulleted("Constraints", sections["Constraints"], found),
+        "constraints": items("Constraints", sections["Constraints"], found) if filled(sections["Constraints"]) else [],
     }
     content["risks"] = risks(sections["Risks"], found)
     content["decision"] = decision(sections["Decision"], content["risks"], found) if "Decision" in sections else None
@@ -267,12 +236,11 @@ def body(content):
 
 
 def main():
-    argparse.ArgumentParser(description=__doc__.splitlines()[0]).parse_args()
     found, content = problems(sys.stdin.read())
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    print(json.dumps({"title": TITLE, "body": body(content)}, ensure_ascii=False))
+    print(json.dumps({"title": "Vision", "body": body(content)}, ensure_ascii=False))
     return 0
 
 

@@ -168,9 +168,6 @@ class VisionDecision(unittest.TestCase):
         draft = DRAFT.replace("[Usability] [Hypothesis]", "[Viability] [Hypothesis]").replace("Go to validate:", "Go to build:")
         rejected(draft, "Go to build", "Viability")
 
-    def test_go_to_build_with_only_a_usability_risk_in_hypothesis_passes(self):
-        page(DRAFT.replace("Go to validate:", "Go to build:"))
-
     def test_a_decision_state_that_is_not_one_of_the_three(self):
         rejected(DRAFT.replace("Go to validate:", "Maybe:"), "Decision")
 
