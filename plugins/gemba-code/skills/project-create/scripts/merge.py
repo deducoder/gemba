@@ -8,7 +8,7 @@ Usage: python3 merge.py < input.json
 The input is {"live": <published ADF>, "new": <ADF the page script printed>, "replace":
 [<section>, ...]}. A section is a level two heading with everything up to the next one; the
 nodes before the first heading are the section "". A replaced section the published page
-lacks goes where the new page puts it.
+lacks goes where the new page puts it, and one the new page lacks is removed.
 
 Prints the merged ADF document as JSON. A section neither page has is printed to stderr,
 with nothing on stdout and exit status 1.
@@ -37,7 +37,9 @@ def merge(live, new, replace):
     for name in replace:
         names = [current for current, _, _ in result]
         if name not in order:
-            if name not in names:
+            if name in names:
+                del result[names.index(name)]
+            else:
                 missing.append(name)
             continue
         _, heading, body = fresh[order.index(name)]

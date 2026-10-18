@@ -6,14 +6,15 @@ Usage: python3 requirements.py [--existing R-01,R-02,...] < draft.md
 
 The draft comes on stdin with its sections in this order: one per version that version-start
 named, as `### <Product> vX.Y.Z`; `### Unassigned`, where every requirement is born and
-which may be empty only when a version section exists; `### Withdrawn`, which is optional;
+which may be empty only when a version or a withdrawn requirement exists; `### Withdrawn`, which is optional;
 and `### Assumptions and open questions`, which may be empty.
 
 - A requirement: `* **R-nn** requirement. Source: origin [Type]`, with an optional
   `[Hypothesis]` after the Type, one of Functional, Business rule, Non-functional or
   Constraint. Each ID is used once in the page and goes upward within its section; a gap is
   a proposal the person removed.
-- A withdrawn requirement: `* ~~**R-nn** requirement~~ reason · YYYY-MM-DD`.
+- A withdrawn requirement: `* ~~**R-nn** requirement~~ reason · YYYY-MM-DD`, in the order
+  they were withdrawn.
 - A question: `* **Question n.** question Assumption: assumption Affects R-nn. [Open|Answered]`,
   numbered from 1; `Affects` is optional and names requirements of the page.
 
@@ -29,6 +30,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -42,7 +44,6 @@ STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 VERSION = re.compile(r"^.+ v\d+\.\d+\.\d+$")
-WITHDRAWN_ID = re.compile(r"^~~\*\*(R-\d+)\*\*")
 WITHDRAWN = re.compile(r"^~~\*\*(R-\d+)\*\* (.+?)~~ (.+) · (\d{4}-\d{2}-\d{2})$")
 STRIKE = {"type": "strike"}
 TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
@@ -50,11 +51,12 @@ QUESTION = re.compile(r"^\*\*Question (\d+)\.\*\* (.+?) Assumption: (.+) \[([^\]
 
 
 def numbered(name, rid, ids, last, found):
-    """Reports an ID used before in the page or not going upward in its section."""
-    if rid in ids or int(rid[2:]) <= last:
+    """Reports an ID used before in the page or not going upward in its section; a last of
+    None skips the order, as in Withdrawn, kept in the order of withdrawal."""
+    if rid in ids or (last is not None and int(rid[2:]) <= last):
         found.append(f"{name}: {rid} breaks the series; number the requirements upward from R-01, never reusing one")
     ids.add(rid)
-    return max(last, int(rid[2:]))
+    return None if last is None else max(last, int(rid[2:]))
 
 
 def requirements(name, lines, ids, found, optional=False):
@@ -82,14 +84,19 @@ def requirements(name, lines, ids, found, optional=False):
 
 
 def withdrawn(lines, ids, found):
-    listed, last = [], 0
+    listed = []
     for item in items("Withdrawn", lines, found, optional=True):
-        rid = WITHDRAWN_ID.match(item)
+        rid = re.search(r"R-\d+", item)
         if rid:
-            last = numbered("Withdrawn", rid.group(1), ids, last, found)
+            numbered("Withdrawn", rid.group(0), ids, None, found)
         match = WITHDRAWN.match(item)
         if not match:
             found.append(f"Withdrawn: write each as '* ~~**R-nn** requirement~~ reason · YYYY-MM-DD': {item}")
+            continue
+        try:
+            date.fromisoformat(match.group(4))
+        except ValueError:
+            found.append(f"Withdrawn: {match.group(1)} has {match.group(4)}, which is not a date")
             continue
         listed.append(match.groups())
     return listed
@@ -131,7 +138,8 @@ def problems(draft, existing=None):
         return found, None
     ids = set()
     groups = [(name, requirements(name, sections[name], ids, found)) for name in versions]
-    groups.append(("Unassigned", requirements("Unassigned", sections["Unassigned"], ids, found, optional=bool(versions))))
+    groups.append(("Unassigned", requirements("Unassigned", sections["Unassigned"], ids, found,
+                                               optional=bool(versions) or "Withdrawn" in sections)))
     gone = withdrawn(sections.get("Withdrawn", []), ids, found)
     listed = questions(sections[QUESTIONS], ids, found)
     if existing is not None:
@@ -170,7 +178,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--existing", help="the IDs of the published page, comma separated")
     args = parser.parse_args()
-    existing = {rid.strip() for rid in args.existing.split(",") if rid.strip()} if args.existing else None
+    existing = {rid.strip() for rid in args.existing.split(",") if rid.strip()} if args.existing is not None else None
+    wrong = sorted(rid for rid in existing or () if not re.match(r"^R-\d+$", rid))
+    if wrong:
+        print(f"existing: {', '.join(wrong)} is not an ID like R-01", file=sys.stderr)
+        return 1
     found, content = problems(sys.stdin.read(), existing)
     if found:
         print("\n".join(found), file=sys.stderr)
