@@ -50,14 +50,15 @@ DECIDED = re.compile(r"^Decided by: ([A-Za-z0-9:_-]+) · (\d{4}-\d{2}-\d{2})$")
 
 
 def problem(lines, found):
-    today = [TODAY.match(line.strip()) for line in lines if line.strip().startswith("Today:")]
-    text = paragraphs([line for line in lines if not line.strip().startswith("Today:")])
+    lines = filled(lines)
+    today = TODAY.match(lines[-1].strip()) if lines else None
+    text = paragraphs(lines[:-1])
     if len(text) != 1:
         found.append("Problem: write one paragraph: who cannot do what, because of what")
-    if len(today) != 1 or not today[0]:
-        found.append("Problem: write one 'Today: ...' line with what is used today in its place")
+    if not today or any(line.strip().startswith("Today:") for line in lines[:-1]):
+        found.append("Problem: end with one 'Today: ...' line with what is used today in its place")
         return None
-    return text[0] if text else "", today[0].group(1)
+    return text[0] if text else "", today.group(1)
 
 
 def users(lines, found):
@@ -72,13 +73,12 @@ def users(lines, found):
 
 
 def success(lines, found):
-    statement = paragraphs([line for line in lines if not line.startswith("* ") and not line.startswith("Baseline:")])
-    metrics = [line[2:].strip() for line in lines if line.startswith("* ") and line[2:].strip()]
-    baseline = [BASELINE.match(line.strip()) for line in lines if line.startswith("Baseline:")]
+    lines = [line.strip() for line in lines]
+    statement = paragraphs([line for line in lines if not line.startswith("*") and not line.startswith("Baseline:")])
+    metrics = items("Success", [line for line in lines if line.startswith("*")], found)
+    baseline = [BASELINE.match(line) for line in lines if line.startswith("Baseline:")]
     if len(statement) != 1:
         found.append("Success: write one paragraph: if current state, then signal for whom")
-    if not metrics:
-        found.append("Success: write at least one metric as a '* ' bullet")
     if len(baseline) != 1 or not baseline[0]:
         found.append("Success: write one 'Baseline: ... Target: ...' line")
         return None
@@ -90,7 +90,7 @@ def risks(lines, found):
     for line in filled(lines):
         if line.startswith("* "):
             count += 1
-            current = None
+            current = {"name": None}
             match = RISK.match(line[2:].strip())
             if not match:
                 found.append(f"Risks: write each as '* **Risk** [Kind] [Evidence|Hypothesis]': {line.strip()}")
@@ -104,6 +104,8 @@ def risks(lines, found):
             found_risks.append(current)
             continue
         field = FIELD.match(line.strip())
+        if current and current["name"] is None:
+            continue
         if not field or current is None:
             found.append(f"Risks: write 'Validation: ...' and 'Threshold: ...' under each risk: {line.strip()}")
         elif field.group(1) in current:
@@ -119,7 +121,7 @@ def risks(lines, found):
     return found_risks
 
 
-def decision(lines, items, found):
+def decision(lines, found_risks, found):
     lines = [line.strip() for line in filled(lines)]
     if len(lines) != 2:
         found.append("Decision: write the decision line and the 'Decided by: <accountId> · YYYY-MM-DD' line, or leave the section out")
@@ -137,9 +139,9 @@ def decision(lines, items, found):
             found.append(f"Decided by: {decided.group(2)} is not a date")
             decided = None
     if match and match.group(1) == "Go to build":
-        for item in items:
-            if item["kind"] in ("Value", "Viability") and item["proof"] == "Hypothesis":
-                found.append(f"Decision: Go to build needs Evidence in every Value and Viability risk; {item['kind']} is a Hypothesis: {item['name']}")
+        for risk in found_risks:
+            if risk["kind"] in ("Value", "Viability") and risk["proof"] == "Hypothesis":
+                found.append(f"Decision: Go to build needs Evidence in every Value and Viability risk; {risk['kind']} is a Hypothesis: {risk['name']}")
     if not match or not decided:
         return None
     return match.group(1), match.group(2), decided.group(1), decided.group(2)
@@ -228,7 +230,7 @@ def body(content):
     if content["decision"]:
         state, what, account, day = content["decision"]
         nodes += [heading("Decision", 2), panel(
-            PANELS[state], heading(what, 3),
+            PANELS[state], {"type": "heading", "attrs": {"level": 3}, "content": inline(what)},
             paragraph(strong("Decided by:"), space(), {"type": "mention", "attrs": {"id": account}},
                       {"type": "text", "text": " · "}, {"type": "date", "attrs": {"timestamp": timestamp(day)}}),
         )]
