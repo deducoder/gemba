@@ -2,7 +2,7 @@
 """Checks the vision of a product against the template and converts it to the live doc
 that Confluence takes: the title and the body as an ADF document.
 
-Usage: python3 vision.py < draft.md
+Usage: python3 vision.py [--requirements <url>] < draft.md
 
 The draft comes on stdin: what the product is in one sentence, ending in its origin as
 `[Client]`, `[Market]`, `[Internal]` or `[Platform]`; two paragraphs, how it changes the
@@ -19,10 +19,14 @@ work of its users and where it goes; then the `### Problem`, `### Users`, `### S
   `Decided by: <accountId> · YYYY-MM-DD`. Go to build needs Evidence in every Value and
   Viability risk.
 
+With --requirements, the URL of the Requirements page, each `Question n` in the Baseline or
+Target line becomes a link to that page, where the open question and its assumption live.
+
 Prints {"title": "Vision", "body": <ADF>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
+import argparse
 import json
 import re
 import sys
@@ -32,7 +36,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, split  # noqa: E402
+from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -169,23 +173,11 @@ def problems(draft):
         "problem": problem(sections["Problem"], found),
         "users": users(sections["Users"], found),
         "success": success(sections["Success"], found),
-        "constraints": items("Constraints", sections["Constraints"], found) if filled(sections["Constraints"]) else [],
+        "constraints": items("Constraints", sections["Constraints"], found, optional=True),
     }
     content["risks"] = risks(sections["Risks"], found)
     content["decision"] = decision(sections["Decision"], content["risks"], found) if "Decision" in sections else None
     return (found, None) if found else (found, content)
-
-
-def status(text, color):
-    return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
-
-
-def strong(text):
-    return {"type": "text", "text": text, "marks": [{"type": "strong"}]}
-
-
-def space():
-    return {"type": "text", "text": " "}
 
 
 def paragraph(*content):
@@ -200,13 +192,31 @@ def label(name, text):
     return paragraph(strong(f"{name}:"), space(), *inline(text))
 
 
+def linked(text, url):
+    """Returns the text as ADF nodes, with each `Question n` outside code linking to the
+    Requirements page."""
+    if not url:
+        return inline(text)
+    nodes = []
+    for i, chunk in enumerate(CODE.split(text)):
+        if i % 2:
+            nodes.extend(inline(f"`{chunk}`"))
+            continue
+        for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
+            if j % 2:
+                nodes.append({"type": "text", "text": part, "marks": [{"type": "link", "attrs": {"href": url}}]})
+            elif part:
+                nodes.extend(inline(part))
+    return nodes
+
+
 def timestamp(day):
     """Returns the date as the milliseconds of its midnight in UTC, as a date node takes it."""
     moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
     return str(int(moment.timestamp() * 1000))
 
 
-def body(content):
+def body(content, requirements=None):
     """Returns the live doc as an ADF document."""
     text, today = content["problem"]
     statement, metrics, (baseline, target) = content["success"]
@@ -216,7 +226,8 @@ def body(content):
         heading("Problem", 2), paragraph(*inline(text)), panel("info", label("Today", today)),
         heading("Users", 2), bullets([[strong(role), space(), *inline(need)] for role, need in content["users"]]),
         heading("Success", 2), paragraph(*inline(statement)), bullets([inline(metric) for metric in metrics]),
-        paragraph(strong("Baseline:"), space(), *inline(baseline), space(), strong("Target:"), space(), *inline(target)),
+        paragraph(strong("Baseline:"), space(), *linked(baseline, requirements), space(), strong("Target:"), space(),
+                  *linked(target, requirements)),
     ]
     if content["constraints"]:
         nodes += [heading("Constraints", 2), bullets([inline(item) for item in content["constraints"]])]
@@ -238,11 +249,14 @@ def body(content):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--requirements", help="the URL of the Requirements page")
+    args = parser.parse_args()
     found, content = problems(sys.stdin.read())
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    print(json.dumps({"title": "Vision", "body": body(content)}, ensure_ascii=False))
+    print(json.dumps({"title": "Vision", "body": body(content, args.requirements)}, ensure_ascii=False))
     return 0
 
 
