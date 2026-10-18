@@ -15,6 +15,7 @@ FENCE = re.compile(r"^(`{3,}|~{3,})")
 TRAIL = ("ran:", "read:")
 VERSION_NAME = r".+ v\d+\.\d+\.\d+"
 STATES = {"Planned": "neutral", "In progress": "blue", "Released": "green"}
+CURRENT = ("Planned", "In progress")
 BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
 
 
