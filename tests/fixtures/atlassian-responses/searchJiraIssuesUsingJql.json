@@ -152,6 +152,12 @@
               "colorName": "blue-gray",
               "name": "To Do"
             }
+          },
+          "timetracking": {
+            "originalEstimate": "2h",
+            "remainingEstimate": "2h",
+            "originalEstimateSeconds": 7200,
+            "remainingEstimateSeconds": 7200
           }
         },
         "webUrl": "https://example.atlassian.net/browse/ABC-4"
@@ -258,6 +264,12 @@
               "colorName": "blue-gray",
               "name": "To Do"
             }
+          },
+          "timetracking": {
+            "originalEstimate": "1h",
+            "remainingEstimate": "1h",
+            "originalEstimateSeconds": 3600,
+            "remainingEstimateSeconds": 3600
           }
         },
         "webUrl": "https://example.atlassian.net/browse/ABC-3"
