@@ -8,7 +8,7 @@ The draft comes on stdin with the `### Unassigned` section, where every requirem
 and the `### Assumptions and open questions` section, which may be empty.
 
 - Unassigned: bullets `* **R-nn** requirement. Source: origin [Type]`, with an optional
-  `[Hypothesis]` after the Type. The IDs form one series from R-01 with no gaps, and the
+  `[Hypothesis]` after the Type. The IDs go upward from R-01 and are never reused; a gap is a proposal the person removed, and the
   Type is Functional, Business rule, Non-functional or Constraint.
 - Assumptions and open questions: bullets
   `* **Question n.** question Assumption: assumption Affects R-nn. [Open|Answered]`,
@@ -33,32 +33,35 @@ TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "pu
 STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
-LOZENGES = re.compile(r"^(.*?)((?: \[[^\]]+\])+)$")
+TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
 QUESTION = re.compile(r"^\*\*Question (\d+)\.\*\* (.+?) Assumption: (.+) \[([^\]]+)\]$")
-AFFECTS = re.compile(r"Affects (R-\d+(?:(?:, | y | and )R-\d+)*)")
 
 
 def requirements(lines, found):
-    catalog = []
+    """Returns the catalog and the IDs written, valid or not, so one bad line reports once."""
+    catalog, ids, last = [], set(), 0
     for item in items("Unassigned", lines, found):
         match = REQUIREMENT.match(item)
         if not match:
             found.append(f"Unassigned: write each as '* **R-nn** requirement. Source: origin [Type]': {item}")
             continue
         rid, rest = match.groups()
-        if rid != f"R-{len(catalog) + 1:02d}":
-            found.append(f"Unassigned: {rid} breaks the series; number the requirements R-01, R-02… with no gaps")
-        tail = LOZENGES.match(rest)
-        lozenges = re.findall(r"\[([^\]]+)\]", tail.group(2)) if tail else []
-        text = tail.group(1) if tail else rest
-        if not lozenges or lozenges[0] not in TYPES or lozenges[1:] not in ([], ["Hypothesis"]):
-            found.append(f"Unassigned: {rid} ends with its Type, one of {', '.join(TYPES)}, and optionally [Hypothesis]: {' '.join(lozenges) or 'none'}")
+        number = int(rid[2:])
+        if rid in ids or number <= last:
+            found.append(f"Unassigned: {rid} breaks the series; number the requirements upward from R-01, never reusing one")
+        ids.add(rid)
+        last = max(last, number)
+        tail = TAIL.match(rest)
+        if not tail or tail.group(2) not in TYPES:
+            found.append(f"Unassigned: {rid} ends with its Type, one of {', '.join(TYPES)}, and optionally [Hypothesis]: {rest}")
+            continue
+        text, kind, hypothesis = tail.group(1), tail.group(2), bool(tail.group(3))
         if " Source: " not in text:
             found.append(f"Unassigned: {rid} needs its 'Source: origin' before the Type")
             continue
         sentence, source = text.rsplit(" Source: ", 1)
-        catalog.append((rid, sentence, source, lozenges))
-    return catalog
+        catalog.append((rid, sentence, source, kind, hypothesis))
+    return catalog, ids
 
 
 def questions(lines, ids, found):
@@ -74,8 +77,7 @@ def questions(lines, ids, found):
             found.append(f"{QUESTIONS}: {name} breaks the series; number the questions from 1")
         if state not in STATES:
             found.append(f"{QUESTIONS}: {name} is {state}; use Open or Answered")
-        affects = AFFECTS.search(assumption)
-        for rid in re.findall(r"R-\d+", affects.group(1)) if affects else []:
+        for rid in re.findall(r"R-\d+", assumption.split("Affects", 1)[1]) if "Affects" in assumption else []:
             if rid not in ids:
                 found.append(f"{QUESTIONS}: {name} affects {rid}, which Unassigned does not have")
         listed.append((name, question, assumption, state))
@@ -94,16 +96,16 @@ def problems(draft):
         found.append(f"{section}: write no '####' headings: {sub}")
     if not check_sections(sections, ["Unassigned", QUESTIONS], repeated, found):
         return found, None
-    catalog = requirements(sections["Unassigned"], found)
-    listed = questions(sections[QUESTIONS], {rid for rid, *_ in catalog}, found)
+    catalog, ids = requirements(sections["Unassigned"], found)
+    listed = questions(sections[QUESTIONS], ids, found)
     return (found, None) if found else (found, {"catalog": catalog, "questions": listed})
 
 
 def body(content):
     """Returns the live doc as an ADF document."""
     lines = []
-    for rid, sentence, source, lozenges in content["catalog"]:
-        marks = [space(), status(lozenges[0], TYPES[lozenges[0]])] + ([space(), status("Hypothesis", "neutral")] if lozenges[1:] else [])
+    for rid, sentence, source, kind, hypothesis in content["catalog"]:
+        marks = [space(), status(kind, TYPES[kind])] + ([space(), status("Hypothesis", "neutral")] if hypothesis else [])
         lines.append([strong(rid), space(), *inline(sentence), space(), *inline(f"Source: {source}", [GREY]), *marks])
     nodes = [heading("Unassigned", 2), bullets(lines)]
     if content["questions"]:
