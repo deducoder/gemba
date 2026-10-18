@@ -63,3 +63,7 @@ graders:
     input_match: 'git push'
     min: 0
     max: 0
+  - name: descendants-down-to-the-pages
+    type: tool_used
+    tool: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    input_match: '"depth"\W+([3-9]|[1-9]\d)'
