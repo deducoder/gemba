@@ -40,7 +40,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Atlassian.
 
-2. **Read the product.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. Without a page titled `Vision`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Vision` with `getConfluencePage` and `contentFormat: "adf"`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it, the same way.
+2. **Read the product.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. Without a page titled `Vision`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Vision` with `getConfluencePage` and `contentFormat: "adf"` and, in the same message, its children with `getConfluencePageDescendants` on it; then `Requirements` and `Roadmap` the same way, both in one message.
 
 3. **Check the decision.** The decision is the `panel` after the `Decision` heading of `Vision`. Without that panel, or with `panelType` `error` (no-go), reply that the product has no go decision, name which case it is, suggest deciding it with `/gemba-code:project-create` and stop, writing nothing. With `warning` (go to validate), the first version validates the greatest risk, the first of `Risks`; with `success` (go to build), it is the cut the person chooses.
 
@@ -89,9 +89,9 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
       ROADMAP
       ```
 
-    Fix each problem a command names until it passes.
+    Each command runs alone, as its own Bash call; the three can go in one message. Fix each problem a command names until it passes.
 
-11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again as in step 4: the version exists, is neither released nor archived, and its `releaseDate` is the one of step 9. When one of them fails, say which and ask again; write nothing until it holds.
+11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4: the version exists, is neither released nor archived, and its `releaseDate` is the one of step 9. When one of them fails, say which and ask again; write nothing until it holds.
 
 12. **Ask the person to accept** the three drafts, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
@@ -107,6 +107,6 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
        Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`).
 
-    A live doc saves late: read each page until it has the change, and retry the update when it does not.
+    The two merges can go in one message, and then the two updates. A live doc saves late: read each page until it has the change, up to three times, and retry the update once when it still does not; then say which page did not save.
 
 14. **Reply** with the links to the version page, `Requirements` and `Roadmap`, the `releaseDate` with its working days and the chain that sets it, and the stack when it was written.
