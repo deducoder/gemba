@@ -11,7 +11,7 @@ versions in progress, each a bullet
 Released is one paragraph while no version is released, or the released versions, newest
 first, each a bullet `* [<Product> vX.Y.Z](<link to its page>) [Released] goal Target: measurable goal`,
 without a date. Next holds at least one entry, or none once its entry became
-the version in Now, and Later any number, each a bullet `* **Unnumbered** goal`.
+a version in Now or in Released, and Later any number, each a bullet `* **Unnumbered** goal`.
 
 Prints {"title": "Roadmap", "body": <ADF>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
@@ -99,12 +99,12 @@ def problems(draft):
         found.append(f"{section}: write no '####' headings: {sub}")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    in_progress = has_versions(sections["Now"])
+    started = has_versions(sections["Now"]) or has_versions(sections["Released"])
     content = {
         name: versions(name, sections[name], found) if has_versions(sections[name]) else single(name, sections[name], found)
         for name in VERSION_SECTIONS
     }
-    content["Next"] = entries("Next", sections["Next"], found, optional=in_progress)
+    content["Next"] = entries("Next", sections["Next"], found, optional=started)
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
     return (found, None) if found else (found, content)
 
