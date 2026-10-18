@@ -21,25 +21,15 @@ each push is a command of its own, visible to whoever gates it.
 import re
 import subprocess
 import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
+
+from branch import current_branch, git, has_ref, is_ancestor, succeeds  # noqa: E402
 
 TAG = re.compile(r"^v\d+\.\d+\.\d+$")
 MESSAGE = "Merge branch 'develop' into main"
-
-
-def git(*args):
-    return subprocess.run(["git", *args], capture_output=True, text=True, check=True)
-
-
-def succeeds(*args):
-    return subprocess.run(["git", *args], capture_output=True).returncode == 0
-
-
-def has_ref(ref):
-    return succeeds("rev-parse", "--verify", "-q", ref)
-
-
-def is_ancestor(ancestor, descendant):
-    return succeeds("merge-base", "--is-ancestor", ancestor, descendant)
 
 
 def rev(ref):
@@ -80,14 +70,15 @@ def update(branch):
 
 
 def release(tag):
-    current = git("branch", "--show-current").stdout.strip()
+    current = current_branch()
     update("develop")
     update("main")
     try:
         git("merge", "-q", "--no-ff", "-m", MESSAGE, "develop")
     except subprocess.CalledProcessError:
         conflicts = git("diff", "--name-only", "--diff-filter=U").stdout.split()
-        succeeds("merge", "--abort")
+        if conflicts:
+            git("merge", "--abort")
         if current:
             succeeds("switch", "-q", current)
         if conflicts:
