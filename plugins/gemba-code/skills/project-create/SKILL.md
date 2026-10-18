@@ -1,11 +1,13 @@
 ---
 name: project-create
-description: Frames a new product with the person and writes its vision as a live doc at the root of the Confluence space, with its Purpose in CLAUDE.md. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material before framing, frames the problem, users, success and constraints one decision at a time, orders the risks with their kind, evidence, validation and threshold, records the go or no-go decision and checks the draft against the vision template. Use when the user wants to start a product from scratch, frame an idea before building it, or write its vision. It writes only what the person accepted, and creates no work item, fix version, requirements or roadmap.
+description: Frames a new product with the person, discovers its requirements and writes its Vision at the root of the Confluence space, with Requirements and Roadmap under it as live docs and its Purpose in CLAUDE.md. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material, frames problem, users, success and constraints one decision at a time, orders the risks, proposes the requirements in batches (functional, business rules, the eight Volere non-functional types, constraints, then what the person did not say), turns what cannot be measured into open questions, records the go or no-go decision and checks each page against its template. Use when the user wants to start a product from scratch, frame an idea before building it, or write its vision and requirements. It writes only what the person accepted, assigns no version and creates no work item or fix version.
 argument-hint: "[idea or path to shared material]"
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/roadmap.py *)
 ---
 
 # Project create
@@ -28,7 +30,19 @@ Vision template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/vision.md`
 ```
 
-This skill writes one Confluence page, `Vision`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the page.
+Requirements template:
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/requirements.md`
+```
+
+Roadmap template:
+
+```markdown
+!`cat ${CLAUDE_SKILL_DIR}/assets/roadmap.md`
+```
+
+This skill writes three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages.
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first. A fact about the world carries its source or is a hypothesis. Never present your own opinion, desk research or synthetic users as evidence that someone needs or would pay for the product.
 
@@ -44,33 +58,64 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
    The origin decides who validates and how each fact is born: with `Market`, what the person says is a hypothesis until real people show it.
 
-4. **Read the material first.** When the person shared material (notes, a PDF, minutes, a specification), read it and list each of its points, with what is known and who confirms it, before the first question of the frame, so no question asks what is already written.
+4. **Read the material first.** When the person shared material (notes, a PDF, minutes, a specification), read it and list each of its points, numbered, with what is known and who confirms it, before the first question of the frame, so no question asks what is already written.
 
 5. **Frame the product,** one decision at a time:
    - the idea, rewritten in one sentence and confirmed;
    - users and problem together, as who cannot do what because of what; the segment is defined by the trigger that makes it change, not by its profile, and with `Market` it is a single segment of early adopters;
    - `Today`: what is used today in its place, doing nothing included, researched with sources;
-   - success as a directional outcome, with its metrics, `Baseline` and `Target`; an unknown `Baseline` is written `desconocido` in the `Content:` language;
+   - success as a directional outcome, with its metrics, `Baseline` and `Target`. A `Baseline` nobody has measured is written `desconocido` in the `Content:` language followed by `(Question n)`, and that question, with its assumption, goes to the open questions of step 7;
    - the fixed constraints: for each one ask what happens if it is not met. An external consequence (law, contract, a date with money at stake, a missing skill) makes it a constraint; a preference is not written.
 
-   For each point that looks like a limit, ask whether the product never does it or does not do it yet: a never is a sentence of the vision; a not yet is left out of this page.
+   For each point that looks like a limit, ask whether the product never does it or does not do it yet: a never is a sentence of the vision; a not yet is a requirement of step 7.
 
 6. **Order the risks** after the frame. Each one carries its `Kind` (`Value`, `Usability`, `Feasibility` or `Viability`), `Evidence` or `Hypothesis`, how it is validated and the `Threshold` that validates it, set before testing. `Evidence` is a fact observed with real people or stated by a source; desk research gives evidence only of market facts such as published prices or competitors. With `Market`, every `Value` and `Viability` risk without evidence from real people is a `Hypothesis`. Propose the order from the greatest risk, the one with the least evidence and the most damage if it fails, and ask the person to confirm which one is the greatest: it goes first.
 
-7. **Record the decision:** go to build, go to validate or no-go, who decides and the date. Propose go to build only when every `Value` and `Viability` risk has `Evidence`; otherwise propose go to validate, where the first version validates the greatest risk. The account of who decides comes from `atlassianUserInfo`, or from `lookupJiraAccountId` when someone else decides. When the person does not decide yet, the draft has no `### Decision` and the page no decision.
+7. **Discover the requirements** after the risks, in this order, one stage at a time:
+   1. functional, walking the work of the main user from end to end, broad before deep, then the other users;
+   2. business rules, from the variants and exceptions of that walk;
+   3. non-functional, going through the eight Volere types one by one: look and feel, usability, performance, operational, maintainability, security, cultural and legal;
+   4. constraints that ask for something concrete;
+   5. last, what the person did not say: the "what if…?" of each user and each rule.
 
-8. **Write the draft** with the template above, in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none; headings, labels and lozenges stay in English. Check it with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+   Propose them in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four requirements, each option one requirement with its ID, `Type` and `Source`. The person keeps what they accept, unchecks what they remove and corrects with a note. Each requirement is singular and verifiable, with its fit criterion inside the sentence, and carries the next ID of one series from `R-01`, never reused, its `Type` (`Functional`, `Business rule`, `Non-functional` or `Constraint`) and its `Source`: who said it, the point of the material or the person's hypothesis, which also gets `[Hypothesis]`. Every requirement is born in `Unassigned`. What cannot be written measurable yet is not a requirement: it becomes an open question, numbered from 1, with the assumption that holds until it is answered and the requirements it affects.
 
-   ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py <<'VISION'
-   <the draft>
-   VISION
-   ```
+8. **Account for the material.** When there was material, show each of its points with where it ended: an `R-nn`, a `Question n` or a limit sentence of the vision. A point with nowhere to go is raised now; none is lost without saying so.
 
-9. **Ask the person to accept** the draft and the `## Purpose` section of step 11, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
+9. **Close the discovery** when there is a minimal definition: the problem, the users, a measurable success and the requirements that make the product valuable, usable and feasible, each risk with its validation and threshold. Ask the person to accept it as minimal; open questions do not stop it, the catalog needs not be complete, and the cut is theirs.
 
-10. **Publish the page** with `createConfluencePage`: the `id` of the space as `spaceId`, its `homepageId` as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
+10. **Record the decision:** go to build, go to validate or no-go, who decides and the date. Propose go to build only when every `Value` and `Viability` risk has `Evidence`; otherwise propose go to validate, where the first version validates the greatest risk. The account of who decides comes from `atlassianUserInfo`, or from `lookupJiraAccountId` when someone else decides. When the person does not decide yet, the draft has no `### Decision` and the page no decision.
 
-11. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
+11. **Write the drafts** with the templates above, in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none; headings, labels and lozenges stay in English. The roadmap has no version yet: `Next` holds the first goal (with go to validate, validating the greatest risk) and `Later` what is known but not ordered. Check each draft with its command, run alone and exactly in this form, and fix each problem it names until it passes:
 
-12. **Reply** with the link to the page and what was written.
+    ```
+    python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py <<'VISION'
+    <the vision draft>
+    VISION
+    ```
+
+    ```
+    python3 ${CLAUDE_SKILL_DIR}/scripts/requirements.py <<'REQUIREMENTS'
+    <the requirements draft>
+    REQUIREMENTS
+    ```
+
+    ```
+    python3 ${CLAUDE_SKILL_DIR}/scripts/roadmap.py <<'ROADMAP'
+    <the roadmap draft>
+    ROADMAP
+    ```
+
+12. **Ask the person to accept** the three drafts and the `## Purpose` section of step 14, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
+
+13. **Publish the pages** with `createConfluencePage`, each with the `id` of the space as `spaceId`, `subtype: live`, the `title` its script printed and its `body` as ADF (`contentFormat: "adf"`): first `Vision` with the `homepageId` as `parentId`, then `Requirements` and `Roadmap` with the `id` of `Vision` as `parentId`. When the vision cites a `Question n`, check it again with the link to `Requirements`, run alone and exactly in this form, and update `Vision` with `updateConfluencePage` and the `body` it printed; a live doc saves late, so read the page and retry until it has the link:
+
+    ```
+    python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py --requirements <the link to Requirements> <<'VISION'
+    <the vision draft>
+    VISION
+    ```
+
+14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
+
+15. **Reply** with the links to the three pages and what was written.
