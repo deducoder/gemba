@@ -149,6 +149,57 @@ class RoadmapVersionInProgress(unittest.TestCase):
         rejected(PLANNED.replace("[Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc)", "Gemba v0.1.0"), "Now")
 
 
+RELEASED_ENTRY = "* [Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc) [Released] Validar que 3 equipos adoptan Gemba. Target: 3 equipos activos a 4 semanas."
+
+RELEASED = DRAFT.replace("Ninguna versión liberada.", RELEASED_ENTRY + "\n" + RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
+
+
+class RoadmapReleasedVersions(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.body = page(RELEASED)
+        cls.items = cls.body[-1]["content"]
+        cls.entry = cls.items[0]["content"][0]["content"]
+
+    def test_released_holds_each_version_as_an_entry_in_its_order(self):
+        self.assertEqual(self.body[-1]["type"], "bulletList")
+        self.assertEqual([item["content"][0]["content"][0]["text"] for item in self.items], ["Gemba v0.1.0", "Gemba v0.0.1"])
+
+    def test_the_entry_links_to_the_version_page(self):
+        self.assertEqual(self.entry[0]["marks"], [{"type": "link", "attrs": {"href": "https://example.atlassian.net/wiki/x/abc"}}])
+
+    def test_the_entry_carries_the_released_lozenge_and_no_date(self):
+        lozenges = [n["attrs"] for n in self.entry if n["type"] == "status"]
+        self.assertEqual([(s["text"], s["color"]) for s in lozenges], [("Released", "green")])
+        self.assertNotIn("date", [n["type"] for n in self.entry])
+
+    def test_the_goal_and_its_target_go_on_their_own_lines(self):
+        breaks = [i for i, node in enumerate(self.entry) if node["type"] == "hardBreak"]
+        self.assertEqual(len(breaks), 2)
+        self.assertEqual(self.entry[breaks[0] + 1]["text"], "Validar que 3 equipos adoptan Gemba.")
+        self.assertEqual(self.entry[breaks[1] + 1], {"type": "text", "text": "Target:", "marks": [{"type": "strong"}]})
+
+    def test_a_version_in_progress_is_not_in_released(self):
+        rejected(RELEASED.replace("[Released]", "[Planned]", 1), "Released", "Planned")
+
+    def test_a_released_version_without_target(self):
+        rejected(RELEASED.replace(" Target: 3 equipos activos a 4 semanas.", "", 1), "Released", "Target")
+
+    def test_a_released_entry_that_is_not_a_version(self):
+        rejected(RELEASED.replace(RELEASED_ENTRY, "* **Unnumbered** algo", 1), "Released")
+
+    def test_next_may_be_empty_once_the_version_of_now_is_released(self):
+        start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
+        self.assertEqual(page(RELEASED[:start] + RELEASED[end:])[-1]["type"], "bulletList")
+
+    def test_a_released_version_with_a_date(self):
+        rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")
+
+    def test_a_version_moves_from_now_to_released(self):
+        moved = PLANNED.replace("Ninguna versión liberada.", RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
+        self.assertEqual(page(moved)[-1]["type"], "bulletList")
+
+
 class RoadmapOptional(unittest.TestCase):
     def test_later_may_be_empty(self):
         start, end = DRAFT.index("* **Unnumbered** Soporte para otros"), DRAFT.index("### Released")
