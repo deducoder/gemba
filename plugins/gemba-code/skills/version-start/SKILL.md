@@ -1,7 +1,7 @@
 ---
 name: version-start
 description: Defines the next version of a framed product with the person, writes its page under Roadmap in Confluence as a live doc and declares its work items. Stops without a go decision in the Vision, takes a Next entry of the Roadmap, proposes the Unassigned requirements of the version in batches and resolves the questions that block them, proposes the stack in the first version with research, computes the release date in working days from the estimates, the people and the longest chain of dependencies, checks in Jira the fix version the person created, and moves the requirements and the roadmap entry to the version. Then proposes each requirement as an epic, a loose story or spike, or a criterion when it cuts across, declares only what the person accepts with epic-start, story-start or spike-start and warns when it does not fit the date. Use to plan or start the next version or MVP of a product framed with project-create, or to declare the work items of a defined version. It creates no fix version.
-argument-hint: "[Next entry of the roadmap]"
+argument-hint: "[Next entry of the roadmap, or a version in Now]"
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -46,7 +46,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 4. **Name the version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata` and read the `allowedValues` of `fixVersions` with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. The versions of the product are those named `<Product> vX.Y.Z`. Without any, the version is the first one: `<Product>` is the `name` in the `allowedValues` of the field `project` of the same response, and the version `<Product> v0.1.0`. With versions, take the highest of them by major and then minor, and the version is its `<Product>` with that major, its minor plus one and patch `0`: after `v1.0.0` and `v0.7.0` comes `v1.1.0`. Propose that name; the person accepts it or gives another of the same form.
 
-5. **Choose the goal.** Offer the entries of `Next` in `Roadmap`, the one the argument names first: the chosen one is the goal of the version and moves to `Now`.
+5. **Choose the goal.** When the argument names a version that `Now` in `Roadmap` already holds as `Planned`, with its page under `Roadmap`, the version is defined: read its page with `getConfluencePage`, take its requirements, its `releaseDate` and its title as the version, ask how many people build it, and go on from step 14. Otherwise offer the entries of `Next` in `Roadmap`, the one the argument names first: the chosen one is the goal of the version and moves to `Now`.
 
 6. **Choose the requirements.** Propose the `Unassigned` requirements of `Requirements` that reach the goal, in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four requirements, each option one requirement with its ID and `Type`. The person keeps what enters the version. A new requirement the person names gets the number above the highest of the page, withdrawn ones included.
 
