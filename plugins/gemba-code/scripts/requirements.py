@@ -30,20 +30,19 @@ import argparse
 import json
 import re
 import sys
-from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, space, split, status, strong, date_node  # noqa: E402
+from draft import FENCE, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, space, split, status, strong, date_node  # noqa: E402
 
 GREY = {"type": "textColor", "attrs": {"color": "#97a0af"}}
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
 STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
-VERSION = re.compile(r"^.+ v\d+\.\d+\.\d+$")
+VERSION = re.compile(rf"^{VERSION_NAME}$")
 WITHDRAWN = re.compile(r"^~~\*\*(R-\d+)\*\* (.+?)~~ (.+) · (\d{4}-\d{2}-\d{2})$")
 STRIKE = {"type": "strike"}
 TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
@@ -93,9 +92,7 @@ def withdrawn(lines, ids, found):
         if not match:
             found.append(f"Withdrawn: write each as '* ~~**R-nn** requirement~~ reason · YYYY-MM-DD': {item}")
             continue
-        try:
-            date.fromisoformat(match.group(4))
-        except ValueError:
+        if not is_day(match.group(4)):
             found.append(f"Withdrawn: {match.group(1)} has {match.group(4)}, which is not a date")
             continue
         listed.append(match.groups())

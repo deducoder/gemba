@@ -30,13 +30,12 @@ import argparse
 import json
 import re
 import sys
-from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, linked, paragraphs, space, split, status, strong, date_node  # noqa: E402
+from draft import BASELINE, FENCE, bullets, check_sections, dated, doc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -47,7 +46,6 @@ FIRST = re.compile(r"^(.+?) \[([^\]]+)\]$")
 NAMED = re.compile(r"^\*\*(.+?)\*\* (.+)$")
 RISK = re.compile(r"^\*\*(.+?)\*\* \[([^\]]+)\] \[([^\]]+)\]$")
 TODAY = re.compile(r"^Today: (.+)$")
-BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
 FIELD = re.compile(r"^(Validation|Threshold): (.+)$")
 DECISION = re.compile(r"^(.+?): (.+)$")
 DECIDED = re.compile(r"^Decided by: ([A-Za-z0-9:_-]+) · (\d{4}-\d{2}-\d{2})$")
@@ -137,9 +135,7 @@ def decision(lines, found_risks, found):
     if not decided:
         found.append(f"Decided by: write the accountId of who decided and the date as 'Decided by: <accountId> · YYYY-MM-DD': {lines[1]}")
     else:
-        try:
-            date.fromisoformat(decided.group(2))
-        except ValueError:
+        if not is_day(decided.group(2)):
             found.append(f"Decided by: {decided.group(2)} is not a date")
             decided = None
     if match and match.group(1) == "Go to build":
@@ -180,16 +176,8 @@ def problems(draft):
     return (found, None) if found else (found, content)
 
 
-def paragraph(*content):
-    return {"type": "paragraph", "content": list(content)}
-
-
 def panel(kind, *content):
     return {"type": "panel", "attrs": {"panelType": kind}, "content": list(content)}
-
-
-def label(name, text):
-    return paragraph(strong(f"{name}:"), space(), *inline(text))
 
 
 def body(content, requirements=None):
@@ -219,7 +207,7 @@ def body(content, requirements=None):
         nodes += [heading("Decision", 2), panel(
             PANELS[state], {"type": "heading", "attrs": {"level": 3}, "content": inline(what)},
             paragraph(strong("Decided by:"), space(), {"type": "mention", "attrs": {"id": account}},
-                      {"type": "text", "text": " · "}, date_node(day)),
+                      *dated(day)),
         )]
     return doc(nodes)
 

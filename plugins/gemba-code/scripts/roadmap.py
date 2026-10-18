@@ -18,18 +18,16 @@ Otherwise prints one line per problem to stderr, prints nothing to stdout and ex
 import json
 import re
 import sys
-from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, bullets, check_sections, date_node, doc, filled, heading, inline, items, paragraphs, space, split, status, strong  # noqa: E402
+from draft import FENCE, STATES, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
-VERSION = re.compile(r"^\[(.+ v\d+\.\d+\.\d+)\]\((https?://\S+)\) \[([^\]]+)\] · (\S+) (.+)$")
-STATES = {"Planned": "neutral", "In progress": "blue", "Released": "green"}
+VERSION = re.compile(rf"^\[({VERSION_NAME})\]\((https?://\S+)\) \[([^\]]+)\] · (\S+) (.+)$")
 VERSION_FORM = "'* [<Product> vX.Y.Z](<link>) [Planned] · YYYY-MM-DD goal Target: measurable goal'"
 
 
@@ -56,9 +54,7 @@ def versions(lines, found):
         if state not in STATES:
             found.append(f"Now: {name} is {state}; use one of {', '.join(STATES)}")
             continue
-        try:
-            date.fromisoformat(day)
-        except ValueError:
+        if not is_day(day):
             found.append(f"Now: {name} has {day}, which is not a date")
             continue
         if " Target: " not in rest:
@@ -67,6 +63,14 @@ def versions(lines, found):
         goal, target = rest.split(" Target: ", 1)
         listed.append((name, link, state, day, goal, target))
     return listed
+
+
+def single(name, lines, found):
+    """Returns the one paragraph of a section that has no version."""
+    text = paragraphs(lines)
+    if len(text) != 1:
+        found.append(f"{name}: write one paragraph saying there is no version yet")
+    return text[0] if text else ""
 
 
 def problems(draft):
@@ -81,17 +85,12 @@ def problems(draft):
         found.append(f"{section}: write no '####' headings: {sub}")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    content = {}
-    if any(line.startswith("* ") for line in sections["Now"]):
-        content["Now"] = versions(sections["Now"], found)
-    for name in ("Now", "Released"):
-        if name in content:
-            continue
-        text = paragraphs(sections[name])
-        if len(text) != 1:
-            found.append(f"{name}: write one paragraph saying there is no version yet")
-        content[name] = text[0] if text else ""
-    content["Next"] = entries("Next", sections["Next"], found, optional=isinstance(content["Now"], list))
+    in_progress = any(line.startswith("* ") for line in sections["Now"])
+    content = {
+        "Now": versions(sections["Now"], found) if in_progress else single("Now", sections["Now"], found),
+        "Released": single("Released", sections["Released"], found),
+        "Next": entries("Next", sections["Next"], found, optional=in_progress),
+    }
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
     return (found, None) if found else (found, content)
 
@@ -102,7 +101,7 @@ def entry(goal):
 
 def version(name, link, state, day, goal, target):
     return [{"type": "text", "text": name, "marks": [{"type": "link", "attrs": {"href": link}}]}, space(),
-            status(state, STATES[state]), {"type": "text", "text": " · "}, date_node(day), {"type": "hardBreak"},
+            *stamp(state, day), {"type": "hardBreak"},
             *inline(goal), {"type": "hardBreak"}, strong("Target:"), space(), *inline(target)]
 
 
@@ -111,10 +110,10 @@ def body(content):
     nodes = []
     for name in SECTIONS:
         nodes.append(heading(name, 2))
-        if name == "Now" and isinstance(content[name], list):
-            nodes.append(bullets([version(*entry) for entry in content[name]]))
-        elif name in ("Now", "Released"):
-            nodes.append({"type": "paragraph", "content": inline(content[name])})
+        if isinstance(content[name], str):
+            nodes.append(paragraph(*inline(content[name])))
+        elif name == "Now":
+            nodes.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
             nodes.append(bullets([entry(goal) for goal in content[name]]))
     return doc(nodes)

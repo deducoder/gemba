@@ -27,21 +27,20 @@ import argparse
 import json
 import re
 import sys
-from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, date_node, doc, heading, inline, items, linked, paragraphs, space, split, status, strong  # noqa: E402
+from draft import BASELINE, FENCE, VERSION_NAME, bullets, check_sections, doc, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
-TITLE = re.compile(r"^.+ v\d+\.\d+\.\d+$")
+TITLE = re.compile(rf"^{VERSION_NAME}$")
 STATUS = re.compile(r"^\[([^\]]+)\] · (\S+)$")
 KINDS = ("Value", "Usability", "Feasibility", "Viability")
-RISK = re.compile(r"^Risk validated: (\w+), «(.+?)»\.? ?(.*)$")
-BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
+RISK = re.compile(r"^Risk validated: ((\w+), «.+?».*)$")
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 SECTIONS = ["Outcome", "Requirements", "Open questions"]
+LEFT_OUT = {"Work items": "the script writes the Jira macro", "Learned": "version-close writes it"}
 COLUMNS = "type,key,summary,priority,status,duedate"
 
 
@@ -55,9 +54,7 @@ def intro(lines, found):
     state, day = match.groups()
     if state != "Planned":
         found.append(f"draft: a version starts Planned, not {state}")
-    try:
-        date.fromisoformat(day)
-    except ValueError:
+    if not is_day(day):
         found.append(f"draft: the release date {day} is not a date")
     if len(text) != 2:
         found.append("draft: write the goal of the version in one paragraph after the release date")
@@ -71,10 +68,10 @@ def mvp(lines, found):
     if not match:
         found.append("MVP criterion: write one paragraph 'Risk validated: <Kind>, «risk». why'")
         return None
-    if match.group(1) not in KINDS:
-        found.append(f"MVP criterion: the Kind is one of {', '.join(KINDS)}, not {match.group(1)}")
+    if match.group(2) not in KINDS:
+        found.append(f"MVP criterion: the Kind is one of {', '.join(KINDS)}, not {match.group(2)}")
         return None
-    return text[0][len("Risk validated: "):]
+    return match.group(1)
 
 
 def outcome(lines, found):
@@ -107,9 +104,9 @@ def problems(draft):
         found.append(f"title: write the version name '<Product> vX.Y.Z' on the first line: {title}")
     for section, sub in subsections:
         found.append(f"{section}: write no '####' headings: {sub}")
-    for name in ("Work items", "Learned"):
+    for name, why in LEFT_OUT.items():
         if name in sections:
-            found.append(f"{name}: leave it out; " + ("the script writes the Jira macro" if name == "Work items" else "version-close writes it"))
+            found.append(f"{name}: leave it out; {why}")
             sections.pop(name)
     expected = (["MVP criterion"] if "MVP criterion" in sections else []) + SECTIONS
     if not check_sections(sections, expected, repeated, found):
@@ -141,17 +138,13 @@ def macro(project, version):
     }}
 
 
-def paragraph(*content):
-    return {"type": "paragraph", "content": list(content)}
-
-
 def body(content, project, requirements):
     """Returns the live doc as an ADF document."""
     day, goal = content["intro"]
-    nodes = [paragraph(status("Planned", "neutral"), {"type": "text", "text": " · "}, date_node(day)),
+    nodes = [paragraph(*stamp("Planned", day)),
              paragraph(*inline(goal))]
     if content["mvp"]:
-        nodes += [heading("MVP criterion", 2), paragraph(strong("Risk validated:"), space(), *inline(content["mvp"]))]
+        nodes += [heading("MVP criterion", 2), label("Risk validated", content["mvp"])]
     statement, baseline, target = content["outcome"]
     nodes += [heading("Outcome", 2), paragraph(*inline(statement)),
               paragraph(strong("Baseline:"), space(), *inline(baseline), space(), strong("Target:"), space(), *inline(target))]
