@@ -24,15 +24,31 @@ each push is a command of its own, visible to whoever gates it.
 import re
 import subprocess
 import sys
-from pathlib import Path
-
-sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
-
-from branch import current_branch, git, has_ref, is_ancestor, succeeds  # noqa: E402
 
 TAG = re.compile(r"^v\d+\.\d+\.\d+$")
 MESSAGE = "Merge branch 'develop' into main"
+
+
+# The same git helpers as scripts/branch.py, kept here: a skill script that imports a plugin
+# script makes evals/changed.py run every eval on each change to that script.
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True, check=True)
+
+
+def succeeds(*args):
+    return subprocess.run(["git", *args], capture_output=True).returncode == 0
+
+
+def has_ref(ref):
+    return succeeds("rev-parse", "--verify", "-q", ref)
+
+
+def is_ancestor(ancestor, descendant):
+    return succeeds("merge-base", "--is-ancestor", ancestor, descendant)
+
+
+def current_branch():
+    return git("branch", "--show-current").stdout.strip()
 
 
 def rev(ref):
