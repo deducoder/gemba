@@ -56,6 +56,17 @@
             }
           },
           "duedate": "2026-10-29",
+          "fixVersions": [
+            {
+              "self": "",
+              "id": "10175",
+              "description": "",
+              "name": "Gemba v0.6.0",
+              "archived": false,
+              "released": false,
+              "releaseDate": "2026-10-18"
+            }
+          ],
           "project": {
             "self": "",
             "id": "10513",
