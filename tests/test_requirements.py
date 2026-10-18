@@ -24,18 +24,18 @@ DRAFT = """### Unassigned
 """
 
 
-def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT)], input=draft, capture_output=True, text=True)
+def run(draft, *args):
+    return subprocess.run([sys.executable, str(SCRIPT), *args], input=draft, capture_output=True, text=True)
 
 
-def page(draft):
-    result = run(draft)
+def page(draft, *args):
+    result = run(draft, *args)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)["body"]["content"]
 
 
-def rejected(draft, *words):
-    result = run(draft)
+def rejected(draft, *words, args=()):
+    result = run(draft, *args)
     assert result.returncode == 1, result.stdout
     assert result.stdout == ""
     for word in words:
@@ -127,6 +127,89 @@ class RequirementsReview(unittest.TestCase):
         rejected(DRAFT.replace("Affects R-03.", "Affects R-03; R-09."), "R-09")
 
 
+REVIEWED = DRAFT.replace("""### Unassigned
+
+* **R-01**""", """### Tours v0.1.0
+
+* **R-01**""").replace("""* **R-02** El folio""", """### Unassigned
+
+* **R-02** El folio""").replace("""### Assumptions and open questions""", """* **R-06** Ventas imprime la hoja de servicio. Source: María (Ventas) [Functional]
+
+### Withdrawn
+
+* ~~**R-05** El operador ve un mapa de la ruta.~~ La persona lo descartó. · 2026-10-18
+
+### Assumptions and open questions""")
+EXISTING = ("--existing", "R-01,R-02,R-03,R-04,R-05")
+
+
+class RequirementsReviewMode(unittest.TestCase):
+    def test_a_reviewed_catalog_passes(self):
+        page(REVIEWED, *EXISTING)
+
+    def test_a_version_group_comes_before_unassigned(self):
+        headings = [flat(n) for n in page(REVIEWED) if n["type"] == "heading"]
+        self.assertEqual(headings, ["Tours v0.1.0", "Unassigned", "Withdrawn", "Assumptions and open questions"])
+
+    def test_a_withdrawn_requirement_is_struck_with_its_reason_and_date(self):
+        line = lines(page(REVIEWED), "Withdrawn")[0]
+        struck = [n["text"] for n in line["content"] if any(m["type"] == "strike" for m in n.get("marks", []))]
+        self.assertEqual(struck, ["R-05", " El operador ve un mapa de la ruta."])
+        self.assertIn("La persona lo descartó.", flat(line))
+        self.assertEqual([n["type"] for n in line["content"]][-1], "date")
+
+    def test_a_published_requirement_that_disappears(self):
+        rejected(REVIEWED.replace("* ~~**R-05** El operador ve un mapa de la ruta.~~ La persona lo descartó. · 2026-10-18\n", ""),
+                 "R-05", args=EXISTING)
+
+    def test_a_new_requirement_that_reuses_a_withdrawn_number(self):
+        rejected(REVIEWED.replace("**R-06** Ventas imprime", "**R-05** Ventas imprime"), "R-05", args=EXISTING)
+
+    def test_a_new_requirement_below_the_highest_published(self):
+        rejected(REVIEWED.replace("**R-06** Ventas imprime", "**R-04** Ventas imprime").replace("* **R-04** Los montos van en MXN. Source: notas, punto 5 [Constraint]\n", ""),
+                 "R-04", args=("--existing", "R-01,R-02,R-03,R-05"))
+
+    def test_a_withdrawn_line_without_its_date(self):
+        rejected(REVIEWED.replace(" · 2026-10-18", ""), "Withdrawn", "R-05")
+
+
+class RequirementsReviewEdges(unittest.TestCase):
+    def test_an_impossible_withdrawn_date_is_reported(self):
+        rejected(REVIEWED.replace("2026-10-18", "2026-13-45"), "Withdrawn", "2026-13-45")
+
+    def test_withdrawn_in_the_order_they_were_withdrawn(self):
+        draft = """### Unassigned
+
+* **R-01** Algo. Source: la persona [Functional]
+
+### Withdrawn
+
+* ~~**R-05** Otra cosa.~~ Ya no aplica. · 2026-10-01
+* ~~**R-02** Una más.~~ La cubre R-01. · 2026-10-18
+
+### Assumptions and open questions
+"""
+        page(draft, "--existing", "R-01,R-02,R-05")
+
+    def test_a_malformed_withdrawn_line_reports_once(self):
+        errors = rejected(REVIEWED.replace("* ~~**R-05** El operador", "* R-05 ~~El operador"), "Withdrawn", args=EXISTING)
+        self.assertEqual(len(errors.strip().splitlines()), 1, errors)
+
+    def test_an_empty_unassigned_with_withdrawn_requirements(self):
+        draft = """### Unassigned
+
+### Withdrawn
+
+* ~~**R-01** Algo.~~ Ya no aplica. · 2026-10-18
+
+### Assumptions and open questions
+"""
+        page(draft, "--existing", "R-01")
+
+    def test_existing_ids_that_are_not_ids(self):
+        rejected(REVIEWED, "existing", "Rx", args=("--existing", "R-01,Rx"))
+
+
 class RequirementsRejects(unittest.TestCase):
     def test_ids_out_of_order(self):
         rejected(DRAFT.replace("**R-02**", "**R-07**"), "R-03")
@@ -143,8 +226,8 @@ class RequirementsRejects(unittest.TestCase):
     def test_a_requirement_without_type(self):
         rejected(DRAFT.replace(" [Business rule]", ""), "R-02")
 
-    def test_a_version_section_at_creation(self):
-        rejected(DRAFT.replace("### Unassigned", "### Tours v0.1.0"), "sections")
+    def test_a_section_that_is_not_of_the_page(self):
+        rejected(DRAFT.replace("### Unassigned", "### Backlog"), "sections")
 
     def test_without_requirements(self):
         start, end = DRAFT.index("* **R-01**"), DRAFT.index("### Assumptions")

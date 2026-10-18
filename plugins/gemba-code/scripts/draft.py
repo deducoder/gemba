@@ -5,6 +5,7 @@ and the Out of scope arrows, and the conversion of their lines to ADF for Jira.
 a work item key after `→` becomes a link to the issue on the site."""
 
 import re
+from datetime import date, datetime, timezone
 
 ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
 KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
@@ -182,6 +183,12 @@ def space():
 def status(text, color):
     """Returns a lozenge."""
     return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
+
+
+def date_node(day):
+    """Returns a YYYY-MM-DD day as a date node, at the milliseconds of its midnight in UTC."""
+    moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
+    return {"type": "date", "attrs": {"timestamp": str(int(moment.timestamp() * 1000))}}
 
 
 def heading(name, level=3):
