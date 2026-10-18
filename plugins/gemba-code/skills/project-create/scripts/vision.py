@@ -36,7 +36,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong, timestamp  # noqa: E402
+from draft import CODE, FENCE, bullets, check_sections, doc, filled, heading, inline, items, paragraphs, space, split, status, strong, date_node  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -237,7 +237,7 @@ def body(content, requirements=None):
         nodes += [heading("Decision", 2), panel(
             PANELS[state], {"type": "heading", "attrs": {"level": 3}, "content": inline(what)},
             paragraph(strong("Decided by:"), space(), {"type": "mention", "attrs": {"id": account}},
-                      {"type": "text", "text": " · "}, {"type": "date", "attrs": {"timestamp": timestamp(day)}}),
+                      {"type": "text", "text": " · "}, date_node(day)),
         )]
     return doc(nodes)
 

@@ -185,10 +185,10 @@ def status(text, color):
     return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
 
 
-def timestamp(day):
-    """Returns the date as the milliseconds of its midnight in UTC, as a date node takes it."""
+def date_node(day):
+    """Returns a YYYY-MM-DD day as a date node, at the milliseconds of its midnight in UTC."""
     moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
-    return str(int(moment.timestamp() * 1000))
+    return {"type": "date", "attrs": {"timestamp": str(int(moment.timestamp() * 1000))}}
 
 
 def heading(name, level=3):

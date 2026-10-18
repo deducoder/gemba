@@ -19,33 +19,35 @@ import sys
 
 
 def sections(doc):
-    """Returns the sections of a document as an ordered list of (name, nodes)."""
-    found = [("", [])]
+    """Returns the sections of a document as an ordered list of (name, heading, body), the
+    heading empty for the section ""."""
+    found = [("", [], [])]
     for node in doc.get("content", []):
         if node.get("type") == "heading" and node.get("attrs", {}).get("level") == 2:
-            name = "".join(part.get("text", "") for part in node.get("content", []))
-            found.append((name, [node]))
+            found.append(("".join(part.get("text", "") for part in node.get("content", [])), [node], []))
         else:
-            found[-1][1].append(node)
+            found[-1][2].append(node)
     return found
 
 
 def merge(live, new, replace):
     """Returns the merged document and the sections that neither page has."""
-    result, fresh = sections(live), dict(sections(new))
-    order = [name for name, _ in sections(new)]
-    missing = [name for name in replace if name not in fresh and name not in dict(result)]
+    result, fresh, missing = sections(live), sections(new), []
+    order = [name for name, _, _ in fresh]
     for name in replace:
-        if name not in fresh:
+        names = [current for current, _, _ in result]
+        if name not in order:
+            if name not in names:
+                missing.append(name)
             continue
-        names = [current for current, _ in result]
+        _, heading, body = fresh[order.index(name)]
         if name in names:
-            heading = result[names.index(name)][1][:1] if name else []
-            result[names.index(name)] = (name, heading + fresh[name][1 if name else 0:])
+            index = names.index(name)
+            result[index] = (name, result[index][1], body)
             continue
         before = [earlier for earlier in order[:order.index(name)] if earlier in names]
-        result.insert(names.index(before[-1]) + 1 if before else 1, (name, fresh[name]))
-    return {**live, "content": [node for _, nodes in result for node in nodes]}, missing
+        result.insert(names.index(before[-1]) + 1 if before else 1, (name, heading, body))
+    return {**live, "content": [node for _, heading, body in result for node in heading + body]}, missing
 
 
 def main():

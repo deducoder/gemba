@@ -34,7 +34,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, space, split, status, strong, timestamp  # noqa: E402
+from draft import FENCE, bullets, check_sections, doc, filled, heading, inline, items, space, split, status, strong, date_node  # noqa: E402
 
 GREY = {"type": "textColor", "attrs": {"color": "#97a0af"}}
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
@@ -42,6 +42,7 @@ STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 VERSION = re.compile(r"^.+ v\d+\.\d+\.\d+$")
+WITHDRAWN_ID = re.compile(r"^~~\*\*(R-\d+)\*\*")
 WITHDRAWN = re.compile(r"^~~\*\*(R-\d+)\*\* (.+?)~~ (.+) · (\d{4}-\d{2}-\d{2})$")
 STRIKE = {"type": "strike"}
 TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
@@ -83,14 +84,13 @@ def requirements(name, lines, ids, found, optional=False):
 def withdrawn(lines, ids, found):
     listed, last = [], 0
     for item in items("Withdrawn", lines, found, optional=True):
+        rid = WITHDRAWN_ID.match(item)
+        if rid:
+            last = numbered("Withdrawn", rid.group(1), ids, last, found)
         match = WITHDRAWN.match(item)
         if not match:
             found.append(f"Withdrawn: write each as '* ~~**R-nn** requirement~~ reason · YYYY-MM-DD': {item}")
-            rid = re.match(r"^~~\*\*(R-\d+)\*\*", item)
-            if rid:
-                ids.add(rid.group(1))
             continue
-        last = numbered("Withdrawn", match.group(1), ids, last, found)
         listed.append(match.groups())
     return listed
 
@@ -135,10 +135,10 @@ def problems(draft, existing=None):
     gone = withdrawn(sections.get("Withdrawn", []), ids, found)
     listed = questions(sections[QUESTIONS], ids, found)
     if existing is not None:
-        for rid in sorted(set(existing) - ids):
+        for rid in sorted(existing - ids):
             found.append(f"draft: {rid} is published; withdraw it instead of deleting it")
         top = max((int(rid[2:]) for rid in existing), default=0)
-        for rid in sorted(ids - set(existing)):
+        for rid in sorted(ids - existing):
             if int(rid[2:]) <= top:
                 found.append(f"draft: {rid} is new, so it takes a number above R-{top:02d}, the highest published")
     return (found, None) if found else (found, {"groups": groups, "withdrawn": gone, "questions": listed})
@@ -155,8 +155,8 @@ def body(content):
         nodes += [heading(name, 2)] + ([bullets(lines)] if lines else [])
     if content["withdrawn"]:
         nodes += [heading("Withdrawn", 2), bullets([
-            [{"type": "text", "text": rid, "marks": [{"type": "strong"}, STRIKE]}, *inline(f" {sentence}", [STRIKE]),
-             space(), *inline(f"{reason} · ", [GREY]), {"type": "date", "attrs": {"timestamp": timestamp(day)}}]
+            [*inline(rid, [{"type": "strong"}, STRIKE]), *inline(f" {sentence}", [STRIKE]),
+             space(), *inline(f"{reason} · ", [GREY]), date_node(day)]
             for rid, sentence, reason, day in content["withdrawn"]])]
     if content["questions"]:
         nodes += [heading(QUESTIONS, 2), bullets([
@@ -170,7 +170,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--existing", help="the IDs of the published page, comma separated")
     args = parser.parse_args()
-    existing = [rid.strip() for rid in args.existing.split(",") if rid.strip()] if args.existing else None
+    existing = {rid.strip() for rid in args.existing.split(",") if rid.strip()} if args.existing else None
     found, content = problems(sys.stdin.read(), existing)
     if found:
         print("\n".join(found), file=sys.stderr)
