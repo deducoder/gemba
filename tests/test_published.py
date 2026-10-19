@@ -42,21 +42,23 @@ class Sections(unittest.TestCase):
     def test_the_head_of_the_page_is_the_section_without_a_name(self):
         html = '<p data-local-id="a1">Intro</p><h2 data-local-id="a2">Problem</h2><p data-local-id="a3">Texto</p>'
         found = sections(html)
-        self.assertEqual([name for name, _, _ in found], ["", "Problem"])
+        self.assertEqual([name for name, _, _, _ in found], ["", "Problem"])
         self.assertEqual(found[0][1], None)
-        self.assertEqual([lid for lid, _ in found[0][2]], ["a1"])
+        self.assertEqual(found[0][2], None)
+        self.assertEqual([lid for lid, _ in found[0][3]], ["a1"])
         self.assertEqual(found[1][1], "a2")
-        self.assertEqual([lid for lid, _ in found[1][2]], ["a3"])
+        self.assertEqual(found[1][2], '<h2 data-local-id="a2">Problem</h2>')
+        self.assertEqual([lid for lid, _ in found[1][3]], ["a3"])
 
     def test_a_section_with_several_body_nodes_keeps_them_all(self):
         html = '<h2 data-local-id="a1">Risks</h2><p data-local-id="a2">Uno</p><p data-local-id="a3">Dos</p>'
         found = sections(html)
-        self.assertEqual([lid for lid, _ in found[1][2]], ["a2", "a3"])
+        self.assertEqual([lid for lid, _ in found[1][3]], ["a2", "a3"])
 
     def test_an_empty_head_has_no_body_nodes(self):
         html = '<h2 data-local-id="a1">Problem</h2><p data-local-id="a2">Texto</p>'
         found = sections(html)
-        self.assertEqual(found[0], ("", None, []))
+        self.assertEqual(found[0], ("", None, None, []))
 
 
 if __name__ == "__main__":

@@ -38,11 +38,12 @@ def top_level_nodes(html):
 
 def sections(html):
     """Returns the sections of a page's HTML as an ordered list of (name, headingLocalId,
-    body), body a list of (localId, raw html); the heading-less section "" is always first."""
-    found = [("", None, [])]
+    headingRaw, body), body a list of (localId, raw html); the heading-less section "" is
+    always first and its headingLocalId and headingRaw are None."""
+    found = [("", None, None, [])]
     for local, raw, tag in top_level_nodes(html):
         if tag == "h2":
-            found.append((TAGS.sub("", raw), local, []))
+            found.append((TAGS.sub("", raw), local, raw, []))
         else:
-            found[-1][2].append((local, raw))
+            found[-1][3].append((local, raw))
     return found
