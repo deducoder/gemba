@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
+description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, creates the Work, Work/Spikes, Work/Researchs and Work/Templates Confluence folders that are missing, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
