@@ -126,6 +126,13 @@ class RoadmapVersionInProgress(unittest.TestCase):
     def test_the_entry_links_to_the_version_page(self):
         self.assertTrue(self.entry.startswith('<a href="https://example.atlassian.net/wiki/x/abc">Gemba v0.1.0</a>'))
 
+    def test_a_link_with_a_quote_does_not_break_out_of_its_href(self):
+        quoted = VERSION.replace("https://example.atlassian.net/wiki/x/abc", 'https://example.com/x"onmouseover="alert(1)')
+        draft = DRAFT.replace("Ninguna versión en curso.", quoted).replace(
+            "* **Unnumbered** Validar que 3 equipos adoptan Gemba.\n", "")
+        entry = items(section(page(draft), "Now"))[0]
+        self.assertTrue(entry.startswith('<a href="https://example.com/x&quot;onmouseover=&quot;alert(1)">'))
+
     def test_the_entry_carries_its_status_as_a_lozenge_and_its_release_date_as_a_date(self):
         self.assertIn('<span data-type="status" data-color="neutral">Planned</span>', self.entry)
         self.assertIn('<time datetime="2026-11-20">2026-11-20</time>', self.entry)

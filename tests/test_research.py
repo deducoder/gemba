@@ -166,6 +166,14 @@ class ResearchRejects(unittest.TestCase):
             f"[2] {URL_TWO} (secondary", f"[2] {URL_ONE} (official", 1)
         rejected(swapped, "secondary")
 
+    def test_a_url_with_a_quote_does_not_break_out_of_its_href(self):
+        quoted_url = 'https://example.com/x"onmouseover="alert(1)'
+        draft = DRAFT.replace(URL_ONE, quoted_url)
+        result = run(draft)
+        body = json.loads(result.stdout)["body"]
+        self.assertIn('href="https://example.com/x&quot;onmouseover=&quot;alert(1)"', body)
+        self.assertNotIn('href="https://example.com/x"onmouseover="alert(1)"', body)
+
     def test_a_source_without_its_kind_and_date(self):
         rejected(DRAFT.replace("(official, 2026-10-17)", ""), "Sources")
 

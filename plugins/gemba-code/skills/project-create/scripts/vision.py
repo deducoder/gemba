@@ -35,7 +35,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, bullets, check_sections, dated, esc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
+from draft import BASELINE, FENCE, attr_esc, bullets, check_sections, dated, esc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -181,7 +181,7 @@ def panel(kind, *content):
 
 
 def mention(account):
-    return f'<span data-type="mention" data-user-id="{esc(account)}">@{esc(account)}</span>'
+    return f'<span data-type="mention" data-user-id="{attr_esc(account)}">@{esc(account)}</span>'
 
 
 def body(content, requirements=None):

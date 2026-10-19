@@ -28,7 +28,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, TRAIL, check_sections, check_summary, esc, heading, inline, paragraph, split, unclosed  # noqa: E402
+from draft import FENCE, TRAIL, attr_esc, check_sections, check_summary, esc, heading, inline, paragraph, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Evidence", "Next"]
 VERDICT = re.compile(r"^(sí|no|inconclusa)[.,:;]", re.IGNORECASE)
@@ -111,7 +111,7 @@ def labelled(text):
 def evidence(block):
     if isinstance(block, tuple):
         language, code = block
-        cls = f' class="language-{esc(language)}"' if language else ""
+        cls = f' class="language-{attr_esc(language)}"' if language else ""
         return f"<pre><code{cls}>{esc(code)}</code></pre>"
     return labelled(block) if block.startswith(TRAIL) else paragraph(inline(block))
 

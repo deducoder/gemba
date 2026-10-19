@@ -25,7 +25,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import CURRENT, FENCE, STATES, VERSION_NAME, bullets, check_sections, esc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, status, strong  # noqa: E402
+from draft import CURRENT, FENCE, STATES, VERSION_NAME, attr_esc, bullets, check_sections, esc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, status, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
@@ -115,7 +115,7 @@ def entry(goal):
 
 def version(name, link, state, day, goal, target):
     lozenge = stamp(state, day) if day else status(state, STATES[state])
-    return (f'<a href="{esc(link)}">{esc(name)}</a>' + space() + lozenge + "<br>"
+    return (f'<a href="{attr_esc(link)}">{esc(name)}</a>' + space() + lozenge + "<br>"
             + inline(goal) + "<br>" + strong("Target:") + space() + inline(target))
 
 

@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, KEY, check_sections, esc, heading, inline, paragraph, paragraphs, split, unclosed  # noqa: E402
+from draft import CODE, FENCE, KEY, attr_esc, check_sections, esc, heading, inline, paragraph, paragraphs, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -146,7 +146,7 @@ def cited(text, sources):
         out = []
         for j, part in enumerate(CITE.split(chunk)):
             if j % 2:
-                out.append(f'<a href="{esc(sources[int(part) - 1][0])}">[{part}]</a>')
+                out.append(f'<a href="{attr_esc(sources[int(part) - 1][0])}">[{part}]</a>')
             elif part:
                 out.append(inline(part))
         parts.append("".join(out))
@@ -158,7 +158,7 @@ def finding(name, state, text, sources):
 
 
 def source(number, url, kind, date, what):
-    return f'<p>[{number}] <a href="{esc(url)}" data-card-appearance="inline"></a>{inline(f" ({kind}, {date}): {what}")}</p>'
+    return f'<p>[{number}] <a href="{attr_esc(url)}" data-card-appearance="inline"></a>{inline(f" ({kind}, {date}): {what}")}</p>'
 
 
 def body(content, site, key):

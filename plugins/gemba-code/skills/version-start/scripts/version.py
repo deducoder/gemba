@@ -25,7 +25,6 @@ template. Otherwise prints one line per problem to stderr, prints nothing to std
 """
 
 import argparse
-import html
 import json
 import re
 import sys
@@ -34,7 +33,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, VERSION_NAME, bullets, check_sections, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
+from draft import BASELINE, FENCE, VERSION_NAME, attr_esc, bullets, check_sections, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
 TITLE = re.compile(rf"^{VERSION_NAME}$")
 STATUS = re.compile(r"^\[([^\]]+)\] · (\S+)$")
@@ -142,7 +141,7 @@ def macro(project, version):
     })
     return ('<div data-type="extension" data-extension-key="jira" '
             'data-extension-type="com.atlassian.confluence.macro.core" '
-            f'data-parameters="{html.escape(parameters, quote=True)}"></div>')
+            f'data-parameters="{attr_esc(parameters)}"></div>')
 
 
 def body(content, project, requirements):

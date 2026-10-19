@@ -28,6 +28,12 @@ def esc(text):
     return html_lib.escape(text, quote=False)
 
 
+def attr_esc(text):
+    """Escapes text for an HTML attribute value, where esc() alone would let a `"` in the
+    text close the attribute early."""
+    return html_lib.escape(text, quote=True)
+
+
 def split(text, titled=True):
     """Returns the Summary, the lines before the first `###` section, the lines of each
     section, the lines of each `####` subsection keyed by (section, subsection) and the
@@ -190,7 +196,7 @@ def linked(text, url):
             continue
         for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
             if j % 2:
-                parts.append(f'<a href="{esc(url)}">{esc(part)}</a>')
+                parts.append(f'<a href="{attr_esc(url)}">{esc(part)}</a>')
             elif part:
                 parts.append(inline(part))
     return "".join(parts)

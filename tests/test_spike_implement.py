@@ -95,6 +95,12 @@ class FindingsDraft(unittest.TestCase):
         self.assertEqual([code for _, code in blocks], ['print("probe")', OUTPUT])
         self.assertEqual(blocks[0][0], "python")
 
+    def test_a_language_with_a_quote_does_not_break_out_of_its_class_attribute(self):
+        draft = DRAFT.replace('```python\nprint("probe")\n```', '```python"onmouseover="alert(1)\nprint("probe")\n```')
+        result = run(draft)
+        body = json.loads(result.stdout)["body"]
+        self.assertIn('class="language-python&quot;onmouseover=&quot;alert(1)"', body)
+
     def test_each_ran_and_read_line_starts_with_its_label_in_bold(self):
         labels = re.findall(r"<p><strong>(ran: |read: )</strong>", self.body)
         self.assertEqual(labels, ["ran: ", "read: "])
