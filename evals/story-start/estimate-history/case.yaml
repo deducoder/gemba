@@ -15,7 +15,7 @@ graders:
   - name: reads-time-spent
     type: regex
     target: mock_calls
-    pattern: 'searchJiraIssuesUsingJql.*[Tt]ime[Ss]pent'
+    pattern: 'searchJiraIssuesUsingJql.*jql\W+[^"]*[Tt]ime[Ss]pent'
   - name: estimate-under-two-hours
     type: regex
     target: mock_calls

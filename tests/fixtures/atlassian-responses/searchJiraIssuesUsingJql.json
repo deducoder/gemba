@@ -310,7 +310,7 @@
             "timeSpentSeconds": 300
           }
         },
-        "webUrl": "https://deducoder.atlassian.net/browse/ABC-17"
+        "webUrl": "https://example.atlassian.net/browse/ABC-17"
       }
     ],
     "webUrl": "https://example.atlassian.net/issues?jql=parent%20%3D%20ABC-2",
