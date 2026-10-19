@@ -15,9 +15,9 @@ graders:
   - name: estimate-under-two-hours
     type: regex
     target: mock_calls
-    pattern: 'originalEstimate\W+(\d{1,2}m|1h(\s*\d{1,2}m)?)\W'
+    pattern: 'createJiraIssue.*originalEstimate\W+(\d{1,2}m|1h(\s*\d{1,2}m)?)\W'
   - name: no-days
     type: regex
     target: mock_calls
-    pattern: 'originalEstimate\W+[^"]*\d+[dw]'
+    pattern: 'createJiraIssue.*originalEstimate\W+\d+[dw]'
     match: not_contains
