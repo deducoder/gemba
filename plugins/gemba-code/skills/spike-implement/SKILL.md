@@ -36,7 +36,7 @@ Findings template:
 Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`

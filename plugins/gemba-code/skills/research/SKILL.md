@@ -25,7 +25,7 @@ Research template:
 This skill only reads sources and writes one Confluence page. It creates and edits no work item, makes no change in Jira and edits no file of the project. The `site` in `atlassian.json` above is the `cloudId` of every Confluence call, `confluence.space` the space of the answer. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluenceSpaces getConfluencePageDescendants getConfluencePage updateConfluencePage createConfluencePage
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluenceSpaces getConfluencePageDescendants updateConfluencePage createConfluencePage
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`

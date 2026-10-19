@@ -30,7 +30,7 @@ CLAUDE.md:
 Until the push of step 7 this skill only reads and works locally: it writes nothing in Jira or Confluence and sends nothing to the remote. Its writes are the release in git, the release of the fix version, the stamp of the version page, the `Now` and `Released` sections of `Roadmap`, and then, only with what the person accepted, the `Learned` section of the version page and the sections of `Requirements` that change. It brings back what the version taught only once the version is released: when it stops before the end of step 10, it says that what the version taught comes back once the version is released, and writes neither `Learned` nor `Requirements`. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getConfluencePage updateConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`

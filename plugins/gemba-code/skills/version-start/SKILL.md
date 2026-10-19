@@ -40,7 +40,7 @@ Version template:
 This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates work items only through `epic-start`, `story-start` and `spike-start`, and only those the person accepted; it creates no fix version: the person creates it in Jira. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue createIssueLink getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py createIssueLink getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
