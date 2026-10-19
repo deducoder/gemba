@@ -22,31 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import CODE, FENCE, HEADING, items  # noqa: E402
+from draft import FENCE, HEADING, items  # noqa: E402
+from legacy_adf import adf_bullets, adf_heading, adf_inline  # noqa: E402
 from released import stamp_state  # noqa: E402
 
 TITLE = "Learned"
-
-
-def adf_inline(text):
-    """Returns text as ADF text nodes, with `code` as a code mark: GEMBA-92 moves this page
-    to HTML and the edits that target it by localId; until then it stays ADF."""
-    nodes = []
-    for i, part in enumerate(CODE.split(text)):
-        if not part:
-            continue
-        nodes.append({"type": "text", "text": part, **({"marks": [{"type": "code"}]} if i % 2 else {})})
-    return nodes
-
-
-def adf_heading(name, level=2):
-    return {"type": "heading", "attrs": {"level": level}, "content": [{"type": "text", "text": name}]}
-
-
-def adf_bullets(items):
-    return {"type": "bulletList", "content": [
-        {"type": "listItem", "content": [{"type": "paragraph", "content": item}]} for item in items
-    ]}
 
 
 def has_learned(page):
