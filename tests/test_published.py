@@ -51,7 +51,7 @@ class Sections(unittest.TestCase):
     def test_a_section_with_several_body_nodes_keeps_them_all(self):
         html = '<h2 data-local-id="a1">Risks</h2><p data-local-id="a2">Uno</p><p data-local-id="a3">Dos</p>'
         found = sections(html)
-        self.assertEqual([lid for lid, _ in found[0][2]], ["a2", "a3"])
+        self.assertEqual([lid for lid, _ in found[1][2]], ["a2", "a3"])
 
     def test_an_empty_head_has_no_body_nodes(self):
         html = '<h2 data-local-id="a1">Problem</h2><p data-local-id="a2">Texto</p>'
