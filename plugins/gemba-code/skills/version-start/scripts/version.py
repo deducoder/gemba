@@ -20,11 +20,12 @@ The page ends with `## Work items`: the Jira macro of the first level of the ver
 epics and the work items without a parent of the project given in --project. The draft does
 not write it, nor `Learned`, which version-close adds.
 
-Prints {"title": "<Product> vX.Y.Z", "body": <ADF>} as JSON when the draft follows the
+Prints {"title": "<Product> vX.Y.Z", "body": <HTML>} as JSON when the draft follows the
 template. Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
 import argparse
+import html
 import json
 import re
 import sys
@@ -33,7 +34,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, VERSION_NAME, bullets, check_sections, doc, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
+from draft import BASELINE, FENCE, VERSION_NAME, bullets, check_sections, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
 TITLE = re.compile(rf"^{VERSION_NAME}$")
 STATUS = re.compile(r"^\[([^\]]+)\] · (\S+)$")
@@ -135,31 +136,28 @@ def problems(draft, first=False):
 def macro(project, version):
     quoted = version.replace("\\", "\\\\").replace('"', '\\"')
     jql = f'project = {project} AND fixVersion = "{quoted}" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key'
-    return {"type": "extension", "attrs": {
-        "layout": "default",
-        "extensionType": "com.atlassian.confluence.macro.core",
-        "extensionKey": "jira",
-        "parameters": {
-            "macroParams": {"jqlQuery": {"value": jql}, "columns": {"value": COLUMNS}},
-            "macroMetadata": {"schemaVersion": {"value": "1"}, "title": "Jira"},
-        },
-    }}
+    parameters = json.dumps({
+        "macroParams": {"jqlQuery": {"value": jql}, "columns": {"value": COLUMNS}},
+        "macroMetadata": {"schemaVersion": {"value": "1"}, "title": "Jira"},
+    })
+    return ('<div data-type="extension" data-extension-key="jira" '
+            'data-extension-type="com.atlassian.confluence.macro.core" '
+            f'data-parameters="{html.escape(parameters, quote=True)}"></div>')
 
 
 def body(content, project, requirements):
-    """Returns the live doc as an ADF document."""
+    """Returns the live doc as HTML."""
     day, goal = content["intro"]
-    nodes = [paragraph(*stamp("Planned", day)),
-             paragraph(*inline(goal))]
+    parts = [paragraph(stamp("Planned", day)), paragraph(inline(goal))]
     if content["mvp"]:
-        nodes += [heading("MVP criterion", 2), label("Risk validated", content["mvp"])]
+        parts += [heading("MVP criterion", 2), label("Risk validated", content["mvp"])]
     statement, baseline, target = content["outcome"]
-    nodes += [heading("Outcome", 2), paragraph(*inline(statement)),
-              paragraph(strong("Baseline:"), space(), *inline(baseline), space(), strong("Target:"), space(), *inline(target))]
-    nodes += [heading("Requirements", 2), bullets([[strong(rid), space(), *inline(text)] for rid, text in content["requirements"]])]
-    nodes += [heading("Open questions", 2), paragraph(*linked(content["questions"], requirements))]
-    nodes += [heading("Work items", 2), macro(project, content["title"])]
-    return doc(nodes)
+    parts += [heading("Outcome", 2), paragraph(inline(statement)),
+              paragraph(strong("Baseline:") + space() + inline(baseline) + space() + strong("Target:") + space() + inline(target))]
+    parts += [heading("Requirements", 2), bullets([strong(rid) + space() + inline(text) for rid, text in content["requirements"]])]
+    parts += [heading("Open questions", 2), paragraph(linked(content["questions"], requirements))]
+    parts += [heading("Work items", 2), macro(project, content["title"])]
+    return "".join(parts)
 
 
 def main():
