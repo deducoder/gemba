@@ -1,7 +1,6 @@
 """Checks version-close's script that marks the page of a product version Released: the
-stamp it writes, what it keeps and what it rejects."""
+edit it builds for the stamp, what it keeps and what it rejects."""
 
-import copy
 import json
 import subprocess
 import sys
@@ -11,15 +10,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "plugins/gemba-code/skills/version-close/scripts/released.py"
 
-PAGE = {"type": "doc", "version": 1, "content": [
-    {"type": "paragraph", "attrs": {"localId": "p1"}, "content": [
-        {"type": "status", "attrs": {"text": "Planned", "color": "neutral", "style": "bold", "localId": "s1"}},
-        {"type": "text", "text": " · "},
-        {"type": "date", "attrs": {"timestamp": "1795132800000", "localId": "d1"}},
-    ]},
-    {"type": "paragraph", "attrs": {"localId": "p2"}, "content": [{"type": "text", "text": "La meta."}]},
-    {"type": "heading", "attrs": {"level": 2, "localId": "h1"}, "content": [{"type": "text", "text": "Outcome"}]},
-]}
+PAGE = ('<p data-local-id="p1">'
+        '<span data-local-id="s1" data-type="status" data-color="neutral" data-status-style="bold">Planned</span>'
+        ' · <time data-local-id="d1" datetime="2026-11-15">2026-11-15</time>'
+        '</p>'
+        '<p data-local-id="p2">La meta.</p>'
+        '<h2 data-local-id="h1">Outcome</h2>')
 
 
 def run(payload):
@@ -30,7 +26,7 @@ def run(payload):
 def released(page, day="2026-11-18"):
     result = run({"page": page, "day": day})
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
+    return json.loads(result.stdout)["edits"]
 
 
 def rejected(payload, *words):
@@ -43,48 +39,42 @@ def rejected(payload, *words):
 
 
 class Released(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.doc = released(PAGE)
-        cls.stamp = cls.doc["content"][0]["content"]
+    def test_the_whole_first_paragraph_is_replaced_by_its_own_localId(self):
+        found = released(PAGE)
+        self.assertEqual(found, [{"name": "replaceNode", "localId": "p1",
+                                   "value": '<p><span data-type="status" data-color="green">Released</span>'
+                                            ' · <time datetime="2026-11-18">2026-11-18</time></p>'}])
 
-    def test_the_lozenge_is_released_in_green(self):
-        self.assertEqual((self.stamp[0]["type"], self.stamp[0]["attrs"]["text"], self.stamp[0]["attrs"]["color"]), ("status", "Released", "green"))
-
-    def test_the_date_is_the_day_of_the_release(self):
-        self.assertEqual(self.stamp[1]["text"], " · ")
-        self.assertEqual(self.stamp[2], {"type": "date", "attrs": {"timestamp": "1794960000000"}})
-
-    def test_the_rest_of_the_page_stays_as_it_was(self):
-        self.assertEqual(self.doc["content"][1:], PAGE["content"][1:])
-        self.assertEqual(self.doc["content"][0]["attrs"], {"localId": "p1"})
-        self.assertEqual({k: v for k, v in self.doc.items() if k != "content"}, {"type": "doc", "version": 1})
+    def test_the_rest_of_the_page_is_not_touched(self):
+        self.assertEqual(len(released(PAGE)), 1)
 
     def test_text_after_the_date_stays(self):
-        page = copy.deepcopy(PAGE)
-        page["content"][0]["content"].append({"type": "text", "text": " (movida del 15)"})
-        self.assertEqual(released(page)["content"][0]["content"][3], {"type": "text", "text": " (movida del 15)"})
+        page = PAGE.replace("</time>\n</p>".strip(), "</time> (movida del 15)</p>", 1)
+        found = released(page)
+        self.assertTrue(found[0]["value"].endswith(" (movida del 15)</p>"))
 
     def test_a_version_in_progress_is_released_too(self):
-        page = copy.deepcopy(PAGE)
-        page["content"][0]["content"][0]["attrs"]["text"] = "In progress"
-        self.assertEqual(released(page)["content"][0]["content"][0]["attrs"]["text"], "Released")
+        page = PAGE.replace(">Planned<", ">In progress<")
+        self.assertIn('>Released<', released(page)[0]["value"])
 
 
 class ReleasedRejects(unittest.TestCase):
     def test_a_version_already_released(self):
-        page = copy.deepcopy(PAGE)
-        page["content"][0]["content"][0]["attrs"]["text"] = "Released"
+        page = PAGE.replace(">Planned<", ">Released<")
         rejected({"page": page, "day": "2026-11-18"}, "Released")
 
     def test_a_page_without_the_stamp(self):
-        rejected({"page": {"type": "doc", "version": 1, "content": PAGE["content"][1:]}, "day": "2026-11-18"}, "Planned")
+        rejected({"page": PAGE.split("<h2", 1)[0].split('<p data-local-id="p2"')[0], "day": "2026-11-18"}, "stamp")
+
+    def test_a_page_whose_first_paragraph_is_not_a_stamp(self):
+        page = '<p data-local-id="p1">La meta.</p>' + PAGE
+        rejected({"page": page, "day": "2026-11-18"}, "stamp")
 
     def test_a_day_that_is_not_a_date(self):
         rejected({"page": PAGE, "day": "2026-13-40"}, "2026-13-40")
 
-    def test_a_page_that_is_not_an_adf_object(self):
-        result = rejected({"page": json.dumps(PAGE), "day": "2026-11-18"}, "input")
+    def test_a_page_that_is_not_a_string(self):
+        result = rejected({"page": {"not": "a string"}, "day": "2026-11-18"}, "input")
         self.assertNotIn("Traceback", result.stderr)
 
     def test_input_that_is_not_json(self):
