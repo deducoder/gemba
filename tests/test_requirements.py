@@ -1,7 +1,8 @@
-"""Checks project-create's requirements script: what it accepts, what it rejects and the ADF
+"""Checks project-create's requirements script: what it accepts, what it rejects and the HTML
 it prints for the live doc that holds the catalog of a product's requirements."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -31,7 +32,7 @@ def run(draft, *args):
 def page(draft, *args):
     result = run(draft, *args)
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)["body"]["content"]
+    return json.loads(result.stdout)["body"]
 
 
 def rejected(draft, *words, args=()):
@@ -43,21 +44,27 @@ def rejected(draft, *words, args=()):
     return result.stderr
 
 
-def flat(node):
-    return "".join(n["text"] if n["type"] == "text" else "" for n in node.get("content", []))
+def flat(html):
+    return re.sub(r"<[^>]+>", "", html)
 
 
-def nodes(node, kind):
-    found = [node] if node.get("type") == kind else []
-    for child in node.get("content", []):
-        found.extend(nodes(child, kind))
-    return found
+def headings(body):
+    return re.findall(r"<h2>(.+?)</h2>", body)
+
+
+def section(body, title):
+    """Returns the HTML of the <ul> list right after the <h2>title</h2> heading, or "" without one."""
+    match = re.search(rf"<h2>{re.escape(title)}</h2>(<ul>.*?</ul>)?", body, re.DOTALL)
+    return match.group(1) or ""
 
 
 def lines(body, title):
-    """Returns the paragraphs of the list under a level two heading."""
-    start = next(i for i, n in enumerate(body) if n["type"] == "heading" and flat(n) == title)
-    return [item["content"][0] for item in body[start + 1]["content"]]
+    """Returns the inner HTML of each bullet of the list under a level two heading."""
+    return re.findall(r"<li><p>(.*?)</p></li>", section(body, title), re.DOTALL)
+
+
+def statuses(line):
+    return re.findall(r'<span data-type="status" data-color="(\w+)">([^<]*)</span>', line)
 
 
 class RequirementsDraft(unittest.TestCase):
@@ -65,7 +72,7 @@ class RequirementsDraft(unittest.TestCase):
     def setUpClass(cls):
         cls.result = run(DRAFT)
         cls.page = json.loads(cls.result.stdout) if cls.result.returncode == 0 else {}
-        cls.body = cls.page.get("body", {}).get("content", [])
+        cls.body = cls.page.get("body", "")
 
     def test_a_draft_that_follows_the_template_passes(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
@@ -74,38 +81,36 @@ class RequirementsDraft(unittest.TestCase):
         self.assertEqual(self.page["title"], "Requirements")
 
     def test_the_headings_are_unassigned_and_the_questions(self):
-        headings = [flat(n) for n in self.body if n["type"] == "heading"]
-        self.assertEqual(headings, ["Unassigned", "Assumptions and open questions"])
+        self.assertEqual(headings(self.body), ["Unassigned", "Assumptions and open questions"])
 
     def test_each_requirement_opens_with_its_id_in_bold(self):
-        first = [line["content"][0] for line in lines(self.body, "Unassigned")]
-        self.assertEqual([n["text"] for n in first], ["R-01", "R-02", "R-03", "R-04"])
-        self.assertTrue(all(n["marks"] == [{"type": "strong"}] for n in first))
+        first = [re.match(r"<strong>(.+?)</strong>", line).group(1) for line in lines(self.body, "Unassigned")]
+        self.assertEqual(first, ["R-01", "R-02", "R-03", "R-04"])
 
     def test_the_source_is_grey_before_the_type(self):
         line = lines(self.body, "Unassigned")[0]
-        source = next(n for n in line["content"] if n["type"] == "text" and n["text"].startswith("Source:"))
-        self.assertEqual(source["marks"], [{"type": "textColor", "attrs": {"color": "#97a0af"}}])
-        self.assertEqual(line["content"][-1]["type"], "status")
+        self.assertIn('<span style="color: #97a0af">Source: notas, punto 2</span>', line)
+        self.assertTrue(line.rstrip().endswith("</span>"))
+        self.assertTrue(line.rstrip().endswith(statuses(line)[-1][1] + "</span>"))
 
     def test_the_type_is_a_lozenge_with_its_color(self):
-        types = [[(s["attrs"]["text"], s["attrs"]["color"]) for s in nodes(line, "status")] for line in lines(self.body, "Unassigned")]
+        types = [statuses(line) for line in lines(self.body, "Unassigned")]
         self.assertEqual(types, [
-            [("Functional", "neutral")], [("Business rule", "blue")],
-            [("Non-functional", "purple"), ("Hypothesis", "neutral")], [("Constraint", "yellow")],
+            [("neutral", "Functional")], [("blue", "Business rule")],
+            [("purple", "Non-functional"), ("neutral", "Hypothesis")], [("yellow", "Constraint")],
         ])
 
     def test_each_question_carries_its_assumption_and_its_state(self):
         questions = lines(self.body, "Assumptions and open questions")
-        self.assertEqual([q["content"][0]["text"] for q in questions], ["Question 1.", "Question 2."])
+        self.assertEqual([re.match(r"<strong>(.+?)</strong>", q).group(1) for q in questions], ["Question 1.", "Question 2."])
         self.assertTrue(all("Assumption:" in flat(q) for q in questions))
-        self.assertEqual([nodes(q, "status")[-1]["attrs"]["text"] for q in questions], ["Open", "Open"])
+        self.assertEqual([statuses(q)[-1][1] for q in questions], ["Open", "Open"])
 
 
 class RequirementsOptional(unittest.TestCase):
     def test_without_questions_the_page_has_no_questions_heading(self):
         body = page(DRAFT[:DRAFT.index("### Assumptions")] + "### Assumptions and open questions\n")
-        self.assertEqual([flat(n) for n in body if n["type"] == "heading"], ["Unassigned"])
+        self.assertEqual(headings(body), ["Unassigned"])
 
     def test_an_answered_question(self):
         page(DRAFT.replace("unas 20. [Open]", "unas 20. [Answered]"))
@@ -148,15 +153,13 @@ class RequirementsReviewMode(unittest.TestCase):
         page(REVIEWED, *EXISTING)
 
     def test_a_version_group_comes_before_unassigned(self):
-        headings = [flat(n) for n in page(REVIEWED) if n["type"] == "heading"]
-        self.assertEqual(headings, ["Tours v0.1.0", "Unassigned", "Withdrawn", "Assumptions and open questions"])
+        self.assertEqual(headings(page(REVIEWED)), ["Tours v0.1.0", "Unassigned", "Withdrawn", "Assumptions and open questions"])
 
     def test_a_withdrawn_requirement_is_struck_with_its_reason_and_date(self):
         line = lines(page(REVIEWED), "Withdrawn")[0]
-        struck = [n["text"] for n in line["content"] if any(m["type"] == "strike" for m in n.get("marks", []))]
-        self.assertEqual(struck, ["R-05", " El operador ve un mapa de la ruta."])
+        self.assertTrue(line.startswith("<s><strong>R-05</strong></s><s> El operador ve un mapa de la ruta.</s>"))
         self.assertIn("La persona lo descartó.", flat(line))
-        self.assertEqual([n["type"] for n in line["content"]][-1], "date")
+        self.assertRegex(line, r'<time datetime="2026-10-18">2026-10-18</time>$')
 
     def test_a_published_requirement_that_disappears(self):
         rejected(REVIEWED.replace("* ~~**R-05** El operador ve un mapa de la ruta.~~ La persona lo descartó. · 2026-10-18\n", ""),
