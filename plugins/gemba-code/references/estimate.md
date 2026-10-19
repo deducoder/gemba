@@ -1,6 +1,13 @@
 # Estimate
 
-The original estimate is the working time of the person with Claude in Implement and Review, written in Jira's units of time: `w`, `d`, `h` and `m`. Decide it from two questions: whether the change follows something that already exists in the project, and how much has to be observed and how uncertain it is. Work out the number from your answers, and never give it by size alone: a work item is not split, and a spike is not narrowed, because of its estimate.
+The original estimate is the working time of one person working with Claude Code and Gemba in Implement and Review, the time the worklogs of those phases register, written in Jira's units of time: `w`, `d`, `h` and `m`. It is not the pace of someone who writes the code without an agent. Never give it by size alone: a work item is not split, and a spike is not narrowed, because of its estimate.
+
+Work it out with these principles:
+
+1. **What was observed comes first.** Before estimating, read with `searchJiraIssuesUsingJql` up to 20 work items of the same type in Done that have time worked (`project = <KEY> AND issuetype = <Type> AND statusCategory = Done AND timespent is not EMPTY ORDER BY resolved DESC`, with their `summary` and `timetracking`). Their `timeSpent` is where the estimate starts, the closest in scope first. Their `originalEstimate` is no reference: it is what the time worked corrects.
+2. **Without that history, add up the work of the phases.** Count the steps Implement and Review will take: what is read, what is changed, which tests and evals are written and run, the live test, and the decisions that wait on the person. Writing and editing with Claude takes little; what makes a phase longer is running tests, evals and live tests, and waiting for decisions.
+3. **Name what is uncertain instead of padding it.** What is not known does not get a margin: it becomes what the work item has to observe, or a spike with its time-box.
+4. **The sections below say which steps count for each type.**
 
 ## Story
 
@@ -8,7 +15,7 @@ What the story builds and what shows each of its Done when criteria. A story tha
 
 ## Epic
 
-Its due date is the working time of the requirement the epic delivers: what its Done when criteria ask to have working, answered with the same two questions, never the sum of the estimates of its children. The children are cut from the requirement afterwards, within that date. A requirement that fits in one working day gets the same day as its due date.
+Its due date is the working time of the requirement the epic delivers: what its Done when criteria ask to have working, worked out the same way, never the sum of the estimates of its children. The children are cut from the requirement afterwards, within that date. A requirement that fits in one working day gets the same day as its due date.
 
 ## Due date
 

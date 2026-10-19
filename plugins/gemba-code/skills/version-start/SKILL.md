@@ -56,7 +56,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 8. **Choose the stack,** only in the first version and when `CLAUDE.md` above has no `## Stack`. Run `/gemba-code:research` with the question of which stacks meet the requirements of the version and the constraints of `Vision`, then offer two or three of the stacks its answer supports, each with its reason and the recommended one first. Write the chosen one with Edit, without retyping the rest, as a `## Stack` section inside the `# Gemba` block, right after its `## Purpose` section or, without one, after `## Language`: one bullet per layer, `- <layer>: <choice>`, and after a blank line `Research: <the link to the research page>`.
 
-9. **Compute the release date.** Estimate each requirement of the version with the `## Epic` rule of the estimate above, the working time of the requirement, and propose which requirements of the version each one comes after. Ask how many people build the version. Run, alone and exactly in this form, with today as `start`:
+9. **Compute the release date.** Estimate each requirement of the version with the `## Epic` rule of the estimate above, the working time of the requirement, and propose which requirements of the version each one comes after. Ask how many people build the version, each one working with Claude Code and Gemba. Run, alone and exactly in this form, with today as `start`:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/release_date.py <<'PLAN'
