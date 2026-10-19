@@ -37,7 +37,7 @@ graders:
   - name: linked-to-the-origin
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
-    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*ABC-50[\s\S]*ABC-9|ABC-9[\s\S]*ABC-50)'
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*(?:ABC-50[\s\S]*ABC-9|ABC-9[\s\S]*ABC-50))'
   - name: reply
     type: regex
     pattern: 'https://example\.atlassian\.net/browse/ABC-50'

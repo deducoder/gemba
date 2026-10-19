@@ -19,4 +19,4 @@ graders:
   - name: linked-to-the-bug
     type: tool_used
     tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
-    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*ABC-50[\s\S]*ABC-12|ABC-12[\s\S]*ABC-50)'
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*(?:ABC-50[\s\S]*ABC-12|ABC-12[\s\S]*ABC-50))'
