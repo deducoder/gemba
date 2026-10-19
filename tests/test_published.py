@@ -37,6 +37,16 @@ class TopLevelNodes(unittest.TestCase):
         html = '<span data-local-id="54e857d6-18db-4c4b-99a7-dc7308c76b2e">x</span>'
         self.assertEqual(top_level_nodes(html)[0][0], "54e857d6-18db-4c4b-99a7-dc7308c76b2e")
 
+    def test_whitespace_between_siblings_is_skipped_not_a_node_of_its_own(self):
+        html = '<p data-local-id="a1">Uno</p> \n <h2 data-local-id="a2">Dos</h2>'
+        nodes = top_level_nodes(html)
+        self.assertEqual([lid for lid, _, _ in nodes], ["a1", "a2"])
+
+    def test_other_void_elements_are_their_own_node_too(self):
+        html = '<p data-local-id="a1">a</p><hr><img src="x"><p data-local-id="a2">b</p>'
+        nodes = top_level_nodes(html)
+        self.assertEqual([tag for _, _, tag in nodes], ["p", "hr", "img", "p"])
+
 
 class Sections(unittest.TestCase):
     def test_the_head_of_the_page_is_the_section_without_a_name(self):

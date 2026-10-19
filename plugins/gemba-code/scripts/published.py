@@ -4,17 +4,23 @@ its level-two sections, each node keeping the `data-local-id` the connector gave
 
 import re
 
-VOID = {"br"}
+VOID = {"br", "hr", "img", "input", "meta", "link"}
 OPEN_TAG = re.compile(r'<(\w+)((?:\s+[\w:-]+="[^"]*")*)\s*/?>')
+WHITESPACE = re.compile(r"\s+")
 LOCAL_ID = re.compile(r'data-local-id="([0-9a-fA-F-]+)"')
 TAGS = re.compile(r"<[^>]+>")
 
 
 def top_level_nodes(html):
     """Returns the top-level sibling nodes of a page's HTML as (localId or None, raw html,
-    tag name), each raw html including its nested content whole."""
+    tag name), each raw html including its nested content whole. Whitespace between
+    siblings is skipped, not kept as a node of its own."""
     nodes, pos, length = [], 0, len(html)
     while pos < length:
+        gap = WHITESPACE.match(html, pos)
+        if gap:
+            pos = gap.end()
+            continue
         opener = OPEN_TAG.match(html, pos)
         tag, attrs = opener.group(1), opener.group(2)
         if tag in VOID:
