@@ -15,7 +15,7 @@ graders:
   - name: looked-for-an-existing-vision
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePageDescendants'
+    pattern: 'getConfluenceContentDescendants'
   - name: lists-the-whatsapp-point
     type: regex
     pattern: 'WhatsApp'
@@ -28,5 +28,5 @@ graders:
   - name: no-page-yet
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage'
+    pattern: 'createConfluenceContent|updateConfluenceContent'
     match: not_contains

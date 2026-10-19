@@ -23,7 +23,7 @@ graders:
   - name: evidence-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue.*(ran|read): '
+    pattern: 'addOrEditJiraIssueComment.*(ran|read): '
   - name: priority
     type: regex
     target: mock_calls

@@ -27,16 +27,16 @@ graders:
     max: 3
   - name: first-part-blocks
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
   - name: second-part-blocks
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-103\b)'
   - name: no-blocks-between-parts
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
     min: 0
     max: 0
   - name: reply

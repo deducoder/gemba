@@ -29,7 +29,8 @@ graders:
   - name: transitions-read-first
     type: tool_order
     before:
-      tool: mcp__plugin_atlassian-stub_atlassian__getTransitionsForJiraIssue
+      tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+      input_match: 'listJiraIssueTransitions'
     after:
       tool: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: no-local-delete

@@ -31,7 +31,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(globex|75\.00|80\.00)'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*(globex|75\.00|80\.00)'
   - name: no-mark
     type: regex
     target: mock_calls

@@ -1,6 +1,13 @@
 """Checks the Jira mocks of the evals against the real responses saved by evals/save_response.py:
 each key of a mock's JSON exists, with the same type, in the real response of its tool. Mocks
-that instruct an agent (`type: agent`) or raise the tool's error (`error: true`) are left out."""
+that instruct an agent (`type: agent`) or raise the tool's error (`error: true`) are left out.
+
+An operation resolved behind executeRead, executeWrite or executeDestructive is mocked through
+one shared dispatcher file (`executeRead.md`, etc.) whose body is a `{{file:fixtures/{input.name}
+.json}}` template, not a literal response, plus one `fixtures/<tool>.json` per operation next to
+it holding that operation's canned response. The three dispatcher files are left out of both
+checks below (their stem names no tool to save a response for); their fixtures are checked the
+same way a mock's body is."""
 
 import functools
 import importlib.util
@@ -10,7 +17,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MOCKS = sorted(ROOT.glob("evals/**/mocks/atlassian/*.md"))
+DISPATCHERS = {"executeRead", "executeWrite", "executeDestructive"}
+MOCKS = sorted(m for m in ROOT.glob("evals/**/mocks/atlassian/*.md") if m.stem not in DISPATCHERS)
+FIXTURES = sorted(ROOT.glob("evals/**/mocks/atlassian/fixtures/*.json"))
 RESPONSES = ROOT / "tests/fixtures/atlassian-responses"
 SPEC = importlib.util.spec_from_file_location("save_response", ROOT / "evals/save_response.py")
 SAVE_RESPONSE = importlib.util.module_from_spec(SPEC)
@@ -59,26 +68,36 @@ def real_paths(tool):
     return paths(json.loads(response(tool).read_text(encoding="utf-8")))
 
 
+def entries():
+    """Yields (name, tool, body, skip) for every mock and every dispatcher fixture, `skip`
+    marking a mock that instructs an agent or raises an error, which carries no real body."""
+    for mock in MOCKS:
+        frontmatter, body = split(mock)
+        skip = bool(re.search(r"^(type: agent|error: true)$", frontmatter, re.M))
+        yield mock.relative_to(ROOT), mock.stem, body, skip
+    for fixture in FIXTURES:
+        yield fixture.relative_to(ROOT), fixture.stem, fixture.read_text(encoding="utf-8"), False
+
+
 class Mocks(unittest.TestCase):
     longMessage = False
 
     def test_every_mocked_tool_has_a_saved_real_response(self):
-        for tool in sorted({mock.stem for mock in MOCKS}):
+        tools = {mock.stem for mock in MOCKS} | {fixture.stem for fixture in FIXTURES}
+        for tool in sorted(tools):
             with self.subTest(tool=tool):
                 self.assertTrue(response(tool).is_file(), f"no saved real response for {tool}")
 
     def test_every_key_of_a_mock_is_in_the_real_response_of_its_tool(self):
         """A tool without a saved response fails the test above, not each of its mocks."""
-        for mock in filter(lambda mock: response(mock.stem).is_file(), MOCKS):
-            name = mock.relative_to(ROOT)
+        for name, tool, body, skip in entries():
+            if skip or not response(tool).is_file():
+                continue
             with self.subTest(mock=str(name)):
-                frontmatter, body = split(mock)
-                if re.search(r"^(type: agent|error: true)$", frontmatter, re.M):
-                    continue
-                real = real_paths(mock.stem)
+                real = real_paths(tool)
                 for path, type_ in paths(json.loads(body)).items():
-                    self.assertIn(path, real, f"{name}: {path} is not in the real response of {mock.stem}")
-                    self.assertEqual(type_, real[path], f"{name}: {path} is a {type_} and in the real response of {mock.stem} a {real[path]}")
+                    self.assertIn(path, real, f"{name}: {path} is not in the real response of {tool}")
+                    self.assertEqual(type_, real[path], f"{name}: {path} is a {type_} and in the real response of {tool} a {real[path]}")
 
     def test_saved_responses_hold_no_personal_data_or_project_key(self):
         responses = sorted(RESPONSES.glob("*.json"))

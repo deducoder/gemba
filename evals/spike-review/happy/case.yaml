@@ -22,7 +22,9 @@ graders:
     pattern: 'getJiraIssue.*ABC-30'
   - name: folder-found-before-the-mark
     type: tool_order
-    before: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+      input_match: 'getConfluenceContentDescendants'
     after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: mark-by-destination
     type: regex
@@ -31,12 +33,12 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createConfluencePage|updateConfluencePage)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog|createConfluenceContent|updateConfluenceContent)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: findings-read
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePage\b'
+    pattern: 'getConfluenceContent\b'
   - name: rerun-after-the-mark
     type: tool_order
     before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
@@ -50,12 +52,12 @@ graders:
   - name: writes-nothing-in-confluence
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage|addCommentToJiraIssue'
+    pattern: 'createConfluenceContent|updateConfluenceContent|addOrEditJiraIssueComment'
     match: not_contains
   - name: no-worklog-yet
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueWorklog'
     match: not_contains
   - name: no-push
     type: tool_used
@@ -65,5 +67,5 @@ graders:
     max: 0
   - name: descendants-down-to-the-pages
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
-    input_match: '"depth":\s*([3-9]|[1-9]\d)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+    input_match: '^(?=[\s\S]*getConfluenceContentDescendants)(?=[\s\S]*"depth":\s*([3-9]|[1-9]\d))'

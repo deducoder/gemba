@@ -15,7 +15,7 @@ graders:
   - name: reads-the-published-vision
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePage[^D]'
+    pattern: 'getConfluenceContent[^D]'
   - name: no-origin-question
     type: regex
     pattern: '[Oo]riginates the demand'
@@ -26,5 +26,5 @@ graders:
   - name: writes-nothing-yet
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage'
+    pattern: 'createConfluenceContent|updateConfluenceContent'
     match: not_contains

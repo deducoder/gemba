@@ -61,5 +61,5 @@ graders:
   - name: no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueWorklog'
     match: not_contains

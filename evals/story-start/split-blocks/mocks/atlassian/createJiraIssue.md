@@ -3,7 +3,7 @@ type: agent
 expect:
   projectKey: ABC
   issueTypeName: Story
-  contentFormat: adf
+  contentFormat: string
 ---
 
 You are Jira creating a story in project ABC. Answer with JSON only, in this shape, with a new key each call: ABC-101 for the first call, ABC-102 for the second, and so on.

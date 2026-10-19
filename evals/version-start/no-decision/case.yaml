@@ -15,11 +15,11 @@ graders:
   - name: reads-the-vision
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePage[^D]'
+    pattern: 'getConfluenceContent[^D]'
   - name: writes-nothing
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage'
+    pattern: 'createConfluenceContent|updateConfluenceContent'
     match: not_contains
   - name: reads-no-fix-version
     type: regex

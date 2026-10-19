@@ -1,0 +1,1 @@
+{"startAt": 0, "maxResults": 50, "total": 4, "issueTypes": [{"id": "10000", "name": "Epic", "subtask": false, "hierarchyLevel": 1}, {"id": "10009", "name": "Story", "subtask": false, "hierarchyLevel": 0}, {"id": "10078", "name": "Bug", "subtask": false, "hierarchyLevel": 0}, {"id": "10079", "name": "Spike", "subtask": false, "hierarchyLevel": 0}]}

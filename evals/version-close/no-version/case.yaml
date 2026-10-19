@@ -15,11 +15,11 @@ graders:
   - name: reads-the-roadmap
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePage[^D]'
+    pattern: 'getConfluenceContent[^D]'
   - name: writes-nothing
     type: regex
     target: mock_calls
-    pattern: 'manageJiraProjectVersion|updateConfluencePage|createConfluencePage'
+    pattern: 'manageJiraProjectVersion|updateConfluenceContent|createConfluenceContent'
     match: not_contains
   - name: reads-no-work-items
     type: regex

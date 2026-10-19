@@ -23,11 +23,11 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(json|999\.00)'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*(json|999\.00)'
   - name: no-mark
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|createConfluencePage'
+    pattern: 'transitionJiraIssue|createConfluenceContent'
     match: not_contains
   - name: no-worktree
     type: tool_used
