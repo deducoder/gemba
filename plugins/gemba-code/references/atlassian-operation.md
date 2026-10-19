@@ -1,1 +1,1 @@
-Each step names the operation it resolved, not the connector tool directly.
+Each step names the operation it resolved, not the connector tool directly. Call the tool its resolution gives: when its tier is `primaria`, call that tool by name with the operation's params; when its tier is `executeRead`, `executeWrite` or `executeDestructive`, call that tier's own tool with `name` set to the resolved tool and `inputs` holding the operation's own params — no `discover` call is needed, the resolution already named it.
