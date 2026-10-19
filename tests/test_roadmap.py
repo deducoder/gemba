@@ -1,7 +1,8 @@
-"""Checks project-create's roadmap script: what it accepts, what it rejects and the ADF it
+"""Checks project-create's roadmap script: what it accepts, what it rejects and the HTML it
 prints for the live doc of a product's roadmap before its first version."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -36,7 +37,7 @@ def run(draft):
 def page(draft):
     result = run(draft)
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)["body"]["content"]
+    return json.loads(result.stdout)["body"]
 
 
 def rejected(draft, *words):
@@ -47,8 +48,22 @@ def rejected(draft, *words):
         assert word in result.stderr, result.stderr
 
 
-def flat(node):
-    return "".join(n["text"] if n["type"] == "text" else "" for n in node.get("content", []))
+def flat(html):
+    return re.sub(r"<[^>]+>", "", html)
+
+
+def headings(body):
+    return re.findall(r"<h2>(.+?)</h2>", body)
+
+
+def section(body, title):
+    """Returns the raw HTML right after the <h2>title</h2> heading, up to the next heading."""
+    match = re.search(rf"<h2>{re.escape(title)}</h2>(.*?)(?=<h2>|$)", body, re.DOTALL)
+    return match.group(1)
+
+
+def items(section_html):
+    return re.findall(r"<li><p>(.*?)</p></li>", section_html, re.DOTALL)
 
 
 class RoadmapDraft(unittest.TestCase):
@@ -56,7 +71,7 @@ class RoadmapDraft(unittest.TestCase):
     def setUpClass(cls):
         cls.result = run(DRAFT)
         cls.page = json.loads(cls.result.stdout) if cls.result.returncode == 0 else {}
-        cls.body = cls.page.get("body", {}).get("content", [])
+        cls.body = cls.page.get("body", "")
 
     def test_a_draft_that_follows_the_template_passes(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
@@ -65,19 +80,18 @@ class RoadmapDraft(unittest.TestCase):
         self.assertEqual(self.page["title"], "Roadmap")
 
     def test_the_headings_are_the_four_horizons_in_order(self):
-        self.assertEqual([flat(n) for n in self.body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
+        self.assertEqual(headings(self.body), ["Now", "Next", "Later", "Released"])
 
     def test_now_and_released_are_a_paragraph(self):
-        self.assertEqual((self.body[1]["type"], flat(self.body[1])), ("paragraph", "Ninguna versión en curso."))
-        self.assertEqual(self.body[-1]["type"], "paragraph")
+        self.assertEqual(section(self.body, "Now"), "<p>Ninguna versión en curso.</p>")
+        self.assertEqual(section(self.body, "Released"), "<p>Ninguna versión liberada.</p>")
 
     def test_each_entry_is_unnumbered_in_bold_then_its_goal_on_a_new_line(self):
-        entries = [item["content"][0]["content"] for n in self.body if n["type"] == "bulletList" for item in n["content"]]
+        entries = items(section(self.body, "Next")) + items(section(self.body, "Later"))
         self.assertEqual(len(entries), 3)
         for entry in entries:
-            self.assertEqual(entry[0], {"type": "text", "text": "Unnumbered", "marks": [{"type": "strong"}]})
-            self.assertEqual(entry[1]["type"], "hardBreak")
-        self.assertEqual(entries[0][2]["text"], "Validar que 3 equipos adoptan Gemba.")
+            self.assertTrue(entry.startswith("<strong>Unnumbered</strong><br>"))
+        self.assertTrue(entries[0].endswith("Validar que 3 equipos adoptan Gemba."))
 
 
 class RoadmapRejects(unittest.TestCase):
@@ -104,31 +118,25 @@ class RoadmapVersionInProgress(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.body = page(PLANNED)
-        cls.entry = cls.body[1]["content"][0]["content"][0]["content"]
+        cls.entry = items(section(cls.body, "Now"))[0]
 
     def test_now_holds_the_version_as_an_entry(self):
-        self.assertEqual(self.body[1]["type"], "bulletList")
+        self.assertIn("<ul>", section(self.body, "Now"))
 
     def test_the_entry_links_to_the_version_page(self):
-        self.assertEqual(self.entry[0]["text"], "Gemba v0.1.0")
-        self.assertEqual(self.entry[0]["marks"], [{"type": "link", "attrs": {"href": "https://example.atlassian.net/wiki/x/abc"}}])
+        self.assertTrue(self.entry.startswith('<a href="https://example.atlassian.net/wiki/x/abc">Gemba v0.1.0</a>'))
 
     def test_the_entry_carries_its_status_as_a_lozenge_and_its_release_date_as_a_date(self):
-        kinds = [node["type"] for node in self.entry]
-        self.assertIn("status", kinds)
-        self.assertEqual(next(n for n in self.entry if n["type"] == "status")["attrs"]["text"], "Planned")
-        self.assertEqual(next(n for n in self.entry if n["type"] == "date")["attrs"]["timestamp"], "1795132800000")
+        self.assertIn('<span data-type="status" data-color="neutral">Planned</span>', self.entry)
+        self.assertIn('<time datetime="2026-11-20">2026-11-20</time>', self.entry)
 
     def test_the_goal_and_its_target_go_on_their_own_lines(self):
-        breaks = [i for i, node in enumerate(self.entry) if node["type"] == "hardBreak"]
-        self.assertEqual(len(breaks), 2)
-        self.assertEqual(self.entry[breaks[0] + 1]["text"], "Validar que 3 equipos adoptan Gemba.")
-        self.assertEqual(self.entry[breaks[1] + 1], {"type": "text", "text": "Target:", "marks": [{"type": "strong"}]})
-        self.assertEqual(self.entry[-1]["text"], "3 equipos activos a 4 semanas.")
+        self.assertEqual(self.entry.count("<br>"), 2)
+        self.assertIn("<br>Validar que 3 equipos adoptan Gemba.<br>", self.entry)
+        self.assertTrue(self.entry.endswith("<strong>Target:</strong> 3 equipos activos a 4 semanas."))
 
     def test_next_may_be_empty_once_its_entry_is_the_version(self):
-        self.assertEqual([flat(n) for n in self.body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
-        self.assertEqual(self.body[3]["type"], "heading")
+        self.assertEqual(headings(self.body), ["Now", "Next", "Later", "Released"])
 
     def test_a_released_version_is_not_in_now(self):
         rejected(PLANNED.replace("[Planned]", "[Released]"), "Now", "Released")
@@ -158,26 +166,27 @@ class RoadmapReleasedVersions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.body = page(RELEASED)
-        cls.items = cls.body[-1]["content"]
-        cls.entry = cls.items[0]["content"][0]["content"]
+        cls.entries = items(section(cls.body, "Released"))
+        cls.entry = cls.entries[0]
 
     def test_released_holds_each_version_as_an_entry_in_its_order(self):
-        self.assertEqual(self.body[-1]["type"], "bulletList")
-        self.assertEqual([item["content"][0]["content"][0]["text"] for item in self.items], ["Gemba v0.1.0", "Gemba v0.0.1"])
+        self.assertIn("<ul>", section(self.body, "Released"))
+        self.assertEqual(
+            [re.match(r'<a href="[^"]+">(.+?)</a>', e).group(1) for e in self.entries],
+            ["Gemba v0.1.0", "Gemba v0.0.1"],
+        )
 
     def test_the_entry_links_to_the_version_page(self):
-        self.assertEqual(self.entry[0]["marks"], [{"type": "link", "attrs": {"href": "https://example.atlassian.net/wiki/x/abc"}}])
+        self.assertTrue(self.entry.startswith('<a href="https://example.atlassian.net/wiki/x/abc">'))
 
     def test_the_entry_carries_the_released_lozenge_and_no_date(self):
-        lozenges = [n["attrs"] for n in self.entry if n["type"] == "status"]
-        self.assertEqual([(s["text"], s["color"]) for s in lozenges], [("Released", "green")])
-        self.assertNotIn("date", [n["type"] for n in self.entry])
+        self.assertIn('<span data-type="status" data-color="green">Released</span>', self.entry)
+        self.assertNotIn("<time", self.entry)
 
     def test_the_goal_and_its_target_go_on_their_own_lines(self):
-        breaks = [i for i, node in enumerate(self.entry) if node["type"] == "hardBreak"]
-        self.assertEqual(len(breaks), 2)
-        self.assertEqual(self.entry[breaks[0] + 1]["text"], "Validar que 3 equipos adoptan Gemba.")
-        self.assertEqual(self.entry[breaks[1] + 1], {"type": "text", "text": "Target:", "marks": [{"type": "strong"}]})
+        self.assertEqual(self.entry.count("<br>"), 2)
+        self.assertIn("<br>Validar que 3 equipos adoptan Gemba.<br>", self.entry)
+        self.assertIn("<strong>Target:</strong>", self.entry)
 
     def test_a_version_in_progress_is_not_in_released(self):
         rejected(RELEASED.replace("[Released]", "[Planned]", 1), "Released", "Planned")
@@ -190,21 +199,21 @@ class RoadmapReleasedVersions(unittest.TestCase):
 
     def test_next_may_be_empty_once_the_version_of_now_is_released(self):
         start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
-        self.assertEqual(page(RELEASED[:start] + RELEASED[end:])[-1]["type"], "bulletList")
+        self.assertIn("<ul>", section(page(RELEASED[:start] + RELEASED[end:]), "Released"))
 
     def test_a_released_version_with_a_date(self):
         rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")
 
     def test_a_version_moves_from_now_to_released(self):
         moved = PLANNED.replace("Ninguna versión liberada.", RELEASED_ENTRY.replace("v0.1.0", "v0.0.1"))
-        self.assertEqual(page(moved)[-1]["type"], "bulletList")
+        self.assertIn("<ul>", section(page(moved), "Released"))
 
 
 class RoadmapOptional(unittest.TestCase):
     def test_later_may_be_empty(self):
         start, end = DRAFT.index("* **Unnumbered** Soporte para otros"), DRAFT.index("### Released")
         body = page(DRAFT[:start] + DRAFT[end:])
-        self.assertEqual([flat(n) for n in body if n["type"] == "heading"], ["Now", "Next", "Later", "Released"])
+        self.assertEqual(headings(body), ["Now", "Next", "Later", "Released"])
 
 
 if __name__ == "__main__":
