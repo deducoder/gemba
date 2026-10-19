@@ -1,0 +1,107 @@
+[
+  {
+    "operation": "getJiraIssue",
+    "tools": [{"tool": "getJiraIssue", "tier": "primaria"}],
+    "params": "fields + fieldsByKeys, view: evidence (issuelinks), expand: changelog / renderedFields",
+    "format": "markdown o html; color solo en renderedFields"
+  },
+  {
+    "operation": "getTransitionsForJiraIssue",
+    "tools": [{"tool": "listJiraIssueTransitions", "tier": "executeRead"}],
+    "params": "issueIdOrKey",
+    "format": "transitions[].to.name"
+  },
+  {
+    "operation": "transitionJiraIssue",
+    "tools": [{"tool": "transitionJiraIssue", "tier": "primaria"}],
+    "params": "transitionId",
+    "format": "devuelve el status final"
+  },
+  {
+    "operation": "addCommentToJiraIssue",
+    "tools": [{"tool": "addOrEditJiraIssueComment", "tier": "primaria"}],
+    "params": "commentBody, contentFormat markdown|html, commentId para editar",
+    "format": "markdown o html"
+  },
+  {
+    "operation": "addWorklogToJiraIssue",
+    "tools": [{"tool": "addOrEditJiraIssueWorklog", "tier": "executeWrite"}],
+    "params": "timeSpent, started",
+    "format": "—"
+  },
+  {
+    "operation": "createIssueLink",
+    "tools": [{"tool": "createJiraIssueLink", "tier": "executeWrite"}],
+    "params": "linkType, inwardIssue (bloquea), outwardIssue (bloqueado)",
+    "format": "—"
+  },
+  {
+    "operation": "createJiraIssue",
+    "tools": [{"tool": "createJiraIssue", "tier": "primaria"}],
+    "params": "contentFormat html, parent, priority, labels, additional_fields {fixVersions, timetracking, duedate, components}",
+    "format": "markdown o html (no ADF)"
+  },
+  {
+    "operation": "searchJiraIssuesUsingJql",
+    "tools": [{"tool": "searchJiraIssuesUsingJql", "tier": "primaria"}],
+    "params": "jql, fields, maxResults, nextPageToken",
+    "format": "pageInfo.hasNextPage + endCursor"
+  },
+  {
+    "operation": "getJiraProjectIssueTypesMetadata",
+    "tools": [{"tool": "listJiraProjectIssueTypesMetadata", "tier": "executeRead"}],
+    "params": "projectIdOrKey",
+    "format": "issueTypes[].id"
+  },
+  {
+    "operation": "getJiraIssueTypeMetaWithFields",
+    "tools": [{"tool": "getJiraIssueTypeMetaWithFields", "tier": "executeRead"}],
+    "params": "projectIdOrKey, issueTypeId, requiredFieldsOnly: false",
+    "format": "allowedValues de fixVersions con released"
+  },
+  {
+    "operation": "manageJiraProjectVersion",
+    "tools": [{"tool": "manageJiraProjectVersion", "tier": "executeDestructive"}],
+    "params": "action create|update|release|archive, versionId, releaseDate",
+    "format": "—"
+  },
+  {
+    "operation": "lookupJiraAccountId",
+    "tools": [
+      {"tool": "lookupJiraAccountId", "tier": "executeRead"},
+      {"tool": "atlassianUserInfo", "tier": "primaria"}
+    ],
+    "params": "query",
+    "format": "accountId"
+  },
+  {
+    "operation": "getConfluenceSpaces",
+    "tools": [{"tool": "getConfluenceSpace", "tier": "executeRead"}],
+    "params": "spaceIdOrKey",
+    "format": "id, homepageId"
+  },
+  {
+    "operation": "getConfluencePageDescendants",
+    "tools": [{"tool": "getConfluenceContentDescendants", "tier": "executeRead"}],
+    "params": "contentId, depth, limit 250, cursor",
+    "format": "id, type (page|folder), parentId, depth"
+  },
+  {
+    "operation": "getConfluencePage",
+    "tools": [{"tool": "getConfluenceContent", "tier": "primaria"}],
+    "params": "content_id, content_format html, detail full",
+    "format": "html con data-local-id + snapshotToken"
+  },
+  {
+    "operation": "createConfluencePage",
+    "tools": [{"tool": "createConfluenceContent", "tier": "primaria"}],
+    "params": "contentType live_doc, parent {spaceId, parentContentId}, title, body {format html}",
+    "format": "html o markdown (no ADF)"
+  },
+  {
+    "operation": "updateConfluencePage",
+    "tools": [{"tool": "updateConfluenceContent", "tier": "primaria"}],
+    "params": "contentId, snapshotToken, body {format html} o edits [replaceNode, insertNodeAfter, insertNodeBefore, deleteNode, appendNodeToEnd, moveNode, setAttrs]",
+    "format": "html o markdown (no ADF)"
+  }
+]
