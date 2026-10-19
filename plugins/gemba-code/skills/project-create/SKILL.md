@@ -10,10 +10,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
-  - Bash(git remote -v)
-  - Bash(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/*)
-  - Bash(curl -sf https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt)
-  - Bash(curl -sf https://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/license.py *)
 ---
 
 # Project create
@@ -130,9 +127,9 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
-15. **Propose a license.** Read the project's `origin` with `git remote -v`; skip this step without one, or when it is not a `github.com` remote (`https://github.com/<owner>/<repo>` or `git@github.com:<owner>/<repo>`, its trailing `.git` dropped). Ask `https://api.github.com/repos/<owner>/<repo>` for it, with no credentials: only exactly `200` means the repository is public; anything else, including a request that fails, means this step proposes nothing. When it is public and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
-    - For MIT, download `https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt` with `curl -sf`; a non-zero exit means the download failed, so stop and say so. Write `LICENSE` with only the text after its second `---`, `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner of origin>)`.
-    - For Apache License 2.0, download `https://www.apache.org/licenses/LICENSE-2.0.txt` with `curl -sf`; a non-zero exit means the download failed, so stop and say so. Write it to `LICENSE` as is, then write `NOTICE` with the product's name, `Copyright <year> <the person's name>` and a line crediting who built it.
+15. **Propose a license.** Run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py`: it prints the project's visibility, read from its `origin` remote and the GitHub API, with no credentials. When `public` is `false`, skip this step: that covers no `origin`, a remote that is not on `github.com`, or a repository this skill cannot confirm is public. When it is `true` and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
+    - For MIT, run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py mit`; a non-zero exit means the download failed, so stop and say so. Write its output to `LICENSE`, with `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner printed above>)`.
+    - For Apache License 2.0, run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py apache-2.0`; a non-zero exit means the download failed, so stop and say so. Write its output to `LICENSE` as is, then write `NOTICE` with the product's name, `Copyright <year> <the person's name>` and a line crediting who built it.
 
 16. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
