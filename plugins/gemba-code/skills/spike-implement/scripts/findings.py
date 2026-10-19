@@ -28,7 +28,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, TRAIL, check_sections, check_summary, esc, heading, inline, split, unclosed  # noqa: E402
+from draft import FENCE, TRAIL, check_sections, check_summary, esc, heading, inline, paragraph, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Evidence", "Next"]
 VERDICT = re.compile(r"^(sí|no|inconclusa)[.,:;]", re.IGNORECASE)
@@ -96,10 +96,6 @@ def problems(draft, key):
     return found, {"title": title, "question": question[0], "answer": answer, "evidence": evidence, "next": nxt}
 
 
-def paragraph(text):
-    return f"<p>{inline(text)}</p>"
-
-
 def verdict(text):
     """Returns the Answer paragraph with its yes, no or inconclusive in bold."""
     first = VERDICT.match(text)
@@ -117,18 +113,18 @@ def evidence(block):
         language, code = block
         cls = f' class="language-{esc(language)}"' if language else ""
         return f"<pre><code{cls}>{esc(code)}</code></pre>"
-    return labelled(block) if block.startswith(TRAIL) else paragraph(block)
+    return labelled(block) if block.startswith(TRAIL) else paragraph(inline(block))
 
 
 def body(content, site, key):
     """Returns the live doc as HTML."""
     link = f'<p><a href="https://{site}/browse/{key}" data-card-appearance="inline"></a></p>'
     return (link
-            + paragraph(content["question"])
+            + paragraph(inline(content["question"]))
             + heading("Answer", 2) + verdict(content["answer"][0])
-            + "".join(paragraph(block) for block in content["answer"][1:])
+            + "".join(paragraph(inline(block)) for block in content["answer"][1:])
             + heading("Evidence", 2) + "".join(evidence(block) for block in content["evidence"])
-            + heading("Next", 2) + "".join(paragraph(block) for block in content["next"]))
+            + heading("Next", 2) + "".join(paragraph(inline(block)) for block in content["next"]))
 
 
 def main():

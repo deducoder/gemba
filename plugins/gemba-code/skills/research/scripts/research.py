@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, KEY, check_sections, esc, heading, inline, paragraphs, split, unclosed  # noqa: E402
+from draft import CODE, FENCE, KEY, check_sections, esc, heading, inline, paragraph, paragraphs, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -136,10 +136,6 @@ def problems(draft):
                    "method": blocks["Method"], "topics": topics, "sources": sources, "next": blocks["Next"]}
 
 
-def paragraph(text):
-    return f"<p>{inline(text)}</p>"
-
-
 def cited(text, sources):
     """Returns the text with each [n] as a link to the source n, without a card."""
     parts = []
@@ -170,14 +166,14 @@ def body(content, site, key):
     link = f'<p><a href="https://{site}/browse/{key}" data-card-appearance="inline"></a></p>' if key else ""
     sources = content["sources"]
     return (link
-            + paragraph(content["decision"])
-            + heading("Answer", 2) + "".join(paragraph(block) for block in content["answer"])
-            + heading("Method", 2) + "".join(paragraph(block) for block in content["method"])
+            + paragraph(inline(content["decision"]))
+            + heading("Answer", 2) + "".join(paragraph(inline(block)) for block in content["answer"])
+            + heading("Method", 2) + "".join(paragraph(inline(block)) for block in content["method"])
             + heading("Findings", 2)
             + "".join(heading(topic, 3) + "".join(finding(*item, sources) for item in findings)
                       for topic, findings in content["topics"])
             + heading("Sources", 2) + "".join(source(n, *values) for n, values in enumerate(sources, 1))
-            + heading("Next", 2) + "".join(paragraph(block) for block in content["next"]))
+            + heading("Next", 2) + "".join(paragraph(inline(block)) for block in content["next"]))
 
 
 def main():
