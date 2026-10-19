@@ -22,7 +22,7 @@ graders:
     min: 2
   - name: evidence
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__addCommentToJiraIssue
+    tool: mcp__plugin_atlassian-stub_atlassian__addOrEditJiraIssueComment
     min: 2
   - name: keys
     type: regex

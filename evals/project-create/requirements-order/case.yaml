@@ -28,5 +28,5 @@ graders:
   - name: no-page-yet
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage'
+    pattern: 'createConfluenceContent|updateConfluenceContent'
     match: not_contains

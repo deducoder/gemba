@@ -27,11 +27,11 @@ graders:
   - name: evidence-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue.*Reproduction.*Cause trail.*(ran|read): '
+    pattern: 'addOrEditJiraIssueComment.*Reproduction.*Cause trail.*(ran|read): '
   - name: reproduced-on-develop
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue.*F-001\s+100\.00'
+    pattern: 'addOrEditJiraIssueComment.*F-001\s+100\.00'
   - name: priority
     type: regex
     target: mock_calls
@@ -59,6 +59,7 @@ graders:
     pattern: 'https://example\.atlassian\.net/browse/ABC-50'
   - name: no-link
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: 'createJiraIssueLink'
     min: 0
     max: 0

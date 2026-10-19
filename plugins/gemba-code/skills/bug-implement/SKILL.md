@@ -9,6 +9,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Bug implement
@@ -29,7 +30,13 @@ Drift comment template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
 
-Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item: the Root cause and the Done when stay as bug-start declared them. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -112,4 +119,4 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
 CANCELLED
 ```
 
-Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the bug with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the bug. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A bug in any other status is not cancelled here: say its status and stop.
+Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the bug with `addCommentToJiraIssue` as HTML (`contentFormat: "html"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the bug. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A bug in any other status is not cancelled here: say its status and stop.

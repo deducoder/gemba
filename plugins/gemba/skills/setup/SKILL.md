@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
+description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, creates the Work, Work/Spikes, Work/Researchs and Work/Templates Confluence folders that are missing, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -77,7 +77,9 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-6. **Integration declaration.** Write `.gemba/project/git.json` exactly in this shape:
+6. **Confluence folders.** Read the Confluence space of `.gemba/project/atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants` and `depth: 2`, which reaches `Work` and its children. `Work`, `Work/Spikes`, `Work/Researchs` and `Work/Templates` are folders (`type: folder`); create with `createConfluenceContent` (`contentType: "folder"`, no body) whichever is missing, `Work` itself first when it is missing too, each with the `id` of its parent (the space's home for `Work`, `Work`'s own `id` for the other three). One already there is left as it is.
+
+7. **Integration declaration.** Write `.gemba/project/git.json` exactly in this shape:
 
    ```json
    {
@@ -85,7 +87,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-7. **Attribution.** In `.claude/settings.json`, set this key, keeping every other key, with two-space indentation and one key per line. Create the file when it is missing.
+8. **Attribution.** In `.claude/settings.json`, set this key, keeping every other key, with two-space indentation and one key per line. Create the file when it is missing.
 
    ```json
    "attribution": {
@@ -95,12 +97,12 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-8. **Worktrees.** Make `.gitignore` ignore the folder where worktrees live, so they are never tracked:
+9. **Worktrees.** Make `.gitignore` ignore the folder where worktrees live, so they are never tracked:
    - **Missing:** create it with the single line `.claude/worktrees/`.
    - **Without that exact line:** append it at the end, after a newline when the last line has none, keeping every other line. A similar pattern, such as `.claude/worktrees` or `.claude/`, does not count.
    - **With that exact line:** change nothing.
 
-9. **Git history,** last, so the initial commit holds what the steps above wrote.
+10. **Git history,** last, so the initial commit holds what the steps above wrote.
 
    - **With history:** change nothing; report what is missing among `main`, `origin`, `develop` and their upstreams, each with the command that adds it, and name the files the steps above changed, which stay uncommitted.
    - **Without history:**
@@ -109,4 +111,4 @@ Ask only for what the current state lacks, in as few questions as possible, and 
      3. Run `git add -A`, `git commit -m "initial commit"`, with no trailers, and `git remote add origin <url>` (`git remote set-url origin <url>` when `origin` exists).
      4. Ask whether to push. Only on a yes, run `git push -u origin main`, `git switch -c develop` and `git push -u origin develop`.
 
-10. **Report** one line per step: what changed, or that it was already right. Say that the changes apply from the next session. Reply in the Conversation language.
+11. **Report** one line per step: what changed, or that it was already right. Say that the changes apply from the next session. Reply in the Conversation language.

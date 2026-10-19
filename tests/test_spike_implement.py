@@ -1,7 +1,8 @@
-"""Checks spike-implement's findings script: what it accepts, what it rejects and the ADF it
+"""Checks spike-implement's findings script: what it accepts, what it rejects and the HTML it
 prints for the live doc that holds the findings of a spike."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -59,9 +60,8 @@ def rejected(draft, *words):
     return result.stderr
 
 
-def flat(node):
-    """Returns the text of a node, joined."""
-    return "".join(node["text"] if node["type"] == "text" else "" for node in node.get("content", []))
+def headings(html):
+    return [(int(level), name) for level, name in re.findall(r"<h(\d)>(.+?)</h\1>", html)]
 
 
 class FindingsDraft(unittest.TestCase):
@@ -69,7 +69,7 @@ class FindingsDraft(unittest.TestCase):
     def setUpClass(cls):
         cls.result = run(DRAFT)
         cls.page = json.loads(cls.result.stdout) if cls.result.returncode == 0 else {}
-        cls.body = cls.page.get("body", {}).get("content", [])
+        cls.body = cls.page.get("body", "")
 
     def test_a_draft_that_follows_the_template_passes(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
@@ -79,51 +79,49 @@ class FindingsDraft(unittest.TestCase):
         self.assertEqual(self.page["title"], "ABC-7 Check a partial unique index for one active bias per idol")
 
     def test_the_first_line_is_the_link_to_the_issue_as_a_smart_link_and_nothing_else(self):
-        self.assertEqual(self.body[0]["type"], "paragraph")
-        self.assertEqual(self.body[0]["content"], [{"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/{KEY}"}}])
+        self.assertTrue(self.body.startswith(f'<p><a href="https://{SITE}/browse/{KEY}" data-card-appearance="inline"></a></p>'))
 
     def test_the_question_follows_without_a_heading(self):
-        self.assertEqual(self.body[1]["type"], "paragraph")
-        self.assertEqual(flat(self.body[1]), QUESTION)
+        self.assertIn(f"<p>{QUESTION}</p>", self.body)
 
     def test_the_headings_are_answer_evidence_and_next_in_that_order(self):
-        headings = [(n["attrs"]["level"], flat(n)) for n in self.body if n["type"] == "heading"]
-        self.assertEqual(headings, [(2, "Answer"), (2, "Evidence"), (2, "Next")])
+        self.assertEqual(headings(self.body), [(2, "Answer"), (2, "Evidence"), (2, "Next")])
 
     def test_the_verdict_of_the_answer_is_bold(self):
-        answer = self.body[self.body.index(next(n for n in self.body if n["type"] == "heading")) + 1]
-        self.assertEqual(answer["content"][0], {"type": "text", "text": "Sí.", "marks": [{"type": "strong"}]})
+        self.assertIn("<p><strong>Sí.</strong>", self.body)
 
     def test_evidence_keeps_each_script_and_output_literal_in_code_blocks(self):
-        blocks = [n for n in self.body if n["type"] == "codeBlock"]
-        self.assertEqual([flat(b) for b in blocks], ['print("probe")', OUTPUT])
-        self.assertEqual(blocks[0]["attrs"]["language"], "python")
+        blocks = re.findall(r"<pre><code(?: class=\"language-(\w+)\")?>(.*?)</code></pre>", self.body, re.DOTALL)
+        self.assertEqual([code for _, code in blocks], ['print("probe")', OUTPUT])
+        self.assertEqual(blocks[0][0], "python")
+
+    def test_a_language_with_a_quote_does_not_break_out_of_its_class_attribute(self):
+        draft = DRAFT.replace('```python\nprint("probe")\n```', '```python"onmouseover="alert(1)\nprint("probe")\n```')
+        result = run(draft)
+        body = json.loads(result.stdout)["body"]
+        self.assertIn('class="language-python&quot;onmouseover=&quot;alert(1)"', body)
 
     def test_each_ran_and_read_line_starts_with_its_label_in_bold(self):
-        labels = [n["content"][0]["text"] for n in self.body if n["type"] == "paragraph" and n["content"][0]["type"] == "text"
-                  and n["content"][0].get("marks") == [{"type": "strong"}] and n["content"][0]["text"] in ("ran: ", "read: ")]
+        labels = re.findall(r"<p><strong>(ran: |read: )</strong>", self.body)
         self.assertEqual(labels, ["ran: ", "read: "])
 
     def test_it_writes_no_done_when_out_of_scope_time_or_status(self):
-        text = json.dumps(self.page, ensure_ascii=False)
         for word in ("Done when", "Out of scope", "Status", "time-box"):
-            self.assertNotIn(word, text)
+            self.assertNotIn(word, self.body)
 
 
 class FindingsEvidence(unittest.TestCase):
     def test_an_empty_output_becomes_a_code_block_without_text(self):
         result = run(DRAFT.replace(OUTPUT, ""))
         self.assertEqual(result.returncode, 0, result.stderr)
-        blocks = [n for n in json.loads(result.stdout)["body"]["content"] if n["type"] == "codeBlock"]
-        self.assertNotIn({"type": "text", "text": ""}, blocks[1].get("content", []))
+        self.assertIn("<pre><code></code></pre>", json.loads(result.stdout)["body"])
 
     def test_consecutive_ran_and_read_lines_are_one_paragraph_each(self):
         draft = DRAFT.replace("read: `invoices.py:6`", "read: `a.py:1` → una\nread: `invoices.py:6`")
         result = run(draft)
         self.assertEqual(result.returncode, 0, result.stderr)
-        labels = [n["content"][0]["text"] for n in json.loads(result.stdout)["body"]["content"]
-                  if n["type"] == "paragraph" and n["content"][0].get("marks") == [{"type": "strong"}]]
-        self.assertEqual(labels.count("read: "), 2)
+        labels = re.findall(r"<p><strong>(read: )</strong>", json.loads(result.stdout)["body"])
+        self.assertEqual(len(labels), 2)
 
 
 class FindingsRejects(unittest.TestCase):

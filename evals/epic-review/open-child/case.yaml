@@ -23,7 +23,7 @@ graders:
   - name: no-write
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|createJiraIssue|createIssueLink|addCommentToJiraIssue|addWorklogToJiraIssue'
+    pattern: 'transitionJiraIssue|createJiraIssue|createJiraIssueLink|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog'
     match: not_contains
   - name: no-code-review
     type: tool_used

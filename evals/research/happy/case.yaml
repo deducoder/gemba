@@ -18,20 +18,22 @@ graders:
     input_match: research
   - name: folder-found-before-the-page
     type: tool_order
-    before: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
-    after: mcp__plugin_atlassian-stub_atlassian__createConfluencePage
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+      input_match: 'getConfluenceContentDescendants'
+    after: mcp__plugin_atlassian-stub_atlassian__createConfluenceContent
   - name: checked-before-the-page
     type: tool_order
     before:
       tool: Bash
       input_match: 'skills/research/scripts/research\.py'
-    after: mcp__plugin_atlassian-stub_atlassian__createConfluencePage
+    after: mcp__plugin_atlassian-stub_atlassian__createConfluenceContent
   - name: live-doc-in-the-folder-titled-with-the-question
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage[\s\S]*live[\s\S]*Can SQLite enforce a unique value only on some rows of a table\?'
+    pattern: 'createConfluenceContent[\s\S]*live[\s\S]*Can SQLite enforce a unique value only on some rows of a table\?'
   - name: no-work-item-and-no-update
     type: regex
     target: mock_calls
-    pattern: 'createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|updateConfluencePage'
+    pattern: 'createJiraIssue|editJiraIssue|transitionJiraIssue|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog|updateConfluenceContent'
     match: not_contains

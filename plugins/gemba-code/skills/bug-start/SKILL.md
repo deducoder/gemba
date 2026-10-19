@@ -7,6 +7,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/bug.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Bug start
@@ -31,7 +32,13 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
 
-The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJiraIssue createIssueLink createJiraIssue
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -86,6 +93,6 @@ The bug stays in Backlog: this skill changes no status, creates no branch, fixes
    BUG
    ```
 
-12. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), with no parent, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as ADF, and link the bug with `createIssueLink`, the link type `Relates`, to each origin of **Read each work item key**.
+12. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), with no parent, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as HTML, and link the bug with `createIssueLink`, the link type `Relates`, to each origin of **Read each work item key**.
 
 13. **Reply** with the key and link of the bug it created and the keys it linked it to, and nothing else.

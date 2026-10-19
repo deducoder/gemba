@@ -22,7 +22,7 @@ With --existing, the IDs the published page has: each of them stays in the draft
 requirement is withdrawn and never deleted, and each new ID goes above the highest of them,
 so no number is reused.
 
-Prints {"title": "Requirements", "body": <ADF>} as JSON when the draft follows the template.
+Prints {"title": "Requirements", "body": <HTML>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
@@ -35,16 +35,14 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, space, split, status, strong, date_node  # noqa: E402
+from draft import FENCE, GREY, STRIKE, STRONG, VERSION_NAME, bullets, check_sections, filled, heading, inline, is_day, items, space, split, status, strong, date_node  # noqa: E402
 
-GREY = {"type": "textColor", "attrs": {"color": "#97a0af"}}
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
 STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 VERSION = re.compile(rf"^{VERSION_NAME}$")
 WITHDRAWN = re.compile(r"^~~\*\*(R-\d+)\*\* (.+?)~~ (.+) · (\d{4}-\d{2}-\d{2})$")
-STRIKE = {"type": "strike"}
 TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
 QUESTION = re.compile(r"^\*\*Question (\d+)\.\*\* (.+?) Assumption: (.+) \[([^\]]+)\]$")
 
@@ -150,25 +148,25 @@ def problems(draft, existing=None):
 
 
 def body(content):
-    """Returns the live doc as an ADF document."""
-    nodes = []
+    """Returns the live doc as HTML."""
+    parts = []
     for name, catalog in content["groups"]:
         lines = []
         for rid, sentence, source, kind, hypothesis in catalog:
-            marks = [space(), status(kind, TYPES[kind])] + ([space(), status("Hypothesis", "neutral")] if hypothesis else [])
-            lines.append([strong(rid), space(), *inline(sentence), space(), *inline(f"Source: {source}", [GREY]), *marks])
-        nodes += [heading(name, 2)] + ([bullets(lines)] if lines else [])
+            marks = space() + status(kind, TYPES[kind]) + (space() + status("Hypothesis", "neutral") if hypothesis else "")
+            lines.append(strong(rid) + space() + inline(sentence) + space() + inline(f"Source: {source}", (GREY,)) + marks)
+        parts.append(heading(name, 2) + (bullets(lines) if lines else ""))
     if content["withdrawn"]:
-        nodes += [heading("Withdrawn", 2), bullets([
-            [*inline(rid, [{"type": "strong"}, STRIKE]), *inline(f" {sentence}", [STRIKE]),
-             space(), *inline(f"{reason} · ", [GREY]), date_node(day)]
-            for rid, sentence, reason, day in content["withdrawn"]])]
+        parts.append(heading("Withdrawn", 2) + bullets([
+            inline(rid, (STRONG, STRIKE)) + inline(f" {sentence}", (STRIKE,))
+            + space() + inline(f"{reason} · ", (GREY,)) + date_node(day)
+            for rid, sentence, reason, day in content["withdrawn"]]))
     if content["questions"]:
-        nodes += [heading(QUESTIONS, 2), bullets([
-            [strong(f"{name}."), space(), *inline(question), space(), strong("Assumption:"), space(),
-             *inline(assumption), space(), status(state, STATES[state])]
-            for name, question, assumption, state in content["questions"]])]
-    return doc(nodes)
+        parts.append(heading(QUESTIONS, 2) + bullets([
+            strong(f"{name}.") + space() + inline(question) + space() + strong("Assumption:") + space()
+            + inline(assumption) + space() + status(state, STATES[state])
+            for name, question, assumption, state in content["questions"]]))
+    return "".join(parts)
 
 
 def main():

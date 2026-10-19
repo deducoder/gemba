@@ -19,7 +19,7 @@ graders:
   - name: no-write
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue'
+    pattern: 'transitionJiraIssue|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog|createJiraIssue|editJiraIssue'
     match: not_contains
   - name: no-branch-script
     type: tool_used

@@ -5,6 +5,7 @@ argument-hint: "[idea]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/story.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Story start
@@ -27,7 +28,13 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
-The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The story stays in Backlog: this skill changes no status, creates no branch and creates no work item other than a story. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJiraIssue createIssueLink createJiraIssue searchJiraIssuesUsingJql
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -61,6 +68,6 @@ The story stays in Backlog: this skill changes no status, creates no branch and 
 
    When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories within the limit it names, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, each with the parent of step 2 and its fix versions when it has one, or without it with the fix version and the due date of step 8, and link them with `createIssueLink`: `Blocks` for each dependency the request or the agreed split names, the blocking story as `inwardIssue` and the blocked one as `outwardIssue`, and `Relates` between the rest.
 
-8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as ADF.
+8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as HTML.
 
 9. **Reply** with the key and link of each story it created with the fix version and the due date it set, the spikes or bugs it named instead, why an epic it named is not the parent and, when the estimate does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.

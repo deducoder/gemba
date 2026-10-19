@@ -1,5 +1,5 @@
 """Checks epic-start's draft script: what it accepts, what it rejects and the
-ADF it prints for Jira."""
+HTML it prints for Jira."""
 
 import json
 import subprocess
@@ -40,14 +40,14 @@ def with_criteria(count):
 
 
 class EpicDraft(unittest.TestCase):
-    def test_a_draft_that_follows_the_template_prints_the_summary_and_the_adf(self):
+    def test_a_draft_that_follows_the_template_prints_the_summary_and_the_html(self):
         result = run(DRAFT)
         self.assertEqual(result.returncode, 0, result.stderr)
         epic = json.loads(result.stdout)
         self.assertEqual(set(epic), {"summary", "description"})
         self.assertEqual(epic["summary"], "Customers manage their invoices from the CLI")
-        headings = [n["content"][0]["text"] for n in epic["description"]["content"] if n["type"] == "heading"]
-        self.assertEqual(headings, ["Done when", "Out of scope"])
+        import re
+        self.assertEqual(re.findall(r"<h3>(.+?)</h3>", epic["description"]), ["Done when", "Out of scope"])
 
     def test_more_than_8_criteria_are_rejected(self):
         result = run(with_criteria(9))

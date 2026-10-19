@@ -9,6 +9,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Project create
@@ -43,7 +44,13 @@ Roadmap template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/roadmap.md`
 ```
 
-This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages.
+This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces lookupJiraAccountId
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first. A fact about the world carries its source or is a hypothesis. Never present your own opinion, desk research or synthetic users as evidence that someone needs or would pay for the product.
 
@@ -109,7 +116,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 12. **Ask the person to accept** the three drafts and the `## Purpose` section of step 14, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
-13. **Publish the pages** with `createConfluencePage`, each with the `id` of the space as `spaceId`, `subtype: live`, the `title` its script printed and its `body` as ADF (`contentFormat: "adf"`): first `Vision` with the `homepageId` as `parentId`, then `Requirements` and `Roadmap` with the `id` of `Vision` as `parentId`. When the vision cites a `Question n`, check it again with the link to `Requirements`, run alone and exactly in this form, and update `Vision` with `updateConfluencePage` and the `body` it printed; a live doc saves late, so read the page and retry until it has the link. When a call fails, stop and say which pages were published and which were not, without creating again a page that exists:
+13. **Publish the pages** with `createConfluencePage`, each with the `id` of the space as `spaceId`, `subtype: live`, the `title` its script printed and its `body` as HTML (`contentFormat: "html"`): first `Vision` with the `homepageId` as `parentId`, then `Requirements` and `Roadmap` with the `id` of `Vision` as `parentId`. When the vision cites a `Question n`, check it again with the link to `Requirements`, run alone and exactly in this form, and update `Vision` with `updateConfluencePage` and the `body` it printed; a live doc saves late, so read the page and retry until it has the link. When a call fails, stop and say which pages were published and which were not, without creating again a page that exists:
 
     ```
     python3 ${CLAUDE_SKILL_DIR}/scripts/vision.py --requirements <the link to Requirements> <<'VISION'
@@ -125,7 +132,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 A framed product is reviewed, never framed again: only what moved changes, and only what the person accepts is written.
 
-1. **Read the pages** with `getConfluencePage` and `contentFormat: "adf"`: `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover only what it holds (steps 7 to 9 for `Requirements`, the goals of step 11 for `Roadmap`), check its draft with its command, ask the person to accept it and create it with `createConfluencePage` and the `id` of `Vision` as `parentId`, before going on; `Vision` is not created again.
+1. **Read the pages** with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"` (each page's `snapshotToken` is needed to update it later): `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover only what it holds (steps 7 to 9 for `Requirements`, the goals of step 11 for `Roadmap`), check its draft with its command, ask the person to accept it and create it with `createConfluencePage` and the `id` of `Vision` as `parentId`, before going on; `Vision` is not created again.
 
 2. **Walk the pages in order,** `Vision`, `Requirements`, `Roadmap`, and for each one ask what moved since it was written, section by section, offering the sections as options. Propose a change only for a section where something moved, with the same rules as the framing: a new requirement takes the number above the highest of the page, withdrawn ones included, and is never reused; a withdrawn requirement moves to `Withdrawn` with its reason and today's date, and is never deleted; a new decision rewrites the panel with its color, `Decided by` and today's date. A section where nothing moved is left out of the proposal.
 
@@ -147,6 +154,6 @@ A framed product is reviewed, never framed again: only what moved changes, and o
    MERGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`), then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
 
 6. **Reply** with each page that changed, the sections changed in it and its link.

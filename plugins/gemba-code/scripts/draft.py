@@ -1,13 +1,18 @@
 """What the draft scripts of every work item type share: splitting the draft into its
 sections, the checks of the Summary, the bullets, the == marks, the evidence lines
-and the Out of scope arrows, and the conversion of their lines to ADF for Jira.
-`code` becomes a code mark, a Done when criterion wrapped in `==` turns orange, and
-a work item key after `→` becomes a link to the issue on the site."""
+and the Out of scope arrows, and the conversion of their lines to HTML for the
+Atlassian connector. `code` becomes a `<code>` span, a Done when criterion wrapped in
+`==` turns orange, and a work item key after `→` becomes a smart link to the issue on
+the site."""
 
+import html as html_lib
 import re
-from datetime import date, datetime, timezone
+from datetime import date
 
-ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
+ORANGE = ('<span style="color: #ff991f">', "</span>")
+GREY = ('<span style="color: #97a0af">', "</span>")
+STRIKE = ("<s>", "</s>")
+STRONG = ("<strong>", "</strong>")
 KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 CODE = re.compile(r"`([^`]+)`")
 HEADING = re.compile(r"^(#{3,4}) (.+?)\s*$")
@@ -17,6 +22,16 @@ VERSION_NAME = r".+ v\d+\.\d+\.\d+"
 STATES = {"Planned": "neutral", "In progress": "blue", "Released": "green"}
 CURRENT = ("Planned", "In progress")
 BASELINE = re.compile(r"^Baseline: (.+?) Target: (.+)$")
+
+
+def esc(text):
+    return html_lib.escape(text, quote=False)
+
+
+def attr_esc(text):
+    """Escapes text for an HTML attribute value, where esc() alone would let a `"` in the
+    text close the attribute early."""
+    return html_lib.escape(text, quote=True)
 
 
 def split(text, titled=True):
@@ -153,82 +168,80 @@ def check_scope(scope, found):
 
 
 def inline(text, marks=()):
-    """Splits text into ADF text nodes, with `code` as a code mark and no other mark on it."""
-    nodes = []
+    """Returns text as HTML, with `code` as a `<code>` span and no other mark on it; the
+    other runs carry each mark in order, innermost first."""
+    parts = []
     for i, part in enumerate(CODE.split(text)):
         if not part:
             continue
         if i % 2:
-            nodes.append({"type": "text", "text": part, "marks": [{"type": "code"}]})
+            parts.append(f"<code>{esc(part)}</code>")
         else:
-            nodes.append({"type": "text", "text": part, **({"marks": list(marks)} if marks else {})})
-    return nodes
+            run = esc(part)
+            for open_tag, close_tag in marks:
+                run = f"{open_tag}{run}{close_tag}"
+            parts.append(run)
+    return "".join(parts)
 
 
 def linked(text, url):
-    """Returns the text as ADF nodes, with each `Question n` outside code linking to the
+    """Returns the text as HTML, with each `Question n` outside code linking to the
     Requirements page."""
     if not url:
         return inline(text)
-    nodes = []
+    parts = []
     for i, chunk in enumerate(CODE.split(text)):
         if i % 2:
-            nodes.extend(inline(f"`{chunk}`"))
+            parts.append(inline(f"`{chunk}`"))
             continue
         for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
             if j % 2:
-                nodes.append({"type": "text", "text": part, "marks": [{"type": "link", "attrs": {"href": url}}]})
+                parts.append(f'<a href="{attr_esc(url)}">{esc(part)}</a>')
             elif part:
-                nodes.extend(inline(part))
-    return nodes
+                parts.append(inline(part))
+    return "".join(parts)
 
 
 def criterion(line):
-    return inline(line[2:-2], [ORANGE]) if wrapped(line) else inline(line)
+    return inline(line[2:-2], (ORANGE,)) if wrapped(line) else inline(line)
 
 
 def excluded(line, site):
     if "→" not in prose(line):
         return inline(line)
     what, key = (part.strip() for part in line.rsplit("→", 1))
-    return inline(f"{what} → ") + [{"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}]
+    return inline(f"{what} → ") + f'<a href="https://{site}/browse/{key}" data-card-appearance="inline"></a>'
 
 
 def strong(text):
-    return {"type": "text", "text": text, "marks": [{"type": "strong"}]}
+    return f"<strong>{esc(text)}</strong>"
 
 
 def space():
-    return {"type": "text", "text": " "}
+    return " "
 
 
 def status(text, color):
     """Returns a lozenge."""
-    return {"type": "status", "attrs": {"text": text, "color": color, "style": "bold"}}
+    return f'<span data-type="status" data-color="{color}">{esc(text)}</span>'
 
 
 def date_node(day):
-    """Returns a YYYY-MM-DD day as a date node, at the milliseconds of its midnight in UTC."""
-    moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
-    return {"type": "date", "attrs": {"timestamp": str(int(moment.timestamp() * 1000))}}
+    """Returns a YYYY-MM-DD day as a date node."""
+    date.fromisoformat(day)
+    return f'<time datetime="{day}">{day}</time>'
 
 
 def heading(name, level=3):
-    return {"type": "heading", "attrs": {"level": level}, "content": [{"type": "text", "text": name}]}
+    return f"<h{level}>{esc(name)}</h{level}>"
 
 
 def bullets(items):
-    return {"type": "bulletList", "content": [
-        {"type": "listItem", "content": [{"type": "paragraph", "content": item}]} for item in items
-    ]}
+    return "<ul>" + "".join(f"<li><p>{item}</p></li>" for item in items) + "</ul>"
 
 
 def section(name, items):
-    return [heading(name), bullets(items)]
-
-
-def doc(content):
-    return {"type": "doc", "version": 1, "content": content}
+    return heading(name) + bullets(items)
 
 
 DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -246,19 +259,19 @@ def is_day(day):
 
 
 def paragraph(*content):
-    return {"type": "paragraph", "content": list(content)}
+    return f"<p>{''.join(content)}</p>"
 
 
 def label(name, text):
     """Returns a paragraph with the label in bold, then its text."""
-    return paragraph(strong(f"{name}:"), space(), *inline(text))
+    return paragraph(strong(f"{name}:"), space(), inline(text))
 
 
 def dated(day):
     """Returns ` · ` and the day as a date node."""
-    return [{"type": "text", "text": " · "}, date_node(day)]
+    return " · " + date_node(day)
 
 
 def stamp(state, day):
     """Returns the lozenge of a version state, ` · ` and its release date."""
-    return [status(state, STATES[state]), *dated(day)]
+    return status(state, STATES[state]) + dated(day)

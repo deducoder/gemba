@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "[bug key]"
 allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Bug close
@@ -15,7 +16,13 @@ allowed-tools:
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
 ```
 
-Until the push this skill only reads and merges locally: it writes nothing in Jira and sends nothing to the remote. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the push this skill only reads and merges locally: it writes nothing in Jira and sends nothing to the remote. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

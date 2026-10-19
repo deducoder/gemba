@@ -1,7 +1,0 @@
----
-expect:
-  cloudId: string
-  keys: ABC
----
-
-{"results": [{"homepageId": "1002", "status": "current", "name": "Acme", "key": "ABC", "id": "1001", "type": "knowledge_base"}], "_links": {"base": "https://example.atlassian.net/wiki"}}

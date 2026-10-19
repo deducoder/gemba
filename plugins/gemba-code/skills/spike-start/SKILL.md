@@ -5,6 +5,7 @@ argument-hint: "[question]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/spike.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Spike start
@@ -27,7 +28,13 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/out-of-scope.md`
 
-The spike stays in Backlog: this skill answers nothing, changes no status, creates no branch and creates no work item other than a spike. The research belongs to the spike once it is implemented, so declaring it runs no experiment. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The spike stays in Backlog: this skill answers nothing, changes no status, creates no branch and creates no work item other than a spike. The research belongs to the spike once it is implemented, so declaring it runs no experiment. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJiraIssue createJiraIssue searchJiraIssuesUsingJql
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 A request with two questions or more is one spike per question. **Observe before drafting** decides each question on its own, so one can be answered, be a research or be a story while another becomes a spike; **Ask** is one message for all of them; from **Draft the spike** on, each question that is a spike goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question, and the epic of step 2 as the parent of each. Do not wait for an agreement to split them.
 
@@ -63,6 +70,6 @@ A request with two questions or more is one spike per question. **Observe before
    SPIKE
    ```
 
-8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as ADF.
+8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as HTML.
 
 9. **Reply** with the key and link of each spike it created with the fix version and the due date it set, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, why an epic it named is not the parent and, when the time-box does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.

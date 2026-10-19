@@ -1,8 +1,0 @@
----
-expect:
-  cloudId: string
-  projectIdOrKey: string
-  issueTypeId: string
----
-
-{"fields": [{"required": false, "schema": {"type": "array", "items": "version", "system": "fixVersions"}, "name": "Fix versions", "key": "fixVersions", "fieldId": "fixVersions", "operations": ["set", "add", "remove"], "allowedValues": [{"id": "10180", "name": "ABC v0.1.0", "archived": false, "released": true, "releaseDate": "2026-10-01"}, {"id": "10181", "name": "ABC v0.2.0", "archived": false, "released": false, "releaseDate": "2026-11-20"}]}]}

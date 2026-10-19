@@ -13,7 +13,7 @@ first, each a bullet `* [<Product> vX.Y.Z](<link to its page>) [Released] goal T
 without a date. Next holds at least one entry, or none once its entry became
 a version in Now or in Released, and Later any number, each a bullet `* **Unnumbered** goal`.
 
-Prints {"title": "Roadmap", "body": <ADF>} as JSON when the draft follows the template.
+Prints {"title": "Roadmap", "body": <HTML>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
@@ -25,7 +25,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import CURRENT, FENCE, STATES, VERSION_NAME, bullets, check_sections, doc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, status, strong  # noqa: E402
+from draft import CURRENT, FENCE, STATES, VERSION_NAME, attr_esc, bullets, check_sections, esc, filled, heading, inline, is_day, items, paragraph, paragraphs, space, split, stamp, status, strong  # noqa: E402
 
 SECTIONS = ["Now", "Next", "Later", "Released"]
 ENTRY = re.compile(r"^\*\*Unnumbered\*\* (.+)$")
@@ -110,28 +110,27 @@ def problems(draft):
 
 
 def entry(goal):
-    return [strong("Unnumbered"), {"type": "hardBreak"}, *inline(goal)]
+    return strong("Unnumbered") + "<br>" + inline(goal)
 
 
 def version(name, link, state, day, goal, target):
-    lozenge = stamp(state, day) if day else [status(state, STATES[state])]
-    return [{"type": "text", "text": name, "marks": [{"type": "link", "attrs": {"href": link}}]}, space(),
-            *lozenge, {"type": "hardBreak"},
-            *inline(goal), {"type": "hardBreak"}, strong("Target:"), space(), *inline(target)]
+    lozenge = stamp(state, day) if day else status(state, STATES[state])
+    return (f'<a href="{attr_esc(link)}">{esc(name)}</a>' + space() + lozenge + "<br>"
+            + inline(goal) + "<br>" + strong("Target:") + space() + inline(target))
 
 
 def body(content):
-    """Returns the live doc as an ADF document."""
-    nodes = []
+    """Returns the live doc as HTML."""
+    parts = []
     for name in SECTIONS:
-        nodes.append(heading(name, 2))
+        parts.append(heading(name, 2))
         if isinstance(content[name], str):
-            nodes.append(paragraph(*inline(content[name])))
+            parts.append(paragraph(inline(content[name])))
         elif name in VERSION_SECTIONS:
-            nodes.append(bullets([version(*listed) for listed in content[name]]))
+            parts.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
-            nodes.append(bullets([entry(goal) for goal in content[name]]))
-    return doc(nodes)
+            parts.append(bullets([entry(goal) for goal in content[name]]))
+    return "".join(parts)
 
 
 def main():

@@ -23,7 +23,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*(Reproduction|invoices\.py acme)'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*Criterion[\s\S]*(Reproduction|invoices\.py acme)'
   - name: no-develop
     type: tool_used
     tool: Bash
@@ -45,5 +45,5 @@ graders:
   - name: no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueWorklog'
     match: not_contains

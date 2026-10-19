@@ -23,11 +23,11 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(999\.00|116\.00)'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*(999\.00|116\.00)'
   - name: no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue|createConfluencePage|updateConfluencePage'
+    pattern: 'addOrEditJiraIssueWorklog|createConfluenceContent|updateConfluenceContent'
     match: not_contains
   - name: no-push
     type: tool_used

@@ -23,7 +23,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*(csv|999\.00)'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*(csv|999\.00)'
   - name: no-mark
     type: regex
     target: mock_calls

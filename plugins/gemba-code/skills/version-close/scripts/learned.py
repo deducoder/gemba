@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Writes what a released product version taught on its published page: a level two heading
-`Learned` at the end of the page, after `Work items`, with one bullet per lesson.
+"""Builds the edit that writes what a released product version taught on its published
+page: a level two heading `Learned` at the end of the page, after `Work items`, with one
+bullet per lesson.
 
 Usage: python3 learned.py < input.json
 
-The input is {"page": <the published ADF of the version page>, "draft": "<the lessons the
+The input is {"page": <the published HTML of the version page>, "draft": "<the lessons the
 person accepted, one `* ` bullet per line>"}. The rest of the page stays as it is, nodes and
 local IDs included.
 
-Prints the ADF document as JSON. When the version is not released yet, the page already has
-`Learned` or the draft is not a list of lessons, prints each problem to stderr, nothing to
-stdout and exits 1.
+Prints {"edits": [<the single appendNodeToEnd edit>]} as JSON. When the version is not
+released yet, the page already has `Learned` or the draft is not a list of lessons, prints
+each problem to stderr, nothing to stdout and exits 1.
 """
 
 import json
@@ -23,15 +24,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from draft import FENCE, HEADING, bullets, heading, inline, items  # noqa: E402
+from published import sections  # noqa: E402
 from released import stamp_state  # noqa: E402
 
 TITLE = "Learned"
 
 
 def has_learned(page):
-    return any(node.get("type") == "heading" and node.get("attrs", {}).get("level") == 2
-               and "".join(part.get("text", "") for part in node.get("content", [])) == TITLE
-               for node in page.get("content", []))
+    return any(name == TITLE for name, _, _, _ in sections(page))
 
 
 def problems(page, draft):
@@ -54,19 +54,17 @@ def main():
     try:
         data = json.loads(sys.stdin.read())
         page, draft = data["page"], data["draft"]
-        if not isinstance(page, dict) or not isinstance(draft, str):
-            raise TypeError
-        if not isinstance(page.get("content", []), list) or not all(isinstance(node, dict) for node in page.get("content", [])):
+        if not isinstance(page, str) or not isinstance(draft, str):
             raise TypeError
     except (ValueError, KeyError, TypeError):
-        print('input: write {"page": <ADF>, "draft": "* lesson"} as JSON', file=sys.stderr)
+        print('input: write {"page": "<html>", "draft": "* lesson"} as JSON', file=sys.stderr)
         return 1
     found, lessons = problems(page, draft)
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    page["content"] = page.get("content", []) + [heading(TITLE, 2), bullets([inline(lesson) for lesson in lessons])]
-    print(json.dumps(page, ensure_ascii=False))
+    value = heading(TITLE, 2) + bullets([inline(lesson) for lesson in lessons])
+    print(json.dumps({"edits": [{"name": "appendNodeToEnd", "value": value}]}, ensure_ascii=False))
     return 0
 
 

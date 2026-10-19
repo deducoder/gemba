@@ -23,7 +23,7 @@ graders:
   - name: no-mark
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|addWorklogToJiraIssue'
+    pattern: 'transitionJiraIssue|addOrEditJiraIssueWorklog'
     match: not_contains
   - name: switched
     type: tool_used

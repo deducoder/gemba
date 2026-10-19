@@ -23,7 +23,7 @@ graders:
   - name: no-mark
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|addWorklogToJiraIssue|createConfluencePage'
+    pattern: 'transitionJiraIssue|addOrEditJiraIssueWorklog|createConfluenceContent'
     match: not_contains
   - name: resumed
     type: tool_used
@@ -37,5 +37,5 @@ graders:
     max: 0
   - name: descendants-down-to-the-pages
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
-    input_match: '"depth":\s*([3-9]|[1-9]\d)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+    input_match: '^(?=[\s\S]*getConfluenceContentDescendants)(?=[\s\S]*"depth":\s*([3-9]|[1-9]\d))'

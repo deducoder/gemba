@@ -19,11 +19,11 @@ graders:
   - name: looked-for-the-folder
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePageDescendants'
+    pattern: 'getConfluenceContentDescendants'
   - name: no-write
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createJiraIssue|editJiraIssue|createConfluencePage'
+    pattern: 'transitionJiraIssue|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog|createJiraIssue|editJiraIssue|createConfluenceContent'
     match: not_contains
   - name: no-worktree
     type: tool_used

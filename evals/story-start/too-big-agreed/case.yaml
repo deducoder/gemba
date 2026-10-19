@@ -19,20 +19,21 @@ graders:
     min: 2
   - name: evidence
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__addCommentToJiraIssue
+    tool: mcp__plugin_atlassian-stub_atlassian__addOrEditJiraIssueComment
     min: 2
   - name: links
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: 'createJiraIssueLink'
     min: 1
   - name: keys
     type: regex
     pattern: 'ABC-101[\s\S]*ABC-102'
   - name: relates
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Relates)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Relates)(?=[\s\S]*Issue\W+ABC-101\b)(?=[\s\S]*Issue\W+ABC-102\b)'
   - name: agreed-blocks
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-103\b)(?=[\s\S]*outwardIssue\W+ABC-104\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-103\b)(?=[\s\S]*outwardIssue\W+ABC-104\b)'

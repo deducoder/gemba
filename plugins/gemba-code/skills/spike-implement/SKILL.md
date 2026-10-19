@@ -8,6 +8,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/findings.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Spike implement
@@ -32,7 +33,13 @@ Findings template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/findings.md`
 ```
 
-Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings.
+Until the Implement mark this skill only reads, apart from a drift comment or a cancellation, and it creates or edits no work item. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
@@ -82,7 +89,7 @@ Until the Implement mark this skill only reads, apart from a drift comment or a 
     FINDINGS
     ```
 
-    When step 5 kept a page for this spike, update it with `updateConfluencePage`: its `id` as `pageId`, the `title` and the `body` the script printed as ADF (`contentFormat: "adf"`), so the link to the issue stays. Otherwise create the page with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Spikes` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
+    When step 5 kept a page for this spike, update it with `updateConfluencePage`: its `id` as `pageId`, the `title` and the `body` the script printed as HTML (`contentFormat: "html"`), so the link to the issue stays. Otherwise create the page with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Spikes` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as HTML (`contentFormat: "html"`).
 
 11. **Report** each Done when criterion of the spike with its evidence in the form `ran:` or `read:`, the Answer, and the link to the page.
 
@@ -108,4 +115,4 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cancelled.py --site <site> <<'CANCELLED'
 CANCELLED
 ```
 
-Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the spike with `addCommentToJiraIssue` as ADF (`contentFormat: "adf"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the spike. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A spike in any other status is not cancelled here: say its status and stop.
+Read the transitions with `getTransitionsForJiraIssue`: when none has Cancelled as its destination (`to.name`), say so and stop, writing nothing. Then add what the command printed to the spike with `addCommentToJiraIssue` as HTML (`contentFormat: "html"`), and apply with `transitionJiraIssue` the one whose destination is Cancelled: pick it by destination, never by id. When it returns an error, stop: relay Jira's reason and say that the comment is already on the spike. Before the Implement mark, do not mark it Implement and do not create the branch; after it, leave the branch as it is and register the time of the phase as **Register the time of the phase** says. Then stop. A spike in any other status is not cancelled here: say its status and stop.

@@ -5,6 +5,7 @@ argument-hint: "[spike key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Spike review
@@ -21,7 +22,13 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
-Until the Review mark this skill only reads: it writes nothing in Jira and nothing in Confluence. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings.
+Until the Review mark this skill only reads: it writes nothing in Jira and nothing in Confluence. The `site` in `atlassian.json` above is the `cloudId` of every Jira and Confluence call, `confluence.space` the space of the findings. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue getConfluencePage getConfluencePageDescendants getConfluenceSpaces
+```
+
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
