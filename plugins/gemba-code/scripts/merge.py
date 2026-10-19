@@ -21,25 +21,21 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from published import sections  # noqa: E402
+from published import sections, top_level_nodes  # noqa: E402
 
 
-def first_node(live):
+def first_node(live_html):
     """Returns the localId of the very first node of the page, heading or body."""
-    for _, heading_id, _, body in live:
-        if heading_id:
-            return heading_id
-        if body:
-            return body[0][0]
-    return None
+    nodes = top_level_nodes(live_html)
+    return nodes[0][0] if nodes else None
 
 
-def anchor(order, names, live, index):
+def anchor(order, by_name, index):
     """Returns the localId to `insertNodeAfter`: the last node of the nearest earlier
     section both pages share, or None when none of them has one to anchor on."""
     for earlier in reversed(order[:index]):
-        if earlier in names:
-            _, heading_id, _, body = live[names.index(earlier)]
+        if earlier in by_name:
+            _, heading_id, _, body = by_name[earlier]
             return (body[-1][0] if body else heading_id) or None
     return None
 
@@ -48,23 +44,24 @@ def edits(live_html, new_html, replace):
     """Returns the edits that replace only the accepted sections, and the sections that
     neither page has."""
     live, new = sections(live_html), sections(new_html)
-    names = [name for name, _, _, _ in live]
-    order = [name for name, _, _, _ in new]
+    by_name = dict(zip((name for name, _, _, _ in live), live))
+    by_new_name = dict(zip((name for name, _, _, _ in new), new))
+    order = list(by_new_name)
     found, missing = [], []
     for name in replace:
         if name not in order:
-            if name not in names:
+            if name not in by_name:
                 missing.append(name)
                 continue
-            _, heading_id, _, body = live[names.index(name)]
+            _, heading_id, _, body = by_name[name]
             if heading_id:
                 found.append({"name": "deleteNode", "localId": heading_id})
             found += [{"name": "deleteNode", "localId": local} for local, _ in body]
             continue
-        _, _, new_heading, new_body = new[order.index(name)]
+        _, _, new_heading, new_body = by_new_name[name]
         value = (new_heading or "") + "".join(raw for _, raw in new_body)
-        if name in names:
-            _, heading_id, _, body = live[names.index(name)]
+        if name in by_name:
+            _, heading_id, _, body = by_name[name]
             if heading_id:
                 found.append({"name": "replaceNode", "localId": heading_id, "value": value})
                 found += [{"name": "deleteNode", "localId": local} for local, _ in body]
@@ -72,13 +69,13 @@ def edits(live_html, new_html, replace):
                 found.append({"name": "replaceNode", "localId": body[0][0], "value": value})
                 found += [{"name": "deleteNode", "localId": local} for local, _ in body[1:]]
             else:
-                found.append({"name": "insertNodeBefore", "localId": first_node(live), "value": value})
+                found.append({"name": "insertNodeBefore", "localId": first_node(live_html), "value": value})
             continue
-        target = anchor(order, names, live, order.index(name))
+        target = anchor(order, by_name, order.index(name))
         if target:
             found.append({"name": "insertNodeAfter", "localId": target, "value": value})
         else:
-            found.append({"name": "insertNodeBefore", "localId": first_node(live), "value": value})
+            found.append({"name": "insertNodeBefore", "localId": first_node(live_html), "value": value})
     return found, missing
 
 

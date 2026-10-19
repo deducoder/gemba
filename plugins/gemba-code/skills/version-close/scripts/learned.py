@@ -15,7 +15,6 @@ each problem to stderr, nothing to stdout and exits 1.
 """
 
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -25,10 +24,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from draft import FENCE, HEADING, bullets, heading, inline, items  # noqa: E402
+from published import sections  # noqa: E402
 from released import stamp_state  # noqa: E402
 
 TITLE = "Learned"
-HAS_LEARNED = re.compile(r"<h2[^>]*>Learned</h2>")
+
+
+def has_learned(page):
+    return any(name == TITLE for name, _, _, _ in sections(page))
 
 
 def problems(page, draft):
@@ -36,7 +39,7 @@ def problems(page, draft):
     found = []
     if stamp_state(page) != "Released":
         found.append("page: the version is not Released; release it first")
-    elif HAS_LEARNED.search(page):
+    elif has_learned(page):
         found.append(f"page: the version already has {TITLE}")
     lines = draft.splitlines()
     if any(FENCE.match(line) for line in lines):

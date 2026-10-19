@@ -49,8 +49,7 @@ def problem(page, day):
     """Returns what keeps the page from being released, or None."""
     if not is_day(day):
         return f"day: {day} is not a date YYYY-MM-DD"
-    _, match = first_paragraph(page)
-    state = match.group(1) if match else None
+    state = stamp_state(page)
     if state == "Released":
         return "page: the version is already Released"
     if state not in CURRENT:
