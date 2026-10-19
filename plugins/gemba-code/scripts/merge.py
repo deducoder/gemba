@@ -47,9 +47,22 @@ def edits(live_html, new_html, replace):
     by_name = dict(zip((name for name, _, _, _ in live), live))
     by_new_name = dict(zip((name for name, _, _, _ in new), new))
     order = list(by_new_name)
-    found, missing = [], []
+    found, missing, pending = [], [], []
+
+    def flush():
+        if not pending:
+            return
+        value = "".join(v for _, v in pending)
+        target = anchor(order, by_name, order.index(pending[0][0]))
+        if target:
+            found.append({"name": "insertNodeAfter", "localId": target, "value": value})
+        else:
+            found.append({"name": "insertNodeBefore", "localId": first_node(live_html), "value": value})
+        pending.clear()
+
     for name in replace:
         if name not in order:
+            flush()
             if name not in by_name:
                 missing.append(name)
                 continue
@@ -61,6 +74,7 @@ def edits(live_html, new_html, replace):
         _, _, new_heading, new_body = by_new_name[name]
         value = (new_heading or "") + "".join(raw for _, raw in new_body)
         if name in by_name:
+            flush()
             _, heading_id, _, body = by_name[name]
             if heading_id:
                 found.append({"name": "replaceNode", "localId": heading_id, "value": value})
@@ -71,11 +85,10 @@ def edits(live_html, new_html, replace):
             else:
                 found.append({"name": "insertNodeBefore", "localId": first_node(live_html), "value": value})
             continue
-        target = anchor(order, by_name, order.index(name))
-        if target:
-            found.append({"name": "insertNodeAfter", "localId": target, "value": value})
-        else:
-            found.append({"name": "insertNodeBefore", "localId": first_node(live_html), "value": value})
+        if pending and order.index(pending[-1][0]) + 1 != order.index(name):
+            flush()
+        pending.append((name, value))
+    flush()
     return found, missing
 
 

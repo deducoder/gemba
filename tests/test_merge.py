@@ -65,6 +65,13 @@ class Merge(unittest.TestCase):
             {"name": "insertNodeBefore", "localId": "a2", "value": "<h2>Withdrawn</h2><p>R-02 retirado</p>"},
         ])
 
+    def test_two_consecutive_new_sections_insert_in_their_own_order(self):
+        new = NEW.replace("<h2>Decision</h2>", "<h2>Withdrawn</h2><p>uno</p><h2>Removed</h2><p>dos</p><h2>Decision</h2>")
+        found = edits(["Withdrawn", "Removed"], new=new)
+        self.assertEqual(found, [
+            {"name": "insertNodeAfter", "localId": "a5", "value": "<h2>Withdrawn</h2><p>uno</p><h2>Removed</h2><p>dos</p>"},
+        ])
+
     def test_an_accepted_section_the_new_page_drops_is_removed(self):
         new = NEW.split("<h2>Decision</h2>")[0]
         found = edits(["Decision"], new=new)
