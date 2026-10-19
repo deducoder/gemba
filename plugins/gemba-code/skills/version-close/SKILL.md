@@ -37,7 +37,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Atlassian.
 
-2. **Find the version.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page, and then the children of the page titled `Vision` the same way: `Roadmap` is one of them. Without `Vision` or without `Roadmap`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Roadmap` with `getConfluencePage` and `contentFormat: "adf"`. The versions in progress are the entries of `Now` whose lozenge is `Planned` or `In progress`: each one carries its name `<Product> vX.Y.Z`, the link to its page, its goal and its `Target`. A version in `Released` may still have to bring back what it taught, because a close stopped before or the person asks again: when the argument names it, go on from step 11 with it. Without any version in progress, and without the argument naming one of those, reply that no version is in progress in `Now` and stop, writing nothing. The version is the one the argument names; with one alone and no argument, that one; with several and no argument, ask which.
+2. **Find the version.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page, and then the children of the page titled `Vision` the same way: `Roadmap` is one of them. Without `Vision` or without `Roadmap`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Roadmap` with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"` (its `snapshotToken` is needed to update it later). The versions in progress are the entries of `Now` whose lozenge is `Planned` or `In progress`: each one carries its name `<Product> vX.Y.Z`, the link to its page, its goal and its `Target`. A version in `Released` may still have to bring back what it taught, because a close stopped before or the person asks again: when the argument names it, go on from step 11 with it. Without any version in progress, and without the argument naming one of those, reply that no version is in progress in `Now` and stop, writing nothing. The version is the one the argument names; with one alone and no argument, that one; with several and no argument, ask which.
 
 3. **Check the fix version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata` and read the `allowedValues` of `fixVersions` with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. The fix version named as the version must be there; take its `id`. When it is missing, say that it is missing or archived and stop, writing nothing. When it is already released while the version is still in `Now`, an earlier run stopped after step 8: say so and go on from step 9.
 
@@ -59,7 +59,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
 
 8. **Release the fix version** with `manageJiraProjectVersion`, `action: "release"`, the `id` of step 3 as `versionId` and today as `releaseDate` (`YYYY-MM-DD`). When it returns an error, stop: relay Jira's reason and say that git is already released and pushed.
 
-9. **Mark the version page Released.** Read the page of the link of step 2 with `getConfluencePage` and `contentFormat: "adf"`, and run, alone and exactly in this form, with its body and today:
+9. **Mark the version page Released.** Read the page of the link of step 2 with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"`, and run, alone and exactly in this form, with its body and today:
 
    ```
    python3 ${CLAUDE_SKILL_DIR}/scripts/released.py <<'PAGE'
@@ -67,7 +67,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
    PAGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document it printed as its `body` (`contentFormat: "adf"`).
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from this step's read and the `edits` it printed.
 
 10. **Move the entry to Released.** Write the draft of `Roadmap`, whole, from the page as published, in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none, the text it already has kept as it is: `Now` without the version, or one paragraph saying no version is in progress when it was the only one, and `Released` with `* [<the version>](<the link to its page>) [Released] <goal> Target: <the Target>` first, before the versions it already lists, or alone when it was a paragraph. Check it, alone and exactly in this form, fixing each problem it names until it passes:
 
@@ -77,7 +77,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
     ROADMAP
     ```
 
-    Merge it, alone and exactly in this form, with the published body and the body the script printed, and update `Roadmap` with `updateConfluencePage` as step 9 does, with the document the merge printed:
+    Merge it, alone and exactly in this form, with the published body and the body the script printed, and update `Roadmap` with `updateConfluencePage` as step 9 does, with its `snapshotToken` from step 2's read and the `edits` the merge printed:
 
     ```
     python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py <<'MERGE'
@@ -87,9 +87,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
 
     A live doc saves late: read each of the two pages until it has the change, up to three times, and retry the update once when it still does not; then say which page did not save. When an update fails, stop and say what was written and what was not.
 
-11. **Read what the version taught.** Read with `searchJiraIssuesUsingJql` every work item of the version (`project = <jira.project> AND fixVersion = "<the version>"`, every page, with their `summary`, `issuetype`, `status`, `description` and `comment`) and, in the same message, `Requirements`, a child of `Vision`, with `getConfluencePage` and `contentFormat: "adf"`.
+11. **Read what the version taught.** Read with `searchJiraIssuesUsingJql` every work item of the version (`project = <jira.project> AND fixVersion = "<the version>"`, every page, with their `summary`, `issuetype`, `status`, `description` and `comment`) and, in the same message, `Requirements`, a child of `Vision`, with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"`.
 
-12. **Propose what was learned.** From the drift and cancellation comments, the bugs found in the version and the questions it answered, propose lessons: each one plain sentence that the next version can act on, with `code` as its only mark. When the version page already has `Learned`, propose none and go on to step 13. Propose them in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four lessons. The person keeps what they accept and corrects with a note. When they accept at least one, read the version page again with `getConfluencePage` and `contentFormat: "adf"` and run, alone and exactly in this form, with its body and the accepted lessons, one `* ` bullet each:
+12. **Propose what was learned.** From the drift and cancellation comments, the bugs found in the version and the questions it answered, propose lessons: each one plain sentence that the next version can act on, with `code` as its only mark. When the version page already has `Learned`, propose none and go on to step 13. Propose them in batches: one `AskUserQuestion` question with `multiSelect` per batch of up to four lessons. The person keeps what they accept and corrects with a note. When they accept at least one, read the version page again with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"` and run, alone and exactly in this form, with its body and the accepted lessons, one `* ` bullet each:
 
     ```
     python3 ${CLAUDE_SKILL_DIR}/scripts/learned.py <<'PAGE'
@@ -97,7 +97,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
     PAGE
     ```
 
-    It adds `Learned` at the end of the page and refuses a version that is not released yet. Right after step 9 a live doc may still show the old stamp: read the page again, up to three times, until it shows `Released`; when it still does not, say that what the version taught comes back once it is released, and stop. Update the page with `updateConfluencePage` as step 9 does, with the document it printed, and read it until it has `Learned`, as step 10 does. When the person accepts none, the page does not change.
+    It adds `Learned` at the end of the page and refuses a version that is not released yet. Right after step 9 a live doc may still show the old stamp: read the page again, up to three times, until it shows `Released`; when it still does not, say that what the version taught comes back once it is released, and stop. Update the page with `updateConfluencePage` as step 9 does, with this step's `snapshotToken` and the `edits` it printed, and read it until it has `Learned`, as step 10 does. When the person accepts none, the page does not change.
 
 13. **Propose the requirements that go back.** For each requirement of the section of the version in `Requirements`, the work items of step 11 whose description cites it as `(R-nn)` cover it. When it has at least one and all of them are Cancelled, propose moving it back to `Unassigned`, with the keys of those work items, in batches as step 12 does. A requirement no work item cites stays in its version.
 
@@ -111,6 +111,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
     REQUIREMENTS
     ```
 
-    Merge it with `merge.py` as step 10 does, replacing only the sections that changed among the version, `Unassigned` and `Assumptions and open questions`, and update `Requirements` with `updateConfluencePage` with the document the merge printed. Read `Requirements` until it has the change, as step 10 does.
+    Merge it with `merge.py` as step 10 does, replacing only the sections that changed among the version, `Unassigned` and `Assumptions and open questions`, and update `Requirements` with `updateConfluencePage`, its `snapshotToken` from step 11's read and the `edits` the merge printed. Read `Requirements` until it has the change, as step 10 does.
 
 16. **Reply** with the tag and its merge commit, the fix version released and its date, and the links to the version page and `Roadmap`; then the lessons written in `Learned`, the requirements moved back to `Unassigned`, the questions answered and the new requirements with their IDs, with the link to `Requirements`, or that the person accepted none. Suggest `/gemba-code:version-start` for the next version. This skill writes no worklog.
