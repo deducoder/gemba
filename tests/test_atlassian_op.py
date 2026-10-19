@@ -19,7 +19,7 @@ class AtlassianOperation(unittest.TestCase):
         result = run("getJiraIssue")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("getJiraIssue (primaria)", result.stdout)
-        self.assertIn("issueIdOrKey" if False else "params:", result.stdout)
+        self.assertIn("params:", result.stdout)
         self.assertIn("format:", result.stdout)
 
     def test_an_executeread_and_an_executewrite_operation_resolve(self):

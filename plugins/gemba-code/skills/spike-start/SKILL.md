@@ -34,7 +34,7 @@ The spike stays in Backlog: this skill answers nothing, changes no status, creat
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJiraIssue createJiraIssue searchJiraIssuesUsingJql
 ```
 
-Each step names the operation it resolved, not the connector tool directly.
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 A request with two questions or more is one spike per question. **Observe before drafting** decides each question on its own, so one can be answered, be a research or be a story while another becomes a spike; **Ask** is one message for all of them; from **Draft the spike** on, each question that is a spike goes through the steps on its own, with its own decision, Evidence, priority and time-box, each Evidence with only the lines that observed its question, and the epic of step 2 as the parent of each. Do not wait for an agreement to split them.
 

@@ -36,7 +36,7 @@ The epic and its children stay in Backlog: this skill changes no status, creates
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields createIssueLink createJiraIssue
 ```
 
-Each step names the operation it resolved, not the connector tool directly.
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

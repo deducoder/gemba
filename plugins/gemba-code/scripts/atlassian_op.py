@@ -5,10 +5,10 @@ operations it resolves.
 
 Usage: python3 atlassian_op.py <operation> [<operation> ...]
 
-Reads references/atlassian.json (sibling of this script's plugin), a list of
-{operation, tools: [{tool, tier}], params, format}. Prints one line per operation, in
-the order given, with its tool(s) and tier, its key parameters and its format. An
-operation not in the catalog prints that it was not found, instead of failing.
+Reads references/atlassian.json (sibling of this script's plugin), an object keyed by
+operation name, each value {tools: [{tool, tier}], params, format}. Prints one line per
+operation, in the order given, with its tool(s) and tier, its key parameters and its
+format. An operation not in the catalog prints that it was not found, instead of failing.
 """
 
 import json
@@ -19,7 +19,7 @@ CATALOG = Path(__file__).resolve().parent.parent / "references" / "atlassian.jso
 
 
 def resolve(names):
-    table = {row["operation"]: row for row in json.loads(CATALOG.read_text(encoding="utf-8"))}
+    table = json.loads(CATALOG.read_text(encoding="utf-8"))
     lines = []
     for name in names:
         row = table.get(name)

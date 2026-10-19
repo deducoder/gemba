@@ -33,7 +33,7 @@ Until the push of step 7 this skill only reads and works locally: it writes noth
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getConfluencePage updateConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion
 ```
 
-Each step names the operation it resolved, not the connector tool directly.
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Atlassian.
 

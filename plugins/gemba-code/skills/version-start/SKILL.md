@@ -43,7 +43,7 @@ This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, u
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue createIssueLink getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql
 ```
 
-Each step names the operation it resolved, not the connector tool directly.
+!`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first.
 
