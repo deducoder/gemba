@@ -27,6 +27,12 @@ CLAUDE.md:
 !`cat "${CLAUDE_PROJECT_DIR}/CLAUDE.md" 2>/dev/null || echo "(missing)"`
 ```
 
+README.md:
+
+```
+!`cat "${CLAUDE_PROJECT_DIR}/README.md" 2>/dev/null || echo "(missing)"`
+```
+
 Vision template:
 
 ```markdown
@@ -125,7 +131,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
     VISION
     ```
 
-14. **Write the Purpose and the README.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`. When the project has no `README.md` yet, write one with Write: `# ` and the product's name, from the `name` `getConfluenceSpaces` returned in step 2, then the same first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`; no Install, Usage, Contributing or License section. When `README.md` already exists, leave it untouched and say so.
+14. **Write the Purpose and the README.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`. When `README.md` above is `(missing)`, write one with Write: `# ` and the product's name, from the `name` `getConfluenceSpaces` returned in step 2, then the same two lines as `## Purpose`; no Install, Usage, Contributing or License section. When it already exists, leave it untouched and say so.
 
 15. **Propose a license.** Run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py`: it prints the project's visibility, read from its `origin` remote and the GitHub API, with no credentials. When `public` is `false`, skip this step: that covers no `origin`, a remote that is not on `github.com`, or a repository this skill cannot confirm is public. When it is `true` and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
     - For MIT, run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py mit`; a non-zero exit means the download failed, so stop and say so. Write its output to `LICENSE`, with `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner printed above>)`.
