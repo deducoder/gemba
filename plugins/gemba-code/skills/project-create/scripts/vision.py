@@ -22,7 +22,7 @@ work of its users and where it goes; then the `### Problem`, `### Users`, `### S
 With --requirements, the URL of the Requirements page, each `Question n` in the Baseline or
 Target line becomes a link to that page, where the open question and its assumption live.
 
-Prints {"title": "Vision", "body": <ADF>} as JSON when the draft follows the template.
+Prints {"title": "Vision", "body": <HTML>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
@@ -35,7 +35,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, bullets, check_sections, dated, doc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
+from draft import BASELINE, FENCE, bullets, check_sections, dated, esc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -177,39 +177,42 @@ def problems(draft):
 
 
 def panel(kind, *content):
-    return {"type": "panel", "attrs": {"panelType": kind}, "content": list(content)}
+    return f'<div data-type="panel-{kind}">{"".join(content)}</div>'
+
+
+def mention(account):
+    return f'<span data-type="mention" data-user-id="{esc(account)}">@{esc(account)}</span>'
 
 
 def body(content, requirements=None):
-    """Returns the live doc as an ADF document."""
+    """Returns the live doc as HTML."""
     text, today = content["problem"]
     statement, metrics, (baseline, target) = content["success"]
-    nodes = [
-        paragraph(*inline(content["what"]), space(), status(content["origin"], "neutral")),
-        *[paragraph(*inline(block)) for block in content["intro"]],
-        heading("Problem", 2), paragraph(*inline(text)), panel("info", label("Today", today)),
-        heading("Users", 2), bullets([[strong(role), space(), *inline(need)] for role, need in content["users"]]),
-        heading("Success", 2), paragraph(*inline(statement)), bullets([inline(metric) for metric in metrics]),
-        paragraph(strong("Baseline:"), space(), *linked(baseline, requirements), space(), strong("Target:"), space(),
-                  *linked(target, requirements)),
+    parts = [
+        paragraph(inline(content["what"]) + space() + status(content["origin"], "neutral")),
+        "".join(paragraph(inline(block)) for block in content["intro"]),
+        heading("Problem", 2), paragraph(inline(text)), panel("info", label("Today", today)),
+        heading("Users", 2), bullets([strong(role) + space() + inline(need) for role, need in content["users"]]),
+        heading("Success", 2), paragraph(inline(statement)), bullets([inline(metric) for metric in metrics]),
+        paragraph(strong("Baseline:") + space() + linked(baseline, requirements) + space() + strong("Target:") + space()
+                  + linked(target, requirements)),
     ]
     if content["constraints"]:
-        nodes += [heading("Constraints", 2), bullets([inline(item) for item in content["constraints"]])]
-    nodes.append(heading("Risks", 2))
+        parts += [heading("Constraints", 2), bullets([inline(item) for item in content["constraints"]])]
+    parts.append(heading("Risks", 2))
     for risk in content["risks"]:
-        nodes += [
-            paragraph(strong(risk["name"]), space(), status(risk["kind"], KINDS[risk["kind"]]),
-                      space(), status(risk["proof"], PROOF[risk["proof"]])),
+        parts += [
+            paragraph(strong(risk["name"]) + space() + status(risk["kind"], KINDS[risk["kind"]])
+                      + space() + status(risk["proof"], PROOF[risk["proof"]])),
             panel("note", label("Validation", risk["Validation"]), label("Threshold", risk["Threshold"])),
         ]
     if content["decision"]:
         state, what, account, day = content["decision"]
-        nodes += [heading("Decision", 2), panel(
-            PANELS[state], {"type": "heading", "attrs": {"level": 3}, "content": inline(what)},
-            paragraph(strong("Decided by:"), space(), {"type": "mention", "attrs": {"id": account}},
-                      *dated(day)),
+        parts += [heading("Decision", 2), panel(
+            PANELS[state], f"<h3>{inline(what)}</h3>",
+            paragraph(strong("Decided by:") + space() + mention(account) + dated(day)),
         )]
-    return doc(nodes)
+    return "".join(parts)
 
 
 def main():
