@@ -105,7 +105,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 12. **Ask the person to accept** the three drafts, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
 13. **Publish,** in this order, and when a call fails, stop and say what was published and what was not, without creating again a page that exists:
-    1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "adf"`).
+    1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "html"`).
     2. `Requirements` and `Roadmap`, the roadmap checked again with the link to the version page. Merge each one, alone and exactly in this form, with its published body, the body its script printed and the headings it changes: for `Requirements` the version, `Unassigned` and `Assumptions and open questions` when a question changed; for `Roadmap`, `Now` and `Next`:
 
        ```

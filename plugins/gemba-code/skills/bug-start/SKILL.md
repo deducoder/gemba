@@ -93,6 +93,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJ
    BUG
    ```
 
-12. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as ADF (`contentFormat: "adf"`), with no parent, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as ADF, and link the bug with `createIssueLink`, the link type `Relates`, to each origin of **Read each work item key**.
+12. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), with no parent, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as HTML, and link the bug with `createIssueLink`, the link type `Relates`, to each origin of **Read each work item key**.
 
 13. **Reply** with the key and link of the bug it created and the keys it linked it to, and nothing else.

@@ -53,6 +53,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluenceSpaces getCon
    RESEARCH
    ```
 
-7. **Publish the page.** When step 3 kept a page for this question, update it with `updateConfluencePage`: its `id` as `pageId`, the `title` and the `body` the script printed as ADF (`contentFormat: "adf"`). Otherwise create it with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Researchs` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as ADF (`contentFormat: "adf"`).
+7. **Publish the page.** When step 3 kept a page for this question, update it with `updateConfluencePage`: its `id` as `pageId`, the `title` and the `body` the script printed as HTML (`contentFormat: "html"`). Otherwise create it with `createConfluencePage`: the `id` of the space as `spaceId`, the `id` of the `Researchs` folder as `parentId`, `subtype: live`, the `title` the script printed and its `body` as HTML (`contentFormat: "html"`).
 
 8. **Reply** with the Answer in one sentence and the link to the page.
