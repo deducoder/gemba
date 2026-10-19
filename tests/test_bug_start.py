@@ -1,4 +1,4 @@
-"""Checks bug-start's draft script: what it accepts, what it rejects and the ADF it
+"""Checks bug-start's draft script: what it accepts, what it rejects and the HTML it
 prints for Jira, the description and the Evidence comment."""
 
 import json
@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "plugins/gemba-code/skills/bug-start"
 SCRIPT = SKILL / "scripts/bug.py"
 SITE = "example.atlassian.net"
-ORANGE = {"type": "textColor", "attrs": {"color": "#ff991f"}}
 
 REPRODUCTION = """$ python3 invoices.py acme
 F-001      100.00
@@ -61,20 +60,8 @@ def run(draft):
     return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
 
 
-def texts(node):
-    """Yields every inline node of an ADF document, in order."""
-    for child in node.get("content", []):
-        if child["type"] in ("text", "inlineCard"):
-            yield child
-        yield from texts(child)
-
-
-def headings(document):
-    return [(n["attrs"]["level"], n["content"][0]["text"]) for n in document["content"] if n["type"] == "heading"]
-
-
-def text_of(node):
-    return "".join(n.get("text", "") for n in texts(node))
+def headings(html):
+    return [(int(level), name) for level, name in re.findall(r"<h(\d)>(.+?)</h\1>", html)]
 
 
 class BugDraft(unittest.TestCase):
@@ -86,44 +73,40 @@ class BugDraft(unittest.TestCase):
     def test_a_draft_that_follows_the_template_prints_the_summary_the_description_and_the_comment(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
         self.assertEqual(self.bug["summary"], "Invoice totals leave out the tax")
-        self.assertEqual(self.bug["description"]["type"], "doc")
-        self.assertEqual(self.bug["comment"]["type"], "doc")
+        self.assertTrue(self.bug["description"].startswith("<p>"))
+        self.assertTrue(self.bug["comment"].startswith("<h3>Evidence</h3>"))
 
     def test_the_description_holds_the_failure_the_cause_the_neighbors_and_the_contract(self):
         description = self.bug["description"]
-        self.assertEqual(description["content"][0]["type"], "paragraph")
+        self.assertTrue(description.startswith("<p>"))
         self.assertEqual(headings(description), [(3, "Root cause"), (3, "Neighboring inputs"), (3, "Done when"), (3, "Out of scope")])
-        self.assertIn("devuelve el subtotal sin multiplicarlo", text_of(description))
-        self.assertNotIn("Reproduction", text_of(description))
-        self.assertNotIn("ran: ", text_of(description))
+        self.assertIn("devuelve el subtotal sin multiplicarlo", description)
+        self.assertNotIn("Reproduction", description)
+        self.assertNotIn("ran: ", description)
 
     def test_the_neighboring_inputs_become_a_table_with_its_header(self):
-        tables = [n for n in self.bug["description"]["content"] if n["type"] == "table"]
-        self.assertEqual(len(tables), 1)
-        rows = tables[0]["content"]
-        self.assertEqual([cell["type"] for cell in rows[0]["content"]], ["tableHeader", "tableHeader"])
-        self.assertEqual([text_of(cell) for cell in rows[0]["content"]], ["Input", "Current behavior"])
-        self.assertEqual([text_of(row["content"][0]) for row in rows[1:]], ["python3 invoices.py nobody", "python3 invoices.py"])
-        self.assertIn({"type": "text", "text": "python3 invoices.py nobody", "marks": [{"type": "code"}]}, list(texts(rows[1])))
+        description = self.bug["description"]
+        self.assertEqual(description.count("<table>"), 1)
+        table = re.search(r"<table>(.*?)</table>", description, re.DOTALL).group(1)
+        self.assertEqual(re.findall(r"<th><p>(.+?)</p></th>", table), ["Input", "Current behavior"])
+        self.assertEqual(re.findall(r"<td><p>(.+?)</p></td>", table)[::2], ["<code>python3 invoices.py nobody</code>", "<code>python3 invoices.py</code>"])
 
     def test_the_evidence_goes_to_one_comment_with_the_reproduction_and_the_cause_trail(self):
         comment = self.bug["comment"]
         self.assertEqual(headings(comment), [(3, "Evidence"), (4, "Reproduction"), (4, "Cause trail")])
-        blocks = [n for n in comment["content"] if n["type"] == "codeBlock"]
-        self.assertEqual([b["content"][0]["text"] for b in blocks], [REPRODUCTION])
-        lists = [n for n in comment["content"] if n["type"] == "bulletList"]
+        self.assertIn(f"<pre><code>{REPRODUCTION}</code></pre>", comment)
         self.assertEqual(
-            [text_of(item) for item in lists[0]["content"]],
-            ["ran: python3 -m unittest → FAILED (failures=1)", "read: invoices.py:16"],
+            re.findall(r"<li><p>(.+?)</p></li>", comment),
+            ["ran: <code>python3 -m unittest</code> → <code>FAILED (failures=1)</code>", "read: <code>invoices.py:16</code>"],
         )
 
     def test_a_criterion_in_equals_reaches_jira_in_orange(self):
-        orange = [n["text"] for n in texts(self.bug["description"]) if ORANGE in n.get("marks", [])]
-        self.assertEqual(orange, ["El comportamiento de cada fila de Neighboring inputs no cambia."])
+        description = self.bug["description"]
+        self.assertIn('<span style="color: #ff991f">El comportamiento de cada fila de Neighboring inputs no cambia.</span>', description)
         self.assertNotIn("==", self.result.stdout)
 
     def test_an_out_of_scope_key_becomes_a_link_to_the_issue(self):
-        self.assertIn({"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/ABC-7"}}, list(texts(self.bug["description"])))
+        self.assertIn(f'<a href="https://{SITE}/browse/ABC-7" data-card-appearance="inline"></a>', self.bug["description"])
 
     def test_an_out_of_scope_with_nothing_to_exclude_is_accepted(self):
         result = run(DRAFT.replace("* Redondear por línea → ABC-7", "* Ninguno."))

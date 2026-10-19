@@ -1,5 +1,5 @@
 """Checks story-start's draft script: what it accepts, what it rejects and the
-ADF it prints for Jira."""
+HTML it prints for Jira."""
 
 import json
 import re
@@ -38,34 +38,23 @@ def run(draft):
     return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
 
 
-def texts(node):
-    """Yields every inline node of an ADF document, in order."""
-    for child in node.get("content", []):
-        if child["type"] in ("text", "inlineCard"):
-            yield child
-        yield from texts(child)
-
-
 class StoryDraft(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.result = run(DRAFT)
         cls.story = json.loads(cls.result.stdout) if cls.result.returncode == 0 else {}
-        cls.nodes = list(texts(cls.story.get("description", {})))
 
-    def test_a_draft_that_follows_the_template_prints_the_summary_and_the_adf(self):
+    def test_a_draft_that_follows_the_template_prints_the_summary_and_the_html(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
         story = self.story
         self.assertEqual(story["summary"], "Let customers download their invoices")
-        self.assertEqual(story["description"]["type"], "doc")
-        headings = [n["content"][0]["text"] for n in story["description"]["content"] if n["type"] == "heading"]
+        headings = re.findall(r"<h3>(.+?)</h3>", story["description"])
         self.assertEqual(headings, ["Done when", "Out of scope"])
 
     def test_the_evidence_goes_to_a_comment_with_one_line_per_criterion(self):
         story = self.story
-        self.assertEqual(story["comment"]["type"], "doc")
-        lines = ["".join(n["text"] for n in item["content"][0]["content"]) for item in story["comment"]["content"][1]["content"]]
-        self.assertEqual(lines, ["read: app/invoices.py:12", "ran: curl -i /invoices/0 → 404"])
+        lines = re.findall(r"<li><p>(.+?)</p></li>", story["comment"])
+        self.assertEqual(lines, ["read: <code>app/invoices.py:12</code>", "ran: <code>curl -i /invoices/0</code> → 404"])
 
     def test_more_than_8_criteria_ask_to_split_the_story(self):
         criteria = "".join(f"* El criterio {i} se cumple.\n" for i in range(9))
@@ -77,19 +66,15 @@ class StoryDraft(unittest.TestCase):
         self.assertEqual(run(draft.replace("* El criterio 8 se cumple.\n", "").replace("* read: `app.py:8`\n", "")).returncode, 0)
 
     def test_a_criterion_in_equals_reaches_jira_in_orange_except_its_code(self):
-        nodes = self.nodes
-        orange = [n["text"] for n in nodes if {"type": "textColor", "attrs": {"color": "#ff991f"}} in n.get("marks", [])]
-        self.assertEqual(orange, ["Si la factura no existe, la descarga responde 404."])
-        for node in nodes:
-            marks = [m["type"] for m in node.get("marks", [])]
-            self.assertFalse("code" in marks and "textColor" in marks, node)
+        description = self.story["description"]
+        self.assertIn('<span style="color: #ff991f">Si la factura no existe, la descarga responde 404.</span>', description)
         self.assertNotIn("==", self.result.stdout)
 
     def test_code_in_backticks_becomes_a_code_mark(self):
-        self.assertIn({"type": "text", "text": "Download", "marks": [{"type": "code"}]}, self.nodes)
+        self.assertIn("<code>Download</code>", self.story["description"])
 
     def test_an_out_of_scope_key_becomes_a_link_to_the_issue(self):
-        self.assertIn({"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/ABC-7"}}, self.nodes)
+        self.assertIn(f'<a href="https://{SITE}/browse/ABC-7" data-card-appearance="inline"></a>', self.story["description"])
 
     def test_the_opening_sentence_may_name_a_domain_or_a_version(self):
         draft = DRAFT.replace("para llevar mis cuentas.", "para llevar mis cuentas en claude.ai v1.2.")
@@ -102,8 +87,6 @@ class StoryDraft(unittest.TestCase):
         result = run(draft)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(f"https://{SITE}/browse/MY_PROJ-7", result.stdout)
-        cards = [n for n in texts(json.loads(result.stdout)["description"]) if n["type"] == "inlineCard"]
-        self.assertEqual(cards, [{"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/MY_PROJ-7"}}])
 
     def test_the_template_has_the_sections_the_script_expects(self):
         template = (SKILL / "assets/story.md").read_text(encoding="utf-8")
