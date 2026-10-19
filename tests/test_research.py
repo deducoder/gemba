@@ -1,7 +1,8 @@
-"""Checks research's draft script: what it accepts, what it rejects and the ADF it prints
+"""Checks research's draft script: what it accepts, what it rejects and the HTML it prints
 for the live doc that holds the answer to a question."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -60,8 +61,8 @@ def rejected(draft, *words, args=()):
     return result.stderr
 
 
-def flat(node):
-    return "".join(node["text"] if node["type"] == "text" else "" for node in node.get("content", []))
+def headings(html, level=2):
+    return re.findall(rf"<h{level}>(.+?)</h{level}>", html)
 
 
 class ResearchDraft(unittest.TestCase):
@@ -69,7 +70,7 @@ class ResearchDraft(unittest.TestCase):
     def setUpClass(cls):
         cls.result = run(DRAFT)
         cls.page = json.loads(cls.result.stdout) if cls.result.returncode == 0 else {}
-        cls.body = cls.page.get("body", {}).get("content", [])
+        cls.body = cls.page.get("body", "")
 
     def test_a_draft_that_follows_the_template_passes(self):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
@@ -79,51 +80,47 @@ class ResearchDraft(unittest.TestCase):
         self.assertEqual(self.page["title"], QUESTION)
 
     def test_without_a_key_the_page_opens_with_the_decision_sentence(self):
-        self.assertEqual(flat(self.body[0]), "Decide el esquema de la historia de liberar biases y lo espera quien la implementa.")
+        self.assertTrue(self.body.startswith("<p>Decide el esquema de la historia de liberar biases y lo espera quien la implementa.</p>"))
 
     def test_the_headings_are_the_five_sections_in_order(self):
-        headings = [(n["attrs"]["level"], flat(n)) for n in self.body if n["type"] == "heading" and n["attrs"]["level"] == 2]
-        self.assertEqual([h[1] for h in headings], ["Answer", "Method", "Findings", "Sources", "Next"])
+        self.assertEqual(headings(self.body), ["Answer", "Method", "Findings", "Sources", "Next"])
 
     def test_the_topics_are_level_three_headings(self):
-        topics = [flat(n) for n in self.body if n["type"] == "heading" and n["attrs"]["level"] == 3]
-        self.assertEqual(topics, ["1. Índices parciales"])
+        self.assertEqual(headings(self.body, 3), ["1. Índices parciales"])
 
     def test_the_citation_number_of_a_finding_links_to_its_source(self):
-        links = [t for n in self.body if n["type"] == "paragraph" for t in n["content"]
-                 if t["type"] == "text" and t.get("marks") == [{"type": "link", "attrs": {"href": URL_ONE}}]]
-        self.assertEqual([t["text"] for t in links], ["[1]"])
+        self.assertIn(f'<a href="{URL_ONE}">[1]</a>', self.body)
 
     def test_a_number_inside_a_code_span_is_code_and_not_a_citation(self):
         draft = DRAFT.replace("su `WHERE`,", "su `WHERE`, como `arr[1]`,")
         result = run(draft)
         self.assertEqual(result.returncode, 0, result.stderr)
-        nodes = [t for n in json.loads(result.stdout)["body"]["content"] if n["type"] == "paragraph" for t in n["content"]
-                 if t["type"] == "text"]
-        self.assertIn({"type": "text", "text": "arr[1]", "marks": [{"type": "code"}]}, nodes)
-        self.assertEqual([t["text"] for t in nodes if any(m["type"] == "link" for m in t.get("marks", []))], ["[1]"])
+        body = json.loads(result.stdout)["body"]
+        self.assertIn("<code>arr[1]</code>", body)
+        self.assertEqual(re.findall(r'<a href="[^"]+">(\[\d+\])</a>', body), ["[1]"])
 
     def test_the_state_of_each_finding_is_bold(self):
-        states = [t["text"] for n in self.body if n["type"] == "paragraph" for t in n["content"]
-                  if t["type"] == "text" and t.get("marks") == [{"type": "strong"}]]
-        self.assertEqual(states, ["1.1 Documented:", "1.2 Inferred:", "1.3 Unverified:"])
+        self.assertEqual(
+            re.findall(r"<strong>(\d\.\d (?:Documented|Inferred|Unverified)):</strong>", self.body),
+            ["1.1 Documented", "1.2 Inferred", "1.3 Unverified"],
+        )
 
     def test_each_source_is_a_smart_link_followed_by_its_kind_and_date(self):
-        cards = [n for n in self.body if n["type"] == "paragraph" and len(n["content"]) > 1 and n["content"][1]["type"] == "inlineCard"]
-        self.assertEqual([c["content"][1]["attrs"]["url"] for c in cards], [URL_ONE, URL_TWO])
-        self.assertIn("(official, 2026-10-17)", flat(cards[0]))
+        cards = re.findall(r'<p>\[\d+\] <a href="([^"]+)" data-card-appearance="inline"></a>(.+?)</p>', self.body)
+        self.assertEqual([url for url, _ in cards], [URL_ONE, URL_TWO])
+        self.assertIn("(official, 2026-10-17)", cards[0][1])
 
     def test_the_finding_citations_of_the_answer_stay_plain_text(self):
-        answer = next(n for n in self.body if n["type"] == "paragraph" and "[Finding 1.1]" in flat(n))
-        self.assertTrue(all("marks" not in t for t in answer["content"]))
+        answer = re.search(r"<p>(Sí\..+?\[Finding 1\.2\]\.)</p>", self.body).group(1)
+        self.assertNotIn("<a ", answer)
 
 
 class ResearchKey(unittest.TestCase):
     def test_a_key_opens_the_page_with_a_smart_link_to_the_issue(self):
         result = run(DRAFT, "--key", "ABC-7")
         self.assertEqual(result.returncode, 0, result.stderr)
-        first = json.loads(result.stdout)["body"]["content"][0]
-        self.assertEqual(first["content"], [{"type": "inlineCard", "attrs": {"url": f"https://{SITE}/browse/ABC-7"}}])
+        body = json.loads(result.stdout)["body"]
+        self.assertTrue(body.startswith(f'<p><a href="https://{SITE}/browse/ABC-7" data-card-appearance="inline"></a></p>'))
 
     def test_a_key_that_is_not_a_work_item_key(self):
         rejected(DRAFT, "key", args=("--key", "abc7"))

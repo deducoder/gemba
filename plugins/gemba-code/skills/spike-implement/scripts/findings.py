@@ -14,7 +14,7 @@ for them.
 
 Lines are written and converted as the plugin's scripts/draft.py says.
 
-When the draft follows the template, prints {"title": ..., "body": <ADF>} as JSON: the link
+When the draft follows the template, prints {"title": ..., "body": <HTML>} as JSON: the link
 to the issue as a smart link alone on the first line, the question, and the three sections.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
@@ -28,7 +28,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import FENCE, TRAIL, check_sections, check_summary, doc, heading, inline, split, unclosed  # noqa: E402
+from draft import FENCE, TRAIL, check_sections, check_summary, esc, heading, inline, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Evidence", "Next"]
 VERDICT = re.compile(r"^(sí|no|inconclusa)[.,:;]", re.IGNORECASE)
@@ -97,46 +97,38 @@ def problems(draft, key):
 
 
 def paragraph(text):
-    return {"type": "paragraph", "content": inline(text)}
+    return f"<p>{inline(text)}</p>"
 
 
 def verdict(text):
     """Returns the Answer paragraph with its yes, no or inconclusive in bold."""
     first = VERDICT.match(text)
-    nodes = inline(text[first.end():])
-    return {"type": "paragraph", "content": [
-        {"type": "text", "text": text[:first.end()], "marks": [{"type": "strong"}]}, *nodes]}
+    return f"<p><strong>{esc(text[:first.end()])}</strong>{inline(text[first.end():])}</p>"
 
 
 def labelled(text):
     """Returns a ran: or read: line with its label in bold."""
     label = text.split(":", 1)[0] + ": "
-    return {"type": "paragraph", "content": [
-        {"type": "text", "text": label, "marks": [{"type": "strong"}]}, *inline(text[len(label):])]}
+    return f"<p><strong>{esc(label)}</strong>{inline(text[len(label):])}</p>"
 
 
 def evidence(block):
     if isinstance(block, tuple):
         language, code = block
-        return {"type": "codeBlock", "attrs": {"language": language} if language else {},
-                **({"content": [{"type": "text", "text": code}]} if code else {})}
+        cls = f' class="language-{esc(language)}"' if language else ""
+        return f"<pre><code{cls}>{esc(code)}</code></pre>"
     return labelled(block) if block.startswith(TRAIL) else paragraph(block)
 
 
 def body(content, site, key):
-    """Returns the live doc as an ADF document."""
-    link = {"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}
-    return doc([
-        {"type": "paragraph", "content": [link]},
-        paragraph(content["question"]),
-        heading("Answer", 2),
-        verdict(content["answer"][0]),
-        *[paragraph(block) for block in content["answer"][1:]],
-        heading("Evidence", 2),
-        *[evidence(block) for block in content["evidence"]],
-        heading("Next", 2),
-        *[paragraph(block) for block in content["next"]],
-    ])
+    """Returns the live doc as HTML."""
+    link = f'<p><a href="https://{site}/browse/{key}" data-card-appearance="inline"></a></p>'
+    return (link
+            + paragraph(content["question"])
+            + heading("Answer", 2) + verdict(content["answer"][0])
+            + "".join(paragraph(block) for block in content["answer"][1:])
+            + heading("Evidence", 2) + "".join(evidence(block) for block in content["evidence"])
+            + heading("Next", 2) + "".join(paragraph(block) for block in content["next"]))
 
 
 def main():
