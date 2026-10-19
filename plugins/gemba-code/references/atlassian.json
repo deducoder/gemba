@@ -106,7 +106,7 @@
         "tier": "executeDestructive"
       }
     ],
-    "params": "action create|update|release|archive, versionId, releaseDate",
+    "params": "action create (projectIdOrKey, name, releaseDate) | update|release|archive (versionId, releaseDate)",
     "format": "—"
   },
   "lookupJiraAccountId": {
@@ -172,5 +172,25 @@
     ],
     "params": "contentId, snapshotToken, body {format html} o edits [replaceNode, insertNodeAfter, insertNodeBefore, deleteNode, appendNodeToEnd, moveNode, setAttrs]",
     "format": "html o markdown (no ADF)"
+  },
+  "setConfluenceContentStatus": {
+    "tools": [
+      {
+        "tool": "setConfluenceContentStatus",
+        "tier": "executeWrite"
+      }
+    ],
+    "params": "contentId, name, color",
+    "format": "contentState {name}"
+  },
+  "getConfluenceContentStatus": {
+    "tools": [
+      {
+        "tool": "getConfluenceContentStatus",
+        "tier": "executeRead"
+      }
+    ],
+    "params": "contentId",
+    "format": "contentState {name}"
   }
 }

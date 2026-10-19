@@ -1,6 +1,6 @@
 ---
 name: version-start
-description: Defines the next version of a framed product with the person (its requirements and the questions that block them, the stack, the release date in working days, the check of the fix version the person created and its live doc under Roadmap) and declares its work items through epic-start, story-start and spike-start, only those the person accepts. Stops without a go decision in the Vision. Use to plan the next version or MVP of a product framed with project-create, or to declare the work items of a defined version. It creates no fix version.
+description: Defines the next version of a framed product with the person (its requirements and the questions that block them, the stack, the release date in working days, the fix version and its live doc under Roadmap) and declares its work items through epic-start, story-start and spike-start, only those the person accepts. Stops without a go decision in the Vision. Use to plan the next version or MVP of a product framed with project-create, or to declare the work items of a defined version.
 argument-hint: "[Next entry of the roadmap, or a version in Now]"
 disable-model-invocation: true
 allowed-tools:
@@ -37,10 +37,10 @@ Version template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/declare-through-start.md`
 
-This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates work items only through `epic-start`, `story-start` and `spike-start`, and only those the person accepted; it creates no fix version: the person creates it in Jira. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages. Resolve the operations this skill names below with:
+This skill writes one new Confluence page, `<Product> vX.Y.Z` under `Roadmap`, updates `Requirements` and `Roadmap`, and writes the `## Stack` section of `CLAUDE.md`, and only what the person accepted. It creates work items only through `epic-start`, `story-start` and `spike-start`, and only those the person accepted. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py createIssueLink getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py createIssueLink getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion setConfluenceContentStatus
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
@@ -100,12 +100,12 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
     Each command runs alone, as its own Bash call; the three can go in one message. Fix each problem a command names until it passes.
 
-11. **Check the fix version.** Ask the person to create in Jira, in Releases, the version with the name of step 4 and the `releaseDate` of step 9 as its release date. When they say it is created, read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4: the version exists, is not released, and its `releaseDate` is the one of step 9. These values leave out archived versions, so a version not listed is missing or archived: say both. When one of them fails, say which and ask again; write nothing until it holds.
+11. **Check the fix version.** Read the `allowedValues` of `fixVersions` again with `getJiraIssueTypeMetaWithFields` and the id of Epic from step 4. When the name of step 4 is there, use it: it must not be released, and its `releaseDate` must be the one of step 9; when either fails, say so and stop. When it is not there, create it with `manageJiraProjectVersion`, `action: "create"`, the `projectIdOrKey` of `atlassian.json`, the `name` of step 4 and the `releaseDate` of step 9. These values leave out archived versions, so a version neither listed nor just created is archived under that name: say so and stop, writing nothing until it holds.
 
 12. **Ask the person to accept** the three drafts, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
 13. **Publish,** in this order, and when a call fails, stop and say what was published and what was not, without creating again a page that exists:
-    1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "html"`).
+    1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "html"`). Then mark it `Planned` with `setConfluenceContentStatus`, its `id` as `contentId`, `name: "Planned"` and `color: "#DFE1E6"`.
     2. `Requirements` and `Roadmap`, the roadmap checked again with the link to the version page. Merge each one, alone and exactly in this form, with its published body (from step 2's read), the body its script printed and the headings it changes: for `Requirements` the version, `Unassigned` and `Assumptions and open questions` when a question changed; for `Roadmap`, `Now` and `Next`:
 
        ```

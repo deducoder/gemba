@@ -30,7 +30,7 @@ CLAUDE.md:
 Until the push of step 7 this skill only reads and works locally: it writes nothing in Jira or Confluence and sends nothing to the remote. Its writes are the release in git, the release of the fix version, the stamp of the version page, the `Now` and `Released` sections of `Roadmap`, and then, only with what the person accepted, the `Learned` section of the version page and the sections of `Requirements` that change. It brings back what the version taught only once the version is released: when it stops before the end of step 10, it says that what the version taught comes back once the version is released, and writes neither `Learned` nor `Requirements`. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `jira.project` the project and `confluence.space` the space of the pages. Resolve the operations this skill names below with:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage getConfluencePageDescendants getConfluenceSpaces getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields searchJiraIssuesUsingJql manageJiraProjectVersion setConfluenceContentStatus
 ```
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/atlassian-operation.md`
@@ -67,7 +67,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
    PAGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from this step's read and the `edits` it printed.
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from this step's read and the `edits` it printed. Then mark it `Released` with `setConfluenceContentStatus`, its `id` as `contentId`, `name: "Released"` and `color: "#57D9A3"`.
 
 10. **Move the entry to Released.** Write the draft of `Roadmap`, whole, from the page as published, in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none, the text it already has kept as it is: `Now` without the version, or one paragraph saying no version is in progress when it was the only one, and `Released` with `* [<the version>](<the link to its page>) [Released] <goal> Target: <the Target>` first, before the versions it already lists, or alone when it was a paragraph. Check it, alone and exactly in this form, fixing each problem it names until it passes:
 
