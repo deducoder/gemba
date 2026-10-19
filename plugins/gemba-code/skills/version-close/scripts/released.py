@@ -14,12 +14,24 @@ the day is not a date, prints the problem to stderr, nothing to stdout and exits
 
 import json
 import sys
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CURRENT, is_day, stamp  # noqa: E402
+from draft import CURRENT, STATES, is_day  # noqa: E402
+
+
+def adf_stamp(state, day):
+    """Returns the ADF nodes of a version's lozenge, ` · ` and its release date: GEMBA-92
+    moves this page to HTML and the edits that target it by localId; until then it stays ADF."""
+    moment = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=timezone.utc)
+    return [
+        {"type": "status", "attrs": {"text": state, "color": STATES[state], "style": "bold"}},
+        {"type": "text", "text": " · "},
+        {"type": "date", "attrs": {"timestamp": str(int(moment.timestamp() * 1000))}},
+    ]
 
 
 def stamp_state(page):
@@ -57,7 +69,7 @@ def main():
         print(found, file=sys.stderr)
         return 1
     first = page["content"][0]["content"]
-    first[:3] = stamp("Released", day)
+    first[:3] = adf_stamp("Released", day)
     print(json.dumps(page, ensure_ascii=False))
     return 0
 
