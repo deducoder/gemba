@@ -164,73 +164,6 @@
       }
     },
     {
-      "name": "getJiraProjectIssueTypesMetadata",
-      "description": "Get issue types",
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "cloudId": {
-            "description": "Cloud ID (UUID or site URL)",
-            "type": "string"
-          },
-          "maxResults": {
-            "default": 50,
-            "maximum": 200,
-            "type": "number"
-          },
-          "projectIdOrKey": {
-            "type": "string"
-          },
-          "startAt": {
-            "default": 0,
-            "type": "number"
-          }
-        },
-        "required": [
-          "cloudId",
-          "projectIdOrKey"
-        ]
-      }
-    },
-    {
-      "name": "getJiraIssueTypeMetaWithFields",
-      "description": "Get field metadata",
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "cloudId": {
-            "description": "Cloud ID (UUID or site URL)",
-            "type": "string"
-          },
-          "issueTypeId": {
-            "type": "string"
-          },
-          "maxResults": {
-            "type": "number"
-          },
-          "projectIdOrKey": {
-            "type": "string"
-          },
-          "requiredFieldsOnly": {
-            "description": "When true (default), returns only the fields that are required to create an issue of this type, reducing response size. Set to false to return all available fields (both required and optional).",
-            "type": "boolean"
-          },
-          "startAt": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "cloudId",
-          "projectIdOrKey",
-          "issueTypeId"
-        ]
-      }
-    },
-    {
       "name": "addOrEditJiraIssueComment",
       "description": "Add or update a comment on a Jira issue",
       "inputSchema": {
@@ -299,52 +232,66 @@
       }
     },
     {
-      "name": "createIssueLink",
-      "description": "Create a link between two Jira issues. For directional link types (e.g. Blocks): inwardIssue = issue that blocks, outwardIssue = issue that is blocked (e.g. \"A is blocked by B\" → inwardIssue: B, outwardIssue: A). Use getIssueLinkTypes if link type is unknown.",
+      "name": "executeRead",
+      "description": "Execute a read-only operation by name (from discover, or already resolved; e.g. listJiraIssueTransitions).",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "name": {
+            "type": "string",
+            "description": "The operation's name, from discover."
+          },
           "cloudId": {
             "type": "string",
             "description": "Cloud ID (UUID or site URL)"
           },
-          "comment": {
-            "type": "string",
-            "description": "Optional comment on the outward issue."
-          },
-          "contentFormat": {
-            "type": "string",
-            "enum": [
-              "markdown",
-              "adf"
-            ]
-          },
-          "inwardIssue": {
-            "type": "string",
-            "description": "Inward issue key (e.g. HSP-1)."
-          },
-          "outwardIssue": {
-            "type": "string",
-            "description": "Outward issue key (e.g. MKY-1)."
-          },
-          "type": {
-            "type": "string",
-            "description": "Link type name (e.g. Duplicate, Blocks, Clones, Relates). Use getIssueLinkTypes to list available types."
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The operation's own inputs."
           }
         },
         "required": [
+          "name",
           "cloudId",
-          "inwardIssue",
-          "outwardIssue",
-          "type"
+          "inputs"
         ]
       }
     },
     {
-      "name": "executeRead",
-      "description": "Execute a discovered read-only operation (name from discover; e.g. listJiraIssueTransitions).",
+      "name": "executeWrite",
+      "description": "Execute a non-destructive write operation by name (from discover, or already resolved; e.g. createJiraIssueLink).",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The operation's name, from discover."
+          },
+          "cloudId": {
+            "type": "string",
+            "description": "Cloud ID (UUID or site URL)"
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The operation's own inputs."
+          }
+        },
+        "required": [
+          "name",
+          "cloudId",
+          "inputs"
+        ]
+      }
+    },
+    {
+      "name": "executeDestructive",
+      "description": "Execute a destructive operation by name (from discover, or already resolved; e.g. manageJiraProjectVersion).",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -522,159 +469,6 @@
           "cloudId",
           "issueIdOrKey",
           "transition"
-        ]
-      }
-    },
-    {
-      "name": "addWorklogToJiraIssue",
-      "description": "Add or update a worklog on a Jira issue. When worklogId is provided, updates that worklog;",
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "cloudId": {
-            "type": "string",
-            "description": "Cloud ID (UUID or site URL)"
-          },
-          "commentBody": {
-            "type": "string",
-            "description": "Comment body"
-          },
-          "contentFormat": {
-            "type": "string",
-            "enum": [
-              "markdown",
-              "adf"
-            ],
-            "description": "Content format for body content. Use \"markdown\" for simplified plain text. Use \"adf\" (Atlassian Document Format, JSON) for full programmatic fidelity. Defaults vary by tool when omitted."
-          },
-          "issueIdOrKey": {
-            "type": "string",
-            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
-          },
-          "started": {
-            "type": "string",
-            "description": "When the work was started (ISO 8601 date-time, e.g. 2026-03-09T09:00:00.000+0000). If omitted, the worklog is booked at the current date/time."
-          },
-          "timeSpent": {
-            "type": "string",
-            "description": "Time spent (e.g. 2h, 30m, 4d). Required for new worklogs; use to set or change time when updating."
-          },
-          "visibility": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "group",
-                  "role"
-                ]
-              },
-              "value": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "type",
-              "value"
-            ]
-          },
-          "worklogId": {
-            "type": "string",
-            "description": "ID of an existing worklog to update. If omitted, a new worklog is created."
-          }
-        },
-        "required": [
-          "cloudId",
-          "issueIdOrKey",
-          "timeSpent"
-        ]
-      }
-    },
-    {
-      "name": "getConfluenceSpaces",
-      "description": "Get spaces",
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "cloudId": {
-            "type": "string",
-            "description": "Cloud ID (UUID or site URL)"
-          },
-          "keys": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            ],
-            "description": "Space keys"
-          },
-          "ids": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              }
-            ],
-            "description": "Space IDs"
-          },
-          "limit": {
-            "type": "number",
-            "description": "Max results (default: 25, max: 250)"
-          }
-        },
-        "required": [
-          "cloudId"
-        ]
-      }
-    },
-    {
-      "name": "getConfluencePageDescendants",
-      "description": "Get child pages of specified page",
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "cloudId": {
-            "type": "string",
-            "description": "Cloud ID (UUID or site URL)"
-          },
-          "pageId": {
-            "type": "string",
-            "description": "Page or blog post ID, or a Confluence tiny link ID (the encoded part from /wiki/x/ URLs, e.g., Fc1bBw)"
-          },
-          "depth": {
-            "type": "number",
-            "description": "Max depth"
-          },
-          "limit": {
-            "type": "number",
-            "description": "Max descendants"
-          },
-          "cursor": {
-            "type": "string",
-            "description": "Pagination cursor"
-          }
-        },
-        "required": [
-          "cloudId",
-          "pageId"
         ]
       }
     },

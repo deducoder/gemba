@@ -58,12 +58,12 @@ graders:
       input_match: 'issueTypeName\W+Spike'
   - name: blocks
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-102\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-101\b)(?=[\s\S]*outwardIssue\W+ABC-102\b)'
   - name: no-inverted-blocks
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
-    input_match: '^(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-101\b)'
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: '^(?=[\s\S]*createJiraIssueLink)(?=[\s\S]*type\W+Blocks)(?=[\s\S]*inwardIssue\W+ABC-102\b)(?=[\s\S]*outwardIssue\W+ABC-101\b)'
     min: 0
     max: 0
   - name: no-assignee

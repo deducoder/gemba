@@ -28,7 +28,9 @@ graders:
     after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: folder-found-before-the-mark
     type: tool_order
-    before: mcp__plugin_atlassian-stub_atlassian__getConfluencePageDescendants
+    before:
+      tool: mcp__plugin_atlassian-stub_atlassian__executeRead
+      input_match: 'getConfluenceContentDescendants'
     after: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
   - name: checked-before-the-mark
     type: tool_order
@@ -43,7 +45,7 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue|createConfluenceContent)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog|createConfluenceContent)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: mark-before-worktree
     type: tool_order
@@ -60,5 +62,5 @@ graders:
   - name: nothing-published-before-the-plan-is-approved
     type: regex
     target: mock_calls
-    pattern: 'createConfluenceContent|addWorklogToJiraIssue'
+    pattern: 'createConfluenceContent|addOrEditJiraIssueWorklog'
     match: not_contains

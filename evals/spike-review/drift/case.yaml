@@ -27,7 +27,7 @@ graders:
   - name: no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue|createConfluenceContent|updateConfluenceContent'
+    pattern: 'addOrEditJiraIssueWorklog|createConfluenceContent|updateConfluenceContent'
     match: not_contains
   - name: no-push
     type: tool_used

@@ -27,7 +27,7 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|createIssueLink|addOrEditJiraIssueComment|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|createJiraIssueLink|addOrEditJiraIssueComment|addOrEditJiraIssueWorklog)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: merge-found
     type: tool_used
@@ -54,5 +54,5 @@ graders:
   - name: no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueWorklog'
     match: not_contains

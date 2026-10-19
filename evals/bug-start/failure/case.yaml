@@ -59,6 +59,7 @@ graders:
     pattern: 'https://example\.atlassian\.net/browse/ABC-50'
   - name: no-link
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: 'createJiraIssueLink'
     min: 0
     max: 0

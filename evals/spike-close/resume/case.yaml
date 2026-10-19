@@ -23,7 +23,7 @@ graders:
   - name: not-marked-again
     type: regex
     target: mock_calls
-    pattern: 'getTransitionsForJiraIssue|transitionJiraIssue'
+    pattern: 'listJiraIssueTransitions|transitionJiraIssue'
     match: not_contains
   - name: deleted
     type: tool_used
@@ -34,5 +34,5 @@ graders:
   - name: no-comment-no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addOrEditJiraIssueComment|addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueComment|addOrEditJiraIssueWorklog'
     match: not_contains

@@ -22,7 +22,8 @@ graders:
     pattern: 'issueTypeName\W+Story'
   - name: no-link
     type: tool_used
-    tool: mcp__plugin_atlassian-stub_atlassian__createIssueLink
+    tool: mcp__plugin_atlassian-stub_atlassian__executeWrite
+    input_match: 'createJiraIssueLink'
     min: 0
     max: 0
   - name: reply

@@ -38,7 +38,7 @@ graders:
   - name: no-worklog-or-estimate
     type: regex
     target: mock_calls
-    pattern: 'addWorklogToJiraIssue|editJiraIssue'
+    pattern: 'addOrEditJiraIssueWorklog|editJiraIssue'
     match: not_contains
   - name: no-branch-or-push
     type: tool_used

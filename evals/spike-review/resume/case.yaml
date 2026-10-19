@@ -23,7 +23,7 @@ graders:
   - name: no-mark
     type: regex
     target: mock_calls
-    pattern: 'transitionJiraIssue|addWorklogToJiraIssue|createConfluenceContent|updateConfluenceContent'
+    pattern: 'transitionJiraIssue|addOrEditJiraIssueWorklog|createConfluenceContent|updateConfluenceContent'
     match: not_contains
   - name: rerun
     type: tool_used

@@ -1,6 +1,10 @@
 """Saves a real response of an Atlassian tool, the one its mocks are compared against, without
 the personal data of whoever captured it and with its project named ABC, as the mocks name it.
 
+For an operation resolved behind executeRead, executeWrite or executeDestructive, <tool> is the
+operation's own real name (e.g. listJiraIssueTransitions), the same name its fixtures/<tool>.json
+mock uses, never the dispatcher's own name (executeRead, executeWrite, executeDestructive).
+
 Usage: python3 evals/save_response.py <tool> <PROJECT> < response.json
 
 It empties every text under the keys in PERSONAL, at any depth, keeping the keys so the response
