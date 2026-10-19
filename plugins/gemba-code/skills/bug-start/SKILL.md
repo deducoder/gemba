@@ -7,6 +7,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/bug.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py open)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/develop.py close)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Bug start
@@ -31,7 +32,13 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/cause-in-test.md`
 
-The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The bug stays in Backlog: this skill changes no status, creates no branch, fixes nothing and creates no work item other than a bug. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJiraIssue createIssueLink createJiraIssue
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

@@ -6,6 +6,7 @@ allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/branch.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Story review
@@ -22,7 +23,13 @@ Drift comment template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/drift.md`
 ```
 
-Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue addCommentToJiraIssue addWorklogToJiraIssue
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

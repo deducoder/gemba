@@ -5,6 +5,7 @@ argument-hint: "[deliverable]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/epic.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Epic start
@@ -29,7 +30,13 @@ Template:
 
 !`cat ${CLAUDE_PLUGIN_ROOT}/references/declare-through-start.md`
 
-The epic and its children stay in Backlog: this skill changes no status, creates no branch and assigns no one. It creates the epic itself, and each child only through `story-start` or `spike-start`. Nothing is written in Jira before the plan is approved. A conversation in which this skill already created the epic goes on with the children not yet declared, and does not create the epic again. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project.
+The epic and its children stay in Backlog: this skill changes no status, creates no branch and assigns no one. It creates the epic itself, and each child only through `story-start` or `spike-start`. Nothing is written in Jira before the plan is approved. A conversation in which this skill already created the epic goes on with the children not yet declared, and does not create the epic again. The `site` in `atlassian.json` above is the `cloudId` of every Jira call, and its `jira.project` the project. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getJiraProjectIssueTypesMetadata getJiraIssueTypeMetaWithFields createIssueLink createJiraIssue
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

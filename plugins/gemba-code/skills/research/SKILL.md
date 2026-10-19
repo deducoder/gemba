@@ -5,6 +5,7 @@ argument-hint: "[question] [related work item key]"
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
   - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/research.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Research
@@ -21,7 +22,13 @@ Research template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/research.md`
 ```
 
-This skill only reads sources and writes one Confluence page. It creates and edits no work item, makes no change in Jira and edits no file of the project. The `site` in `atlassian.json` above is the `cloudId` of every Confluence call, `confluence.space` the space of the answer.
+This skill only reads sources and writes one Confluence page. It creates and edits no work item, makes no change in Jira and edits no file of the project. The `site` in `atlassian.json` above is the `cloudId` of every Confluence call, `confluence.space` the space of the answer. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluenceSpaces getConfluencePageDescendants getConfluencePage updateConfluencePage createConfluencePage
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Confluence.
 

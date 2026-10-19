@@ -2,6 +2,8 @@
 name: epic-review
 description: Reviews a finished epic from Jira. Checks that each of its children is Done or Cancelled, marks it in Review, and reviews with /code-review the merge into develop of each of its stories in Done. It declares each finding loose with the start skill of its type, linked to the epic with Relates, and warns when the epic reaches Review after its due date. It stops, writing nothing, when the epic or a child is not ready, resumes one already in Review and writes no worklog. Use when the user asks to review an epic, or gives an epic key whose children are finished.
 argument-hint: "[epic key]"
+allowed-tools:
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Epic review
@@ -12,7 +14,13 @@ argument-hint: "[epic key]"
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
 ```
 
-Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. It has no branch, it adds no child to the epic and it writes no worklog. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Review mark this skill only reads: it writes nothing in Jira and nothing in git. It has no branch, it adds no child to the epic and it writes no worklog. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue createIssueLink searchJiraIssuesUsingJql
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

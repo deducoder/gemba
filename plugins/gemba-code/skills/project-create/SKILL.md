@@ -9,6 +9,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/requirements.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Project create
@@ -43,7 +44,13 @@ Roadmap template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/roadmap.md`
 ```
 
-This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages.
+This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces lookupJiraAccountId
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 The person decides. Ask one decision at a time with `AskUserQuestion`, offering two or three options with their reason, the recommended one first. A fact about the world carries its source or is a hypothesis. Never present your own opinion, desk research or synthetic users as evidence that someone needs or would pay for the product.
 

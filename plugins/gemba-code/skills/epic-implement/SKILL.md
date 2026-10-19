@@ -2,6 +2,8 @@
 name: epic-implement
 description: Starts a declared epic from Jira. Checks that it is an Epic in Backlog or Implement with children, marks it in Implement, and lists its children ready to start, in Backlog and not blocked, by priority and with their assignee, together with its due date and the days left. It stops, writing nothing, when the epic is not ready, resumes one already in Implement, creates no branch and writes no worklog. Use when the user asks to start, implement or work on an epic, or gives an epic key to begin.
 argument-hint: "[epic key]"
+allowed-tools:
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Epic implement
@@ -14,7 +16,13 @@ argument-hint: "[epic key]"
 
 Today: !`date +%Y-%m-%d`
 
-Until the Implement mark this skill only reads. It never creates a branch or pushes, it creates and edits no work item, and it writes no worklog and no original estimate on the epic: its children are built with their own skills. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+Until the Implement mark this skill only reads. It never creates a branch or pushes, it creates and edits no work item, and it writes no worklog and no original estimate on the epic: its children are built with their own skills. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue searchJiraIssuesUsingJql
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 

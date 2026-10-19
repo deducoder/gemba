@@ -3,6 +3,8 @@ name: epic-close
 description: Closes a reviewed epic from Jira. Marks the epic Done once it is in Review, without waiting for the work items linked to it with Relates. It touches no branch and no code, merges and pushes nothing, and writes no worklog. Use when the user asks to close or finish an epic, or gives an epic key whose review is done.
 disable-model-invocation: true
 argument-hint: "[epic key]"
+allowed-tools:
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
 ---
 
 # Epic close
@@ -13,7 +15,13 @@ argument-hint: "[epic key]"
 !`cat "${CLAUDE_PROJECT_DIR}/.gemba/project/atlassian.json" 2>/dev/null || echo "(missing)"`
 ```
 
-The only write of this skill is the Done mark: it creates, deletes, merges and pushes no branch, and writes no comment and no worklog. The `site` in `atlassian.json` above is the `cloudId` of every Jira call.
+The only write of this skill is the Done mark: it creates, deletes, merges and pushes no branch, and writes no comment and no worklog. The `site` in `atlassian.json` above is the `cloudId` of every Jira call. Resolve the operations this skill names below with:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransitionsForJiraIssue transitionJiraIssue
+```
+
+Each step names the operation it resolved, not the connector tool directly.
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, reply that the project needs `/gemba:setup` first and stop, without calling Jira.
 
