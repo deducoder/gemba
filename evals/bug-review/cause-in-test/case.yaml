@@ -35,7 +35,7 @@ graders:
   - name: no-drift
     type: regex
     target: mock_calls
-    pattern: addCommentToJiraIssue
+    pattern: addOrEditJiraIssueComment
     match: not_contains
   - name: push-with-upstream
     type: tool_used

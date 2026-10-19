@@ -23,7 +23,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*999\.00'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*Criterion[\s\S]*999\.00'
   - name: re-ran-the-evidence
     type: tool_used
     tool: Bash

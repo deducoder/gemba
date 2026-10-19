@@ -23,7 +23,7 @@ graders:
   - name: cause-in-the-test
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue.*read: [^}]{0,40}\}[^}]{0,200}test_invoices\.py'
+    pattern: 'addOrEditJiraIssueComment.*read: [^}]{0,40}\}[^}]{0,200}test_invoices\.py'
   - name: product-change-criterion
     type: regex
     target: mock_calls

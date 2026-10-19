@@ -47,7 +47,7 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: mark-before-branch
     type: tool_order

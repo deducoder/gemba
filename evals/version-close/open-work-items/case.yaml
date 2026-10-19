@@ -19,7 +19,7 @@ graders:
   - name: writes-nothing
     type: regex
     target: mock_calls
-    pattern: 'manageJiraProjectVersion|updateConfluencePage|createConfluencePage'
+    pattern: 'manageJiraProjectVersion|updateConfluenceContent|createConfluenceContent'
     match: not_contains
   - name: names-the-work-item
     type: regex

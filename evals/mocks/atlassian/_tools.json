@@ -231,7 +231,7 @@
       }
     },
     {
-      "name": "addCommentToJiraIssue",
+      "name": "addOrEditJiraIssueComment",
       "description": "Add or update a comment on a Jira issue",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -343,48 +343,31 @@
       }
     },
     {
-      "name": "getTransitionsForJiraIssue",
-      "description": "Get transitions",
+      "name": "executeRead",
+      "description": "Execute a discovered read-only operation (name from discover; e.g. listJiraIssueTransitions).",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "actionSource": {
+          "name": {
             "type": "string",
-            "enum": [
-              "jira_mcp_card",
-              "model_tool_call"
-            ],
-            "description": "Invocation attribution. Set to jira_mcp_card when called from a Jira MCP Widget UI; omit or set to model_tool_call for model/tool-loop calls."
+            "description": "The operation's name, from discover."
           },
           "cloudId": {
             "type": "string",
             "description": "Cloud ID (UUID or site URL)"
           },
-          "expand": {
-            "type": "string"
-          },
-          "includeUnavailableTransitions": {
-            "type": "boolean"
-          },
-          "issueIdOrKey": {
-            "type": "string",
-            "description": "Issue ID or key (e.g., PROJ-123 or 10000)"
-          },
-          "skipRemoteOnlyCondition": {
-            "type": "boolean"
-          },
-          "sortByOpsBarAndStatus": {
-            "type": "boolean"
-          },
-          "transitionId": {
-            "type": "string"
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The operation's own inputs."
           }
         },
         "required": [
+          "name",
           "cloudId",
-          "issueIdOrKey"
+          "inputs"
         ]
       }
     },
@@ -696,7 +679,7 @@
       }
     },
     {
-      "name": "createConfluencePage",
+      "name": "createConfluenceContent",
       "description": "Create a Confluence page or blog post.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -748,7 +731,7 @@
       }
     },
     {
-      "name": "updateConfluencePage",
+      "name": "updateConfluenceContent",
       "description": "Update a Confluence page or blog post.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -793,7 +776,7 @@
       }
     },
     {
-      "name": "getConfluencePage",
+      "name": "getConfluenceContent",
       "description": "Get a Confluence page or blog post by ID, including body content.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",

@@ -19,7 +19,7 @@ graders:
   - name: cancel-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*Cancelled[\s\S]*Reason: [\s\S]*Found: (ran|read):[\s\S]*Replaced by[\s\S]*'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*Cancelled[\s\S]*Reason: [\s\S]*Found: (ran|read):[\s\S]*Replaced by[\s\S]*'
   - name: replaced-by
     type: regex
     target: mock_calls

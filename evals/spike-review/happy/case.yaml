@@ -31,12 +31,12 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createConfluencePage|updateConfluencePage)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue|createConfluenceContent|updateConfluenceContent)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: findings-read
     type: regex
     target: mock_calls
-    pattern: 'getConfluencePage\b'
+    pattern: 'getConfluenceContent\b'
   - name: rerun-after-the-mark
     type: tool_order
     before: mcp__plugin_atlassian-stub_atlassian__transitionJiraIssue
@@ -50,7 +50,7 @@ graders:
   - name: writes-nothing-in-confluence
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage|addCommentToJiraIssue'
+    pattern: 'createConfluenceContent|updateConfluenceContent|addOrEditJiraIssueComment'
     match: not_contains
   - name: no-worklog-yet
     type: regex

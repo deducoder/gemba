@@ -19,7 +19,7 @@ graders:
   - name: no-drift
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue'
+    pattern: 'addOrEditJiraIssueComment'
     match: not_contains
   - name: fix-redone-before-the-commit
     type: tool_order

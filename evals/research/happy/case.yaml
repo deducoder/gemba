@@ -29,9 +29,9 @@ graders:
   - name: live-doc-in-the-folder-titled-with-the-question
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage[\s\S]*live[\s\S]*Can SQLite enforce a unique value only on some rows of a table\?'
+    pattern: 'createConfluenceContent[\s\S]*live[\s\S]*Can SQLite enforce a unique value only on some rows of a table\?'
   - name: no-work-item-and-no-update
     type: regex
     target: mock_calls
-    pattern: 'createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|updateConfluencePage'
+    pattern: 'createJiraIssue|editJiraIssue|transitionJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue|updateConfluenceContent'
     match: not_contains

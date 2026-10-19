@@ -27,7 +27,7 @@ graders:
   - name: drift-comment
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue[\s\S]*### Drift[\s\S]*Criterion[\s\S]*initech'
+    pattern: 'addOrEditJiraIssueComment[\s\S]*### Drift[\s\S]*Criterion[\s\S]*initech'
   - name: no-push
     type: tool_used
     tool: Bash

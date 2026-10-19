@@ -19,11 +19,11 @@ graders:
   - name: updates-the-page-of-the-question
     type: regex
     target: mock_calls
-    pattern: 'updateConfluencePage[\s\S]*1007'
+    pattern: 'updateConfluenceContent[\s\S]*1007'
   - name: creates-no-second-page
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage'
+    pattern: 'createConfluenceContent'
     match: not_contains
   - name: descendants-down-to-the-pages
     type: tool_used

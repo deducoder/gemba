@@ -19,7 +19,7 @@ graders:
   - name: no-create
     type: regex
     target: mock_calls
-    pattern: 'createJiraIssue|editJiraIssue|addCommentToJiraIssue'
+    pattern: 'createJiraIssue|editJiraIssue|addOrEditJiraIssueComment'
     match: not_contains
   - name: source
     type: regex

@@ -43,7 +43,7 @@ graders:
   - name: only-reads-before-the-mark
     type: regex
     target: mock_calls
-    pattern: '(createJiraIssue|editJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue|createConfluencePage)[\s\S]*transitionJiraIssue'
+    pattern: '(createJiraIssue|editJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue|createConfluenceContent)[\s\S]*transitionJiraIssue'
     match: not_contains
   - name: mark-before-worktree
     type: tool_order
@@ -60,5 +60,5 @@ graders:
   - name: nothing-published-before-the-plan-is-approved
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|addWorklogToJiraIssue'
+    pattern: 'createConfluenceContent|addWorklogToJiraIssue'
     match: not_contains

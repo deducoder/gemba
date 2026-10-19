@@ -34,5 +34,5 @@ graders:
   - name: no-comment-no-worklog
     type: regex
     target: mock_calls
-    pattern: 'addCommentToJiraIssue|addWorklogToJiraIssue'
+    pattern: 'addOrEditJiraIssueComment|addWorklogToJiraIssue'
     match: not_contains

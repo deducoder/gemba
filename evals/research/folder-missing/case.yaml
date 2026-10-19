@@ -23,7 +23,7 @@ graders:
   - name: no-write
     type: regex
     target: mock_calls
-    pattern: 'createConfluencePage|updateConfluencePage|createJiraIssue|editJiraIssue|transitionJiraIssue|addCommentToJiraIssue|addWorklogToJiraIssue'
+    pattern: 'createConfluenceContent|updateConfluenceContent|createJiraIssue|editJiraIssue|transitionJiraIssue|addOrEditJiraIssueComment|addWorklogToJiraIssue'
     match: not_contains
   - name: names-the-missing-folder
     type: regex
