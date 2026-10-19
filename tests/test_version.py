@@ -1,7 +1,8 @@
-"""Checks version-start's version script: what it accepts, what it rejects and the ADF it
+"""Checks version-start's version script: what it accepts, what it rejects and the HTML it
 prints for the live doc of a product version, with its Jira macro of work items."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -61,72 +62,85 @@ def rejected(draft, *words, args=()):
         assert word in result.stderr, result.stderr
 
 
-def flat(node):
-    return "".join(n.get("text", "") for n in node.get("content", []))
+def flat(html):
+    return re.sub(r"<[^>]+>", "", html)
+
+
+def headings(body, level=2):
+    return re.findall(rf"<h{level}>(.+?)</h{level}>", body)
+
+
+def section(body, title):
+    """Returns the raw HTML right after the <h2>title</h2> heading, up to the next heading."""
+    match = re.search(rf"<h2>{re.escape(title)}</h2>(.*?)(?=<h2>|$)", body, re.DOTALL)
+    return match.group(1)
+
+
+def items(section_html):
+    return re.findall(r"<li><p>(.*?)</p></li>", section_html, re.DOTALL)
 
 
 class VersionPage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.page = page(DRAFT)
-        cls.body = cls.page["body"]["content"]
+        cls.body = cls.page["body"]
 
     def test_the_title_is_the_version(self):
         self.assertEqual(self.page["title"], "Gemba v0.1.0")
 
     def test_the_sections_follow_the_version_template(self):
-        self.assertEqual([flat(n) for n in self.body if n["type"] == "heading"],
-                         ["MVP criterion", "Outcome", "Requirements", "Open questions", "Work items"])
-        self.assertTrue(all(n["attrs"]["level"] == 2 for n in self.body if n["type"] == "heading"))
+        self.assertEqual(headings(self.body), ["MVP criterion", "Outcome", "Requirements", "Open questions", "Work items"])
 
     def test_the_first_line_is_the_status_lozenge_and_the_release_date(self):
-        first = self.body[0]["content"]
-        self.assertEqual(first[0]["type"], "status")
-        self.assertEqual(first[0]["attrs"]["text"], "Planned")
-        self.assertEqual(first[-1], {"type": "date", "attrs": {"timestamp": "1795132800000"}})
+        first = re.match(r"<p>(.*?)</p>", self.body).group(1)
+        self.assertTrue(first.startswith('<span data-type="status" data-color="neutral">Planned</span>'))
+        self.assertTrue(first.endswith('<time datetime="2026-11-20">2026-11-20</time>'))
 
     def test_the_goal_is_the_paragraph_after_it(self):
-        self.assertEqual(flat(self.body[1]), "Validar que 3 equipos adoptan Gemba en un proyecto activo.")
+        self.assertIn("<p>Validar que 3 equipos adoptan Gemba en un proyecto activo.</p>", self.body)
 
     def test_the_mvp_criterion_starts_with_its_label(self):
-        mvp = self.body[3]["content"]
-        self.assertEqual(mvp[0], {"type": "text", "text": "Risk validated:", "marks": [{"type": "strong"}]})
+        mvp = section(self.body, "MVP criterion")
+        self.assertTrue(mvp.startswith("<p><strong>Risk validated:</strong>"))
 
     def test_baseline_and_target_are_labels(self):
-        outcome = self.body[6]["content"]
-        labels = [n["text"] for n in outcome if n.get("marks") == [{"type": "strong"}]]
-        self.assertEqual(labels, ["Baseline:", "Target:"])
+        outcome = section(self.body, "Outcome")
+        self.assertIn("<strong>Baseline:</strong>", outcome)
+        self.assertIn("<strong>Target:</strong>", outcome)
 
     def test_each_requirement_carries_its_id_in_bold(self):
-        listed = [item["content"][0]["content"] for item in self.body[8]["content"]]
-        self.assertEqual([entry[0]["text"] for entry in listed], ["R-01", "R-04"])
-        self.assertIn({"type": "text", "text": "story-review", "marks": [{"type": "code"}]}, listed[1])
+        listed = items(section(self.body, "Requirements"))
+        self.assertEqual([re.match(r"<strong>(.+?)</strong>", item).group(1) for item in listed], ["R-01", "R-04"])
+        self.assertIn("<code>story-review</code>", listed[1])
 
     def test_each_open_question_links_to_requirements(self):
-        links = [n for n in self.body[10]["content"] if n.get("marks", [{}])[0].get("type") == "link"]
-        self.assertEqual([n["text"] for n in links], ["Question 2", "Question 3"])
-        self.assertEqual(links[0]["marks"][0]["attrs"]["href"], REQUIREMENTS)
+        questions = section(self.body, "Open questions")
+        links = re.findall(rf'<a href="{re.escape(REQUIREMENTS)}">(.+?)</a>', questions)
+        self.assertEqual(links, ["Question 2", "Question 3"])
 
     def test_work_items_is_the_jira_macro_of_the_first_level_of_the_version(self):
-        macro = self.body[-1]
-        self.assertEqual((macro["type"], macro["attrs"]["extensionKey"]), ("extension", "jira"))
-        self.assertEqual(macro["attrs"]["extensionType"], "com.atlassian.confluence.macro.core")
-        params = macro["attrs"]["parameters"]["macroParams"]
-        self.assertEqual(params["jqlQuery"]["value"],
-                         'project = ABC AND fixVersion = "Gemba v0.1.0" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key')
-        self.assertEqual(params["columns"]["value"], "type,key,summary,priority,status,duedate")
+        macro = section(self.body, "Work items")
+        self.assertIn('data-type="extension"', macro)
+        self.assertIn('data-extension-key="jira"', macro)
+        self.assertIn('data-extension-type="com.atlassian.confluence.macro.core"', macro)
+        parameters = json.loads(re.search(r'data-parameters="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
+        self.assertEqual(parameters["macroParams"]["jqlQuery"]["value"],
+                          'project = ABC AND fixVersion = "Gemba v0.1.0" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key')
+        self.assertEqual(parameters["macroParams"]["columns"]["value"], "type,key,summary,priority,status,duedate")
 
 
 class VersionOptional(unittest.TestCase):
     def test_quotes_in_the_version_name_are_escaped_in_the_jql(self):
-        body = page(DRAFT.replace("Gemba v0.1.0", 'Ga"b v0.1.0'))["body"]["content"]
-        jql = body[-1]["attrs"]["parameters"]["macroParams"]["jqlQuery"]["value"]
-        self.assertIn('fixVersion = "Ga\\"b v0.1.0"', jql)
+        body = page(DRAFT.replace("Gemba v0.1.0", 'Ga"b v0.1.0'))["body"]
+        macro = section(body, "Work items")
+        parameters = json.loads(re.search(r'data-parameters="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
+        self.assertIn('fixVersion = "Ga\\"b v0.1.0"', parameters["macroParams"]["jqlQuery"]["value"])
 
     def test_a_later_version_has_no_mvp_criterion(self):
         start, end = DRAFT.index("### MVP criterion"), DRAFT.index("### Outcome")
-        body = page(DRAFT[:start] + DRAFT[end:].replace("Gemba v0.1.0", "Gemba v0.2.0"), *LATER)["body"]["content"]
-        self.assertEqual([flat(n) for n in body if n["type"] == "heading"][0], "Outcome")
+        body = page(DRAFT[:start] + DRAFT[end:].replace("Gemba v0.1.0", "Gemba v0.2.0"), *LATER)["body"]
+        self.assertEqual(headings(body)[0], "Outcome")
 
 
 class VersionRejects(unittest.TestCase):

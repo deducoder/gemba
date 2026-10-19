@@ -17,7 +17,7 @@ source never goes before an official or a spec one.
 The related work item is not in the draft: --key adds a smart link to it as the first
 line of the page, and must look like a work item key.
 
-Prints {"title": ..., "body": <ADF>} as JSON when the draft follows the template.
+Prints {"title": ..., "body": <HTML>} as JSON when the draft follows the template.
 Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
 """
 
@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, KEY, check_sections, doc, heading, inline, paragraphs, split, unclosed  # noqa: E402
+from draft import CODE, FENCE, KEY, attr_esc, check_sections, esc, heading, inline, paragraph, paragraphs, split, unclosed  # noqa: E402
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -136,53 +136,44 @@ def problems(draft):
                    "method": blocks["Method"], "topics": topics, "sources": sources, "next": blocks["Next"]}
 
 
-def paragraph(text):
-    return {"type": "paragraph", "content": inline(text)}
-
-
 def cited(text, sources):
     """Returns the text with each [n] as a link to the source n, without a card."""
-    nodes = []
+    parts = []
     for i, chunk in enumerate(CODE.split(text)):
         if i % 2:
-            nodes.extend(inline(f"`{chunk}`"))
+            parts.append(inline(f"`{chunk}`"))
             continue
+        out = []
         for j, part in enumerate(CITE.split(chunk)):
             if j % 2:
-                nodes.append({"type": "text", "text": f"[{part}]",
-                              "marks": [{"type": "link", "attrs": {"href": sources[int(part) - 1][0]}}]})
+                out.append(f'<a href="{attr_esc(sources[int(part) - 1][0])}">[{part}]</a>')
             elif part:
-                nodes.extend(inline(part))
-    return nodes
+                out.append(inline(part))
+        parts.append("".join(out))
+    return "".join(parts)
 
 
 def finding(name, state, text, sources):
-    return {"type": "paragraph", "content": [
-        {"type": "text", "text": f"{name} {state}:", "marks": [{"type": "strong"}]},
-        {"type": "text", "text": " "}, *cited(text, sources)]}
+    return f"<p><strong>{esc(name)} {esc(state)}:</strong> {cited(text, sources)}</p>"
 
 
 def source(number, url, kind, date, what):
-    return {"type": "paragraph", "content": [
-        {"type": "text", "text": f"[{number}] "}, {"type": "inlineCard", "attrs": {"url": url}},
-        *inline(f" ({kind}, {date}): {what}")]}
+    return f'<p>[{number}] <a href="{attr_esc(url)}" data-card-appearance="inline"></a>{inline(f" ({kind}, {date}): {what}")}</p>'
 
 
 def body(content, site, key):
-    """Returns the live doc as an ADF document."""
-    link = [{"type": "paragraph", "content": [{"type": "inlineCard", "attrs": {"url": f"https://{site}/browse/{key}"}}]}] if key else []
+    """Returns the live doc as HTML."""
+    link = f'<p><a href="https://{site}/browse/{key}" data-card-appearance="inline"></a></p>' if key else ""
     sources = content["sources"]
-    return doc([
-        *link,
-        paragraph(content["decision"]),
-        heading("Answer", 2), *[paragraph(block) for block in content["answer"]],
-        heading("Method", 2), *[paragraph(block) for block in content["method"]],
-        heading("Findings", 2),
-        *[node for topic, findings in content["topics"]
-          for node in (heading(topic, 3), *[finding(*item, sources) for item in findings])],
-        heading("Sources", 2), *[source(n, *values) for n, values in enumerate(sources, 1)],
-        heading("Next", 2), *[paragraph(block) for block in content["next"]],
-    ])
+    return (link
+            + paragraph(inline(content["decision"]))
+            + heading("Answer", 2) + "".join(paragraph(inline(block)) for block in content["answer"])
+            + heading("Method", 2) + "".join(paragraph(inline(block)) for block in content["method"])
+            + heading("Findings", 2)
+            + "".join(heading(topic, 3) + "".join(finding(*item, sources) for item in findings)
+                      for topic, findings in content["topics"])
+            + heading("Sources", 2) + "".join(source(n, *values) for n, values in enumerate(sources, 1))
+            + heading("Next", 2) + "".join(paragraph(inline(block)) for block in content["next"]))
 
 
 def main():

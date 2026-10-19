@@ -19,7 +19,11 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CURRENT, is_day, stamp  # noqa: E402
+from draft import CURRENT, is_day  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from legacy_adf import adf_stamp  # noqa: E402
 
 
 def stamp_state(page):
@@ -57,7 +61,7 @@ def main():
         print(found, file=sys.stderr)
         return 1
     first = page["content"][0]["content"]
-    first[:3] = stamp("Released", day)
+    first[:3] = adf_stamp("Released", day)
     print(json.dumps(page, ensure_ascii=False))
     return 0
 

@@ -22,7 +22,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from draft import FENCE, HEADING, bullets, heading, inline, items  # noqa: E402
+from draft import FENCE, HEADING, items  # noqa: E402
+from legacy_adf import adf_bullets, adf_heading, adf_inline  # noqa: E402
 from released import stamp_state  # noqa: E402
 
 TITLE = "Learned"
@@ -65,7 +66,7 @@ def main():
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    page["content"] = page.get("content", []) + [heading(TITLE, 2), bullets([inline(lesson) for lesson in lessons])]
+    page["content"] = page.get("content", []) + [adf_heading(TITLE, 2), adf_bullets([adf_inline(lesson) for lesson in lessons])]
     print(json.dumps(page, ensure_ascii=False))
     return 0
 
