@@ -12,8 +12,8 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
   - Bash(git remote -v)
   - Bash(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/*)
-  - Bash(curl -s https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt)
-  - Bash(curl -s https://www.apache.org/licenses/LICENSE-2.0.txt)
+  - Bash(curl -sf https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt)
+  - Bash(curl -sf https://www.apache.org/licenses/LICENSE-2.0.txt)
 ---
 
 # Project create
@@ -130,9 +130,9 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
-15. **Propose a license.** Read the project's `origin` with `git remote -v`; skip this step without one, or when it is not a `github.com` remote (`https://github.com/<owner>/<repo>` or `git@github.com:<owner>/<repo>`). Ask `https://api.github.com/repos/<owner>/<repo>` for it, with no credentials: only exactly `200` means the repository is public; anything else, including a request that fails, means this step proposes nothing. When it is public and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
-    - For MIT, download `https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt`; when the download fails, stop and say so. Write `LICENSE` with only the text after its second `---`, `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner of origin>)`.
-    - For Apache License 2.0, download `https://www.apache.org/licenses/LICENSE-2.0.txt`; when the download fails, stop and say so. Write it to `LICENSE` as is, then write `NOTICE` with the product's name, `Copyright <year> <the person's name>` and a line crediting who built it.
+15. **Propose a license.** Read the project's `origin` with `git remote -v`; skip this step without one, or when it is not a `github.com` remote (`https://github.com/<owner>/<repo>` or `git@github.com:<owner>/<repo>`, its trailing `.git` dropped). Ask `https://api.github.com/repos/<owner>/<repo>` for it, with no credentials: only exactly `200` means the repository is public; anything else, including a request that fails, means this step proposes nothing. When it is public and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
+    - For MIT, download `https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt` with `curl -sf`; a non-zero exit means the download failed, so stop and say so. Write `LICENSE` with only the text after its second `---`, `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner of origin>)`.
+    - For Apache License 2.0, download `https://www.apache.org/licenses/LICENSE-2.0.txt` with `curl -sf`; a non-zero exit means the download failed, so stop and say so. Write it to `LICENSE` as is, then write `NOTICE` with the product's name, `Copyright <year> <the person's name>` and a line crediting who built it.
 
 16. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
