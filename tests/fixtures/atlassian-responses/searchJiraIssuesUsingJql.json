@@ -273,6 +273,44 @@
           }
         },
         "webUrl": "https://example.atlassian.net/browse/ABC-3"
+      },
+      {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "id": "12145",
+        "key": "ABC-17",
+        "fields": {
+          "summary": "Probe the Jira operations of the MCP connector",
+          "issuetype": {
+            "id": "10009",
+            "description": "Entregable de valor solicitado por el cliente o el negocio.",
+            "iconUrl": "",
+            "name": "Story",
+            "subtask": false,
+            "avatarId": 10315,
+            "hierarchyLevel": 0
+          },
+          "status": {
+            "description": "Implementación en curso.",
+            "iconUrl": "",
+            "name": "Implement",
+            "id": "10076",
+            "statusCategory": {
+              "id": 4,
+              "key": "indeterminate",
+              "colorName": "yellow",
+              "name": "In Progress"
+            }
+          },
+          "timetracking": {
+            "originalEstimate": "20m",
+            "remainingEstimate": "25m",
+            "timeSpent": "5m",
+            "originalEstimateSeconds": 1200,
+            "remainingEstimateSeconds": 1500,
+            "timeSpentSeconds": 300
+          }
+        },
+        "webUrl": "https://deducoder.atlassian.net/browse/ABC-17"
       }
     ],
     "webUrl": "https://example.atlassian.net/issues?jql=parent%20%3D%20ABC-2",

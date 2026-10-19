@@ -1,0 +1,7 @@
+---
+expect:
+  cloudId: string
+  jql: string
+---
+
+{"issues": {"nodes": [{"id": "31", "key": "ABC-31", "fields": {"summary": "Print the invoices as JSON", "issuetype": {"name": "Story"}, "status": {"name": "Done"}, "timetracking": {"originalEstimate": "1d", "timeSpent": "20m", "originalEstimateSeconds": 28800, "timeSpentSeconds": 1200}}, "webUrl": "https://example.atlassian.net/browse/ABC-31"}, {"id": "32", "key": "ABC-32", "fields": {"summary": "Filter the invoices by month", "issuetype": {"name": "Story"}, "status": {"name": "Done"}, "timetracking": {"originalEstimate": "1d", "timeSpent": "25m", "originalEstimateSeconds": 28800, "timeSpentSeconds": 1500}}, "webUrl": "https://example.atlassian.net/browse/ABC-32"}, {"id": "33", "key": "ABC-33", "fields": {"summary": "Show the tax of each invoice", "issuetype": {"name": "Story"}, "status": {"name": "Done"}, "timetracking": {"originalEstimate": "1d", "timeSpent": "30m", "originalEstimateSeconds": 28800, "timeSpentSeconds": 1800}}, "webUrl": "https://example.atlassian.net/browse/ABC-33"}, {"id": "34", "key": "ABC-34", "fields": {"summary": "Sort the invoices by total", "issuetype": {"name": "Story"}, "status": {"name": "Done"}, "timetracking": {"originalEstimate": "1d", "timeSpent": "40m", "originalEstimateSeconds": 28800, "timeSpentSeconds": 2400}}, "webUrl": "https://example.atlassian.net/browse/ABC-34"}], "pageInfo": {"hasNextPage": false}}}

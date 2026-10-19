@@ -1,0 +1,23 @@
+schema_version: "1.1"
+name: story-start-estimate-without-history
+plugins:
+  - ../../../plugins/gemba
+  - ../../../plugins/gemba-code
+  - ../../../tests/fixtures/atlassian-stub
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: 'Declare a story: add a --csv option to invoices.py that prints the customer''s invoices as CSV.'
+  allowed_tools: [Read, Glob, Grep, Skill]
+  max_turns: 24
+  timeout_seconds: 180
+graders:
+  - name: estimate-under-two-hours
+    type: regex
+    target: mock_calls
+    pattern: 'originalEstimate\W+(\d{1,2}m|1h(\s*\d{1,2}m)?)\W'
+  - name: no-days
+    type: regex
+    target: mock_calls
+    pattern: 'originalEstimate\W+[^"]*\d+[dw]'
+    match: not_contains
