@@ -169,7 +169,7 @@ def check_scope(scope, found):
 
 def inline(text, marks=()):
     """Returns text as HTML, with `code` as a `<code>` span and no other mark on it; the
-    other runs carry each mark in order, outermost first."""
+    other runs carry each mark in order, innermost first."""
     parts = []
     for i, part in enumerate(CODE.split(text)):
         if not part:
@@ -242,10 +242,6 @@ def bullets(items):
 
 def section(name, items):
     return heading(name) + bullets(items)
-
-
-def doc(content):
-    return "".join(content)
 
 
 DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
