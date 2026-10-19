@@ -10,12 +10,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "plugins/gemba-code/skills/version-close/scripts/released.py"
 
-PAGE = ('<p data-local-id="p1">'
-        '<span data-local-id="s1" data-type="status" data-color="neutral" data-status-style="bold">Planned</span>'
-        ' · <time data-local-id="d1" datetime="2026-11-15">2026-11-15</time>'
+PAGE = ('<p data-local-id="a1">'
+        '<span data-local-id="a2" data-type="status" data-color="neutral" data-status-style="bold">Planned</span>'
+        ' · <time data-local-id="a3" datetime="2026-11-15">2026-11-15</time>'
         '</p>'
-        '<p data-local-id="p2">La meta.</p>'
-        '<h2 data-local-id="h1">Outcome</h2>')
+        '<p data-local-id="a4">La meta.</p>'
+        '<h2 data-local-id="a5">Outcome</h2>')
 
 
 def run(payload):
@@ -41,7 +41,7 @@ def rejected(payload, *words):
 class Released(unittest.TestCase):
     def test_the_whole_first_paragraph_is_replaced_by_its_own_localId(self):
         found = released(PAGE)
-        self.assertEqual(found, [{"name": "replaceNode", "localId": "p1",
+        self.assertEqual(found, [{"name": "replaceNode", "localId": "a1",
                                    "value": '<p><span data-type="status" data-color="green">Released</span>'
                                             ' · <time datetime="2026-11-18">2026-11-18</time></p>'}])
 
@@ -49,9 +49,9 @@ class Released(unittest.TestCase):
         self.assertEqual(len(released(PAGE)), 1)
 
     def test_text_after_the_date_stays(self):
-        page = PAGE.replace("</time>\n</p>".strip(), "</time> (movida del 15)</p>", 1)
+        page = PAGE.replace('</time></p>', "</time> (movida del 15)</p>", 1)
         found = released(page)
-        self.assertTrue(found[0]["value"].endswith(" (movida del 15)</p>"))
+        self.assertTrue(found[0]["value"].endswith(" (movida del 15)</p>"), found[0]["value"])
 
     def test_a_version_in_progress_is_released_too(self):
         page = PAGE.replace(">Planned<", ">In progress<")
@@ -64,10 +64,13 @@ class ReleasedRejects(unittest.TestCase):
         rejected({"page": page, "day": "2026-11-18"}, "Released")
 
     def test_a_page_without_the_stamp(self):
-        rejected({"page": PAGE.split("<h2", 1)[0].split('<p data-local-id="p2"')[0], "day": "2026-11-18"}, "stamp")
+        rejected({"page": '<p data-local-id="a6">La meta.</p>', "day": "2026-11-18"}, "stamp")
+
+    def test_an_empty_page(self):
+        rejected({"page": "", "day": "2026-11-18"}, "stamp")
 
     def test_a_page_whose_first_paragraph_is_not_a_stamp(self):
-        page = '<p data-local-id="p1">La meta.</p>' + PAGE
+        page = '<p data-local-id="a6">La meta.</p>' + PAGE
         rejected({"page": page, "day": "2026-11-18"}, "stamp")
 
     def test_a_day_that_is_not_a_date(self):
