@@ -10,6 +10,10 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
+  - Bash(git remote -v)
+  - Bash(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/*)
+  - Bash(curl -s https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt)
+  - Bash(curl -s https://www.apache.org/licenses/LICENSE-2.0.txt)
 ---
 
 # Project create
@@ -126,7 +130,11 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
 
-15. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
+15. **Propose a license.** Read the project's `origin` with `git remote -v`; without one, skip this step. Ask `https://api.github.com/repos/<owner>/<repo>` for it, with the owner and repo from that URL and no credentials: `200` means the repository is public, anything else means it is not, and this step proposes nothing. When it is public and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
+    - For MIT, download `https://raw.githubusercontent.com/github/choosealicense.com/gh-pages/_licenses/mit.txt` and write `LICENSE` with only the text after its second `---`, `[year]` as today's year and `[fullname]` as the person's name (from `atlassianUserInfo`) with their GitHub handle, the owner of `origin`, in parentheses — the same form Gemba's own `LICENSE` and `NOTICE` use.
+    - For Apache License 2.0, download `https://www.apache.org/licenses/LICENSE-2.0.txt` and write it to `LICENSE` as is; then write `NOTICE` with the product's name, `Copyright <year> <name>` and a line crediting who built it, the same form as Gemba's own `NOTICE`.
+
+16. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
 ## Review a framed product
 
