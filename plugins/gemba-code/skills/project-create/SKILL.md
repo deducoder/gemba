@@ -132,7 +132,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 A framed product is reviewed, never framed again: only what moved changes, and only what the person accepts is written.
 
-1. **Read the pages** with `getConfluencePage` and `contentFormat: "adf"`: `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover only what it holds (steps 7 to 9 for `Requirements`, the goals of step 11 for `Roadmap`), check its draft with its command, ask the person to accept it and create it with `createConfluencePage` and the `id` of `Vision` as `parentId`, before going on; `Vision` is not created again.
+1. **Read the pages** with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"` (each page's `snapshotToken` is needed to update it later): `Vision`, then its children `Requirements` and `Roadmap` from `getConfluencePageDescendants` on it. When a child is missing, discover only what it holds (steps 7 to 9 for `Requirements`, the goals of step 11 for `Roadmap`), check its draft with its command, ask the person to accept it and create it with `createConfluencePage` and the `id` of `Vision` as `parentId`, before going on; `Vision` is not created again.
 
 2. **Walk the pages in order,** `Vision`, `Requirements`, `Roadmap`, and for each one ask what moved since it was written, section by section, offering the sections as options. Propose a change only for a section where something moved, with the same rules as the framing: a new requirement takes the number above the highest of the page, withdrawn ones included, and is never reused; a withdrawn requirement moves to `Withdrawn` with its reason and today's date, and is never deleted; a new decision rewrites the panel with its color, `Decided by` and today's date. A section where nothing moved is left out of the proposal.
 
@@ -154,6 +154,6 @@ A framed product is reviewed, never framed again: only what moved changes, and o
    MERGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`), then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
 
 6. **Reply** with each page that changed, the sections changed in it and its link.

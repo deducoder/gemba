@@ -49,7 +49,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Atlassian.
 
-2. **Read the product.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. Without a page titled `Vision`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Vision` with `getConfluencePage` and `contentFormat: "adf"` and, in the same message, its children with `getConfluencePageDescendants` on it; then `Requirements` and `Roadmap` the same way, both in one message.
+2. **Read the product.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. Without a page titled `Vision`, reply that the product needs `/gemba-code:project-create` first and stop. Read `Vision` with `getConfluencePage`, `contentFormat: "html"` and `detail: "full"` (its `snapshotToken` is needed to update it later) and, in the same message, its children with `getConfluencePageDescendants` on it; then `Requirements` and `Roadmap` the same way, both in one message.
 
 3. **Check the decision.** The decision is the `panel` after the `Decision` heading of `Vision`. Without that panel, or with `panelType` `error` (no-go), reply that the product has no go decision, name which case it is, suggest deciding it with `/gemba-code:project-create` and stop, writing nothing. With `warning` (go to validate), the first version validates the greatest risk, the first of `Risks`; with `success` (go to build), it is the cut the person chooses. When the argument names a version that `Now` in `Roadmap` holds as `Planned`, the version is defined: take its requirements from its section of `Requirements`, its `releaseDate` and its link from its entry in `Now`, check its fix version as step 11 does, with the id of Epic from `getJiraProjectIssueTypesMetadata`, propose which requirements each one comes after and ask how many people build it, as step 9 does, and go on from step 14.
 
@@ -106,7 +106,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 13. **Publish,** in this order, and when a call fails, stop and say what was published and what was not, without creating again a page that exists:
     1. The version page with `createConfluencePage`, the `id` of the space as `spaceId`, `subtype: live`, the `id` of `Roadmap` as `parentId`, and the `title` and `body` its script printed (`contentFormat: "html"`).
-    2. `Requirements` and `Roadmap`, the roadmap checked again with the link to the version page. Merge each one, alone and exactly in this form, with its published body, the body its script printed and the headings it changes: for `Requirements` the version, `Unassigned` and `Assumptions and open questions` when a question changed; for `Roadmap`, `Now` and `Next`:
+    2. `Requirements` and `Roadmap`, the roadmap checked again with the link to the version page. Merge each one, alone and exactly in this form, with its published body (from step 2's read), the body its script printed and the headings it changes: for `Requirements` the version, `Unassigned` and `Assumptions and open questions` when a question changed; for `Roadmap`, `Now` and `Next`:
 
        ```
        python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py <<'MERGE'
@@ -114,7 +114,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
        MERGE
        ```
 
-       Update the page with `updateConfluencePage`, its `id` as `pageId`, its title and the document the merge printed as its `body` (`contentFormat: "adf"`).
+       Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 2's read and the `edits` the merge printed.
 
     The two merges can go in one message, and then the two updates. A live doc saves late: read each page until it has the change, up to three times, and retry the update once when it still does not; then say which page did not save.
 
