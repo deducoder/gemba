@@ -2,7 +2,7 @@
 expect:
   cloudId: string
   pageId: string
-  contentFormat: adf
+  contentFormat: string
   title: string
   body: string
 ---

@@ -4,7 +4,7 @@ expect:
   spaceId: string
   parentId: "1005"
   subtype: live
-  contentFormat: adf
+  contentFormat: string
   title: string
   body: string
 ---

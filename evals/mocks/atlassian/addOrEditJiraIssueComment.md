@@ -1,7 +1,7 @@
 ---
 expect:
   issueIdOrKey: string
-  contentFormat: adf
+  contentFormat: string
 ---
 
 {"id": "10001", "body": "Evidence"}

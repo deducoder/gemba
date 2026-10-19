@@ -2,7 +2,7 @@
 expect:
   cloudId: string
   issueIdOrKey: ABC-40
-  contentFormat: adf
+  contentFormat: string
 ---
 
 {"id": "10002", "body": "Cancelled"}
