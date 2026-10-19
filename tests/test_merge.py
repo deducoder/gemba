@@ -58,10 +58,11 @@ class Merge(unittest.TestCase):
         ])
 
     def test_a_new_section_with_nothing_earlier_kept_goes_before_the_first_live_node(self):
-        new = "<h2>Withdrawn</h2><p>R-02 retirado</p>" + NEW
-        found = edits(["Withdrawn"], new=new)
+        live = LIVE[LIVE.index("<h2"):]
+        new = NEW.replace("<h2>Problem</h2>", "<h2>Withdrawn</h2><p>R-02 retirado</p><h2>Problem</h2>")
+        found = edits(["Withdrawn"], live=live, new=new)
         self.assertEqual(found, [
-            {"name": "insertNodeBefore", "localId": "a1", "value": "<h2>Withdrawn</h2><p>R-02 retirado</p>"},
+            {"name": "insertNodeBefore", "localId": "a2", "value": "<h2>Withdrawn</h2><p>R-02 retirado</p>"},
         ])
 
     def test_an_accepted_section_the_new_page_drops_is_removed(self):
