@@ -121,7 +121,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
     ROADMAP
     ```
 
-12. **Ask the person to accept** the three drafts and the `## Purpose` section and the `README.md` of step 14, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
+12. **Ask the person to accept** the three drafts and the `## Purpose` section of step 14, shown in full, and, when `README.md` above is `(missing)`, the README.md of that same step. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
 13. **Publish the pages** with `createConfluencePage`, each with the `id` of the space as `spaceId`, `subtype: live`, the `title` its script printed and its `body` as HTML (`contentFormat: "html"`): first `Vision` with the `homepageId` as `parentId`, then `Requirements` and `Roadmap` with the `id` of `Vision` as `parentId`. When the vision cites a `Question n`, check it again with the link to `Requirements`, run alone and exactly in this form, and update `Vision` with `updateConfluencePage` and the `body` it printed; a live doc saves late, so read the page and retry until it has the link. When a call fails, stop and say which pages were published and which were not, without creating again a page that exists:
 
@@ -165,6 +165,6 @@ A framed product is reviewed, never framed again: only what moved changes, and o
    MERGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit, and, when `README.md` carries a `Vision:` line, its description the same way.
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit, and, when `README.md` carries a `Vision:` line, update README.md's description the same way.
 
 6. **Reply** with each page that changed, the sections changed in it and its link.
