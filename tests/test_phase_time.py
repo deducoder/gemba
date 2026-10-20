@@ -52,14 +52,15 @@ class PhaseTime(unittest.TestCase):
     def test_a_long_phase_is_still_its_plain_interval(self):
         self.assertEqual(self.minutes("03:19:50", "11:53:41"), 514)
 
+    def test_a_multi_day_phase_is_its_full_elapsed_time(self):
+        result = self.run_script("2026-10-15T00:00:00-06:00", "2026-10-18T06:00:00-06:00")
+        self.assertEqual(result["minutes"], 3 * 24 * 60 + 6 * 60)
+
     def test_commits_between_the_marks_do_not_change_the_result(self):
         git(self.cwd, "init", "-q", "-b", "develop")
         (self.cwd / "a").write_text("a")
         git(self.cwd, "add", "a")
         git(self.cwd, "commit", "-qam", "change at 00:56:49", date=at("00:56:49"))
-        self.assertEqual(self.minutes("00:54:27", "01:03:46"), 9)
-
-    def test_outside_a_git_repo_it_still_prints_the_elapsed_time(self):
         self.assertEqual(self.minutes("00:54:27", "01:03:46"), 9)
 
     def test_a_phase_without_an_end_mark_is_the_interval_of_its_marks(self):
