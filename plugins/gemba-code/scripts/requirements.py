@@ -65,7 +65,7 @@ def requirements(name, lines, ids, found, optional=False):
     for item in items(name, lines, found, optional):
         match = REQUIREMENT.match(item)
         if not match:
-            found.append(f"{name}: write each as '* **R-nn** requirement. Source: origin [Type]': {item}")
+            found.append(f"{name}: write each as '* **R-nn** requirement [Type] Source: origin [Hypothesis]': {item}")
             continue
         rid, rest = match.groups()
         last = numbered(name, rid, ids, last, found)
