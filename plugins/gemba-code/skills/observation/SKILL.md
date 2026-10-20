@@ -34,12 +34,12 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluenceSpaces getCon
 
 5. **Record**, when the request is `record <KEY>: <observation>`:
    - Decide its Severity with the rubric above.
-   - Build one `add_entry`, at the position after the last row of step 4: `Observation` the text, `Severity` as decided, `Status` `Open`, `Origin` `https://<site>/browse/<KEY>`, `Date` today (`YYYY-MM-DD`), `Tracked in` `""`.
+   - Build one `add_entry`, its `entry_index` the number of rows step 4 read plus one: `Observation` the text, `Severity` as decided, `Status` `Open`, `Origin` `https://<site>/browse/<KEY>`, `Date` today (`YYYY-MM-DD`), `Tracked in` `""`.
    - Apply it with `updateConfluenceDatabase`: the `contentId` and `snapshotToken` of step 4, `body.format: "csv"`, the envelope as `body.value`, and `body.context.content` the CSV step 4 read — without it the call is rejected.
    - Reply with the row and its Severity.
 
 6. **Declare**, when the request is `declare <KEY> <reference>`:
-   - Keep the one row of step 4 whose `Observation` contains `<reference>`, or whose `_id` equals it. Stop, naming them, when none match or more than one does.
-   - Build one `edit_entry` for that row's position: `Status` `Declared`, `Tracked in` `https://<site>/browse/<KEY>`, every other cell `""` (unchanged).
+   - Keep the one row of step 4 whose `Observation` contains `<reference>`. Stop, saying no row matches, when none do; stop, naming each one, when more than one does.
+   - Build one `edit_entry`, its `entry_index` that row's own `_id`: `Status` `Declared`, `Tracked in` `https://<site>/browse/<KEY>`, every other cell `""` (unchanged).
    - Apply it the same way step 5 does.
    - Reply with the row and its new Status.
