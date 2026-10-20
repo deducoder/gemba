@@ -46,8 +46,18 @@
         "tier": "executeWrite"
       }
     ],
-    "params": "timeSpent, started",
+    "params": "timeSpent, started, worklogId para editar",
     "format": "—"
+  },
+  "getWorklogsForJiraIssue": {
+    "tools": [
+      {
+        "tool": "listJiraIssueWorklogs",
+        "tier": "executeRead"
+      }
+    ],
+    "params": "issueIdOrKey, startAt, maxResults",
+    "format": "worklogs[].id + started + timeSpent"
   },
   "createIssueLink": {
     "tools": [
