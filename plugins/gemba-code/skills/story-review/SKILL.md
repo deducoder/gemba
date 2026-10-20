@@ -51,7 +51,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
 
 5. **Simplify the branch.** Invoke `/simplify origin/develop...HEAD` with the Skill tool, from the story branch. Commit its fixes in the commit format of the Gemba Code context, split by what was done.
 
-6. **Review the branch.** Invoke `/code-review origin/develop...HEAD` with the Skill tool. Fix each finding and commit it, or report why it stays.
+6. **Review the branch.** Invoke `/code-review origin/develop...HEAD` with the Skill tool. Fix each finding and commit it, or report why it stays. For each finding that stays, invoke `/gemba-code:observation` with the Skill tool, `record <KEY>: <the finding>`.
 
 7. **Check each criterion on the final state of the branch.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met. When something no longer holds, leave a drift comment and stop until the person decides: do not push and do not register the time.
 
