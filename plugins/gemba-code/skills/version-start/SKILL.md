@@ -74,10 +74,10 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
    Show the person its `workingDays`, `releaseDate` and `longestChain`, with each estimate. With a correction, run it again.
 
 10. **Write the drafts** in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none; headings, labels and lozenges stay in English.
-    - The version page, with the template above: `[Planned]` and the `releaseDate`, the goal, the `MVP criterion` only in the first version (the risk it validates, from `Vision`, why this cut and what it leaves out), the `Outcome` with its `Baseline` and `Target`, the requirements of the version as the catalog writes them without their `Source` or `Type`, and the numbers of the questions of step 7, or one sentence saying none blocked it. Check it, alone and exactly in this form, with the link to `Requirements` and `--first` only in the first version:
+    - The version page, with the template above: `[Planned]` and the `releaseDate`, the goal, the `MVP criterion` only in the first version (the risk it validates, from `Vision`, why this cut and what it leaves out), the `Outcome` with its `Baseline` and `Target`, the requirements of the version as the catalog writes them without their `Source` or `Type`, and the numbers of the questions of step 7, or one sentence saying none blocked it. The script's `Work items` table needs the site's Atlassian `cloudId`, not read from `atlassian.json`: get it once with `getAccessibleAtlassianResources` and reuse it for every call below. Check the draft, alone and exactly in this form, with the link to `Requirements` and `--first` only in the first version:
 
       ```
-      python3 ${CLAUDE_SKILL_DIR}/scripts/version.py --project <jira.project> --requirements <the link to Requirements> [--first] <<'VERSION'
+      python3 ${CLAUDE_SKILL_DIR}/scripts/version.py --project <jira.project> --site <site> --cloud-id <the cloudId> --requirements <the link to Requirements> [--first] <<'VERSION'
       <the version draft>
       VERSION
       ```
