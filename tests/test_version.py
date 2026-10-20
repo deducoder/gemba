@@ -39,7 +39,9 @@ Question 2 y Question 3, ya respondidas.
 """
 
 
-LATER = ("--project", "ABC", "--requirements", REQUIREMENTS)
+SITE = "example.atlassian.net"
+CLOUD_ID = "60bceecb-ff67-4e42-ad74-e1b4da07354e"
+LATER = ("--project", "ABC", "--site", SITE, "--cloud-id", CLOUD_ID, "--requirements", REQUIREMENTS)
 FIRST = LATER + ("--first",)
 
 
@@ -119,23 +121,30 @@ class VersionPage(unittest.TestCase):
         links = re.findall(rf'<a href="{re.escape(REQUIREMENTS)}">(.+?)</a>', questions)
         self.assertEqual(links, ["Question 2", "Question 3"])
 
-    def test_work_items_is_the_jira_macro_of_the_first_level_of_the_version(self):
+    def test_work_items_is_the_jira_issues_data_source_of_the_version(self):
         macro = section(self.body, "Work items")
-        self.assertIn('data-type="extension"', macro)
-        self.assertIn('data-extension-key="jira"', macro)
-        self.assertIn('data-extension-type="com.atlassian.confluence.macro.core"', macro)
-        parameters = json.loads(re.search(r'data-parameters="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
-        self.assertEqual(parameters["macroParams"]["jqlQuery"]["value"],
-                          'project = ABC AND fixVersion = "Gemba v0.1.0" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key')
-        self.assertEqual(parameters["macroParams"]["columns"]["value"], "type,key,summary,priority,status,duedate")
+        self.assertIn('data-type="block-card"', macro)
+        datasource = json.loads(re.search(r'data-datasource="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
+        self.assertEqual(datasource["id"], "d8b75300-dfda-4519-b6cd-e49abbd50401")
+        self.assertEqual(datasource["parameters"]["cloudId"], CLOUD_ID)
+        self.assertEqual(datasource["parameters"]["jql"],
+                          'project = ABC AND fixVersion = "Gemba v0.1.0" AND issuetype NOT IN (Epic, Sub-task) ORDER BY key')
+        self.assertEqual(datasource["views"][0]["properties"]["columns"],
+                          [{"key": "issuetype"}, {"key": "key"}, {"key": "summary"}, {"key": "priority"}, {"key": "status"}])
+
+    def test_work_items_carries_a_fallback_link_with_the_percent_encoded_jql(self):
+        macro = section(self.body, "Work items")
+        url = f"https://{SITE}/issues/?jql=project%20%3D%20ABC%20AND%20fixVersion%20%3D%20%22Gemba%20v0.1.0%22%20AND%20issuetype%20NOT%20IN%20%28Epic%2C%20Sub-task%29%20ORDER%20BY%20key"
+        self.assertEqual(re.search(r'data-url="([^"]*)"', macro).group(1), url)
+        self.assertIn(f'<a href="{url}">{url}</a>', macro)
 
 
 class VersionOptional(unittest.TestCase):
     def test_quotes_in_the_version_name_are_escaped_in_the_jql(self):
         body = page(DRAFT.replace("Gemba v0.1.0", 'Ga"b v0.1.0'))["body"]
         macro = section(body, "Work items")
-        parameters = json.loads(re.search(r'data-parameters="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
-        self.assertIn('fixVersion = "Ga\\"b v0.1.0"', parameters["macroParams"]["jqlQuery"]["value"])
+        datasource = json.loads(re.search(r'data-datasource="([^"]*(?:&quot;[^"]*)*)"', macro).group(1).replace("&quot;", '"'))
+        self.assertIn('fixVersion = "Ga\\"b v0.1.0"', datasource["parameters"]["jql"])
 
     def test_a_later_version_has_no_mvp_criterion(self):
         start, end = DRAFT.index("### MVP criterion"), DRAFT.index("### Outcome")
@@ -186,7 +195,7 @@ class VersionRejects(unittest.TestCase):
         rejected(DRAFT.replace("2026-11-20", "20261120"), "20261120")
 
     def test_a_project_that_is_not_a_jira_key(self):
-        rejected(DRAFT, "--project", args=("--project", 'ABC" OR project = X', "--requirements", REQUIREMENTS))
+        rejected(DRAFT, "--project", args=("--project", 'ABC" OR project = X', "--site", SITE, "--cloud-id", CLOUD_ID, "--requirements", REQUIREMENTS))
 
     def test_the_first_version_needs_its_mvp_criterion(self):
         start, end = DRAFT.index("### MVP criterion"), DRAFT.index("### Outcome")

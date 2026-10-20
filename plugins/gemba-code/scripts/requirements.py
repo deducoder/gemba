@@ -9,10 +9,11 @@ named, as `### <Product> vX.Y.Z`; `### Unassigned`, where every requirement is b
 which may be empty only when a version or a withdrawn requirement exists; `### Withdrawn`, which is optional;
 and `### Assumptions and open questions`, which may be empty.
 
-- A requirement: `* **R-nn** requirement. Source: origin [Type]`, with an optional
-  `[Hypothesis]` after the Type, one of Functional, Business rule, Non-functional or
-  Constraint. Each ID is used once in the page and goes upward within its section; a gap is
-  a proposal the person removed.
+- A requirement: `* **R-nn** requirement [Type] Source: origin [Hypothesis]`, Type one of
+  Functional, Business rule, Non-functional or Constraint, origin one of Interview, Material,
+  Research or Vision. Source and Hypothesis are each optional, but not both absent: a
+  requirement with nothing external to back it carries only `[Hypothesis]`. Each ID is used
+  once in the page and goes upward within its section; a gap is a proposal the person removed.
 - A withdrawn requirement: `* ~~**R-nn** requirement~~ reason · YYYY-MM-DD`, in the order
   they were withdrawn.
 - A question: `* **Question n.** question Assumption: assumption Affects R-nn. [Open|Answered]`,
@@ -38,12 +39,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from draft import FENCE, GREY, STRIKE, STRONG, VERSION_NAME, bullets, check_sections, filled, heading, inline, is_day, items, space, split, status, strong, date_node  # noqa: E402
 
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
+SOURCES = ("Interview", "Material", "Research", "Vision")
 STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 VERSION = re.compile(rf"^{VERSION_NAME}$")
 WITHDRAWN = re.compile(r"^~~\*\*(R-\d+)\*\* (.+?)~~ (.+) · (\d{4}-\d{2}-\d{2})$")
-TAIL = re.compile(r"^(.*?) \[([^\]]+)\]( \[Hypothesis\])?$")
+TAIL = re.compile(r"^(.*?) \[([^\]]+)\](?: Source: (\w+))?( \[Hypothesis\])?$")
 QUESTION = re.compile(r"^\*\*Question (\d+)\.\*\* (.+?) Assumption: (.+) \[([^\]]+)\]$")
 
 
@@ -63,19 +65,21 @@ def requirements(name, lines, ids, found, optional=False):
     for item in items(name, lines, found, optional):
         match = REQUIREMENT.match(item)
         if not match:
-            found.append(f"{name}: write each as '* **R-nn** requirement. Source: origin [Type]': {item}")
+            found.append(f"{name}: write each as '* **R-nn** requirement [Type] Source: origin [Hypothesis]': {item}")
             continue
         rid, rest = match.groups()
         last = numbered(name, rid, ids, last, found)
         tail = TAIL.match(rest)
         if not tail or tail.group(2) not in TYPES:
-            found.append(f"{name}: {rid} ends with its Type, one of {', '.join(TYPES)}, and optionally [Hypothesis]: {rest}")
+            found.append(f"{name}: {rid} carries its Type right after the sentence, one of {', '.join(TYPES)}, then its optional Source and [Hypothesis]: {rest}")
             continue
-        text, kind, hypothesis = tail.group(1), tail.group(2), bool(tail.group(3))
-        if " Source: " not in text:
-            found.append(f"{name}: {rid} needs its 'Source: origin' before the Type")
+        sentence, kind, source, hypothesis = tail.group(1), tail.group(2), tail.group(3), bool(tail.group(4))
+        if source is None and not hypothesis:
+            found.append(f"{name}: {rid} needs its 'Source: origin' or [Hypothesis], or both")
             continue
-        sentence, source = text.rsplit(" Source: ", 1)
+        if source is not None and source not in SOURCES:
+            found.append(f"{name}: {rid}'s Source is one of {', '.join(SOURCES)}, not {source}")
+            continue
         catalog.append((rid, sentence, source, kind, hypothesis))
     return catalog
 
@@ -153,8 +157,12 @@ def body(content):
     for name, catalog in content["groups"]:
         lines = []
         for rid, sentence, source, kind, hypothesis in catalog:
-            marks = space() + status(kind, TYPES[kind]) + (space() + status("Hypothesis", "neutral") if hypothesis else "")
-            lines.append(strong(rid) + space() + inline(sentence) + space() + inline(f"Source: {source}", (GREY,)) + marks)
+            marks = space() + status(kind, TYPES[kind])
+            if source:
+                marks += space() + inline(f"Source: {source}", (GREY,))
+            if hypothesis:
+                marks += space() + status("Hypothesis", "neutral")
+            lines.append(strong(rid) + space() + inline(sentence) + marks)
         parts.append(heading(name, 2) + (bullets(lines) if lines else ""))
     if content["withdrawn"]:
         parts.append(heading("Withdrawn", 2) + bullets([

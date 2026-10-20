@@ -1,7 +1,7 @@
 ### Unassigned
 
-* **R-01** <requirement: singular and verifiable, its fit criterion in the sentence>. Source: <who said it, the point of the material or the person's hypothesis> [Functional | Business rule | Non-functional | Constraint]
-* **R-02** <requirement born from an assumption>. Source: <origin> [Type] [Hypothesis]
+* **R-01** <requirement: singular and verifiable, its fit criterion in the sentence> [Functional | Business rule | Non-functional | Constraint] Source: <Interview | Material | Research | Vision>
+* **R-02** <requirement with nothing external to back it> [Type] [Hypothesis]
 
 ### Assumptions and open questions
 

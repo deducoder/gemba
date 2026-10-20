@@ -36,6 +36,7 @@ VERSION_SECTIONS = {
     "Released": (("Released",), False, "'* [<Product> vX.Y.Z](<link>) [Released] goal Target: measurable goal'"),
 }
 OTHER = {"Now": "a released one goes to Released", "Released": "one in progress goes to Now"}
+NEXT_PLACEHOLDER = "Se decide con lo aprendido hasta ahora."
 
 
 def entries(name, lines, found, optional=False):
@@ -106,6 +107,7 @@ def problems(draft):
     }
     content["Next"] = entries("Next", sections["Next"], found, optional=started)
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
+    content["started"] = started
     return (found, None) if found else (found, content)
 
 
@@ -130,6 +132,8 @@ def body(content):
             parts.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
             parts.append(bullets([entry(goal) for goal in content[name]]))
+        elif name == "Next" and content["started"]:
+            parts.append(paragraph(inline(NEXT_PLACEHOLDER)))
     return "".join(parts)
 
 

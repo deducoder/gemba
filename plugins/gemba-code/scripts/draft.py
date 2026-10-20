@@ -262,6 +262,10 @@ def paragraph(*content):
     return f"<p>{''.join(content)}</p>"
 
 
+def blockquote(*content):
+    return f"<blockquote>{''.join(content)}</blockquote>"
+
+
 def label(name, text):
     """Returns a paragraph with the label in bold, then its text."""
     return paragraph(strong(f"{name}:"), space(), inline(text))
