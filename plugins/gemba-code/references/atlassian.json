@@ -183,6 +183,26 @@
     "params": "contentId, snapshotToken, body {format html} o edits [replaceNode, insertNodeAfter, insertNodeBefore, deleteNode, appendNodeToEnd, moveNode, setAttrs]",
     "format": "html o markdown (no ADF)"
   },
+  "getConfluenceDatabase": {
+    "tools": [
+      {
+        "tool": "getConfluenceContent",
+        "tier": "primaria"
+      }
+    ],
+    "params": "content_id, content_format csv",
+    "format": "csv con snapshotToken"
+  },
+  "updateConfluenceDatabase": {
+    "tools": [
+      {
+        "tool": "updateConfluenceContent",
+        "tier": "primaria"
+      }
+    ],
+    "params": "contentId, snapshotToken, body {format csv, value: sobre de edición, context: {content: csv actual}}",
+    "format": "—"
+  },
   "setConfluenceContentStatus": {
     "tools": [
       {

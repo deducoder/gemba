@@ -75,7 +75,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
 
 7. **Simplify the branch.** Invoke `/simplify origin/develop...HEAD` with the Skill tool, from the bug branch. Commit its fixes in the commit format of the Gemba Code context, split by what was done.
 
-8. **Review the branch.** Invoke `/code-review origin/develop...HEAD` with the Skill tool. Fix each finding and commit it, or report why it stays.
+8. **Review the branch.** Invoke `/code-review origin/develop...HEAD` with the Skill tool. Fix each finding and commit it, or report why it stays. For each finding that stays, invoke `/gemba-code:observation` with the Skill tool, `record <KEY>: <the finding>`.
 
 9. **Check each criterion on the final state of the branch.** Run the regression test, the command of the Reproduction, the command each Done when criterion names and the input of each row of Neighboring inputs, and compare each row with its Current behavior. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met. When a criterion is not met, or a row changes and no Done when criterion asks for that change, leave a drift comment.
 
