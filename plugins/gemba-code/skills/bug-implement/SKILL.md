@@ -103,7 +103,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
      python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
      ```
 
-     It prints `timeSpent` and `started`. Propose them to the person as an estimate and wait for the confirmation or for another time. With it, write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment.
+     It prints `timeSpent` and `started`. Write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment, and say the time it registered.
 
 ## Leave a drift comment
 

@@ -55,7 +55,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateCo
 
    It prints the tag, then on a second line `released` when it merged `develop` into `main` with `--no-ff` and tagged the merge, or `already released` when an earlier run did, and then the commits the push of `main` sends. It leaves the project on `develop`, level with `main`. When it refuses, relay its reason and stop: nothing is pushed or released.
 
-7. **Push,** in this order, each one as a command of its own that the person approves: `git push origin main`, `git push origin refs/tags/v<X.Y.Z>` and `git push origin develop`. Before the first, say the tag and the commits step 6 listed. When a push fails or the person declines it, stop: say what was pushed, and nothing is released in Jira.
+7. **Push,** in this order, each one as a command of its own: `git push origin main`, `git push origin refs/tags/v<X.Y.Z>` and `git push origin develop`. Before the first, say the tag and the commits step 6 listed. When a push fails or is declined, stop: say what was pushed, and nothing is released in Jira.
 
 8. **Release the fix version** with `manageJiraProjectVersion`, `action: "release"`, the `id` of step 3 as `versionId` and today as `releaseDate` (`YYYY-MM-DD`). When it returns an error, stop: relay Jira's reason and say that git is already released and pushed.
 

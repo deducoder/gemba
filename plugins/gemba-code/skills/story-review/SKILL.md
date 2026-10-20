@@ -55,7 +55,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
 
 7. **Check each criterion on the final state of the branch.** Read the Evidence comment of the story: re-run each `ran:` command and re-read each `read:` source. Run only commands that read; when one would write, stop and ask. Report each Done when criterion with its evidence in the form `ran:` or `read:`, naming any that is not met. When something no longer holds, leave a drift comment and stop until the person decides: do not push and do not register the time.
 
-8. **Push the branch** with `git push -u origin <branch>`, the current branch, as a command of its own: the person approves it. The first time it creates the branch on the remote; after that it sends the new commits. Say the branch and the commits it sends.
+8. **Push the branch** with `git push -u origin <branch>`, the current branch, as a command of its own. The first time it creates the branch on the remote; after that it sends the new commits. Say the branch and the commits it sends.
 
 9. **Register the time of the phase.** Read the story again with `getJiraIssue`, asking only for its `status` and `expand: "changelog"`, and take the time of the last change into Review. Run:
 
@@ -63,7 +63,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/phase_time.py --start <that time>
    ```
 
-   It prints `timeSpent` and `started`. Propose them to the person as an estimate and wait for the confirmation or for another time. With it, write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment.
+   It prints `timeSpent` and `started`. Write the worklog with `addWorklogToJiraIssue`, with that `timeSpent` and `started` and no comment, and say the time it registered.
 
 ## Leave a drift comment
 
