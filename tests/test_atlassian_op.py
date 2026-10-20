@@ -34,6 +34,12 @@ class AtlassianOperation(unittest.TestCase):
         self.assertIn("lookupJiraAccountId (executeRead)", result.stdout)
         self.assertIn("atlassianUserInfo (primaria)", result.stdout)
 
+    def test_the_worklogs_of_a_jira_issue_can_be_listed_and_an_existing_one_edited(self):
+        result = run("getWorklogsForJiraIssue", "addWorklogToJiraIssue")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("listJiraIssueWorklogs (executeRead)", result.stdout)
+        self.assertIn("worklogId", result.stdout)
+
     def test_an_unknown_operation_says_so_instead_of_failing(self):
         result = run("notAnOperation")
         self.assertEqual(result.returncode, 0, result.stderr)
