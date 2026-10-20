@@ -2,7 +2,7 @@
 """Checks the page of a product version against the template and converts it to the live
 doc that Confluence takes: the title and the body as an ADF document.
 
-Usage: python3 version.py --project <KEY> --requirements <url> [--first] < draft.md
+Usage: python3 version.py --project <KEY> --site <host> --cloud-id <uuid> --requirements <url> [--first] < draft.md
 
 The draft comes on stdin: the version name `<Product> vX.Y.Z` on the first line, then the
 paragraph `[Planned] · YYYY-MM-DD` with its release date and the paragraph of its goal,
@@ -136,8 +136,8 @@ def problems(draft, first=False):
 
 def macro(project, version, site, cloud_id):
     quoted = version.replace("\\", "\\\\").replace('"', '\\"')
-    jql = f'project = {project} AND fixVersion = "{quoted}" AND issuetype != Epic ORDER BY key'
-    url = f"https://{site}/issues/?jql=" + quote(jql, safe="()")
+    jql = f'project = {project} AND fixVersion = "{quoted}" AND issuetype NOT IN (Epic, Sub-task) ORDER BY key'
+    url = f"https://{site}/issues/?jql=" + quote(jql)
     datasource = json.dumps({
         "id": DATASOURCE_ID,
         "parameters": {"cloudId": cloud_id, "jql": jql},

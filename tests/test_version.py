@@ -128,13 +128,13 @@ class VersionPage(unittest.TestCase):
         self.assertEqual(datasource["id"], "d8b75300-dfda-4519-b6cd-e49abbd50401")
         self.assertEqual(datasource["parameters"]["cloudId"], CLOUD_ID)
         self.assertEqual(datasource["parameters"]["jql"],
-                          'project = ABC AND fixVersion = "Gemba v0.1.0" AND issuetype != Epic ORDER BY key')
+                          'project = ABC AND fixVersion = "Gemba v0.1.0" AND issuetype NOT IN (Epic, Sub-task) ORDER BY key')
         self.assertEqual(datasource["views"][0]["properties"]["columns"],
                           [{"key": "issuetype"}, {"key": "key"}, {"key": "summary"}, {"key": "priority"}, {"key": "status"}])
 
     def test_work_items_carries_a_fallback_link_with_the_percent_encoded_jql(self):
         macro = section(self.body, "Work items")
-        url = f"https://{SITE}/issues/?jql=project%20%3D%20ABC%20AND%20fixVersion%20%3D%20%22Gemba%20v0.1.0%22%20AND%20issuetype%20%21%3D%20Epic%20ORDER%20BY%20key"
+        url = f"https://{SITE}/issues/?jql=project%20%3D%20ABC%20AND%20fixVersion%20%3D%20%22Gemba%20v0.1.0%22%20AND%20issuetype%20NOT%20IN%20%28Epic%2C%20Sub-task%29%20ORDER%20BY%20key"
         self.assertEqual(re.search(r'data-url="([^"]*)"', macro).group(1), url)
         self.assertIn(f'<a href="{url}">{url}</a>', macro)
 
