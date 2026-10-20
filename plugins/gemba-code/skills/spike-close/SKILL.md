@@ -54,6 +54,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getTransition
 
    When the person declines it or it fails, stop: the spike stays Done and the folder and the branch stay. Say so, and do not run step 6.
 
-6. **Delete the branch on the remote** only when step 3 said `on origin`, with `git push origin --delete <branch>` as a command of its own that the person approves. When it said `local only`, touch no remote.
+6. **Delete the branch on the remote** only when step 3 said `on origin`, with `git push origin --delete <branch>` as a command of its own. When it said `local only`, touch no remote.
 
 7. **Report** the status of the spike and what was deleted: the folder, the local branch and, when it ran, the remote branch; or that the close was resumed or that nothing was left. The project stays where it was. This skill merges and pushes nothing and writes no comment and no worklog: the answer is in the findings that Jira shows, and `spike-implement` and `spike-review` already registered the time of their phases.

@@ -1,6 +1,6 @@
 ---
 name: project-create
-description: Frames a new product with the person, discovers its requirements and writes its Vision at the root of the Confluence space, with Requirements and Roadmap under it as live docs and its Purpose in CLAUDE.md. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material, frames problem, users, success and constraints one decision at a time, orders the risks, proposes the requirements in batches (functional, business rules, the Volere non-functional types, constraints, then the unsaid), turns what cannot be measured into open questions, records the go or no-go decision and checks each page against its template; with a framed product it reviews the three pages and changes only the sections that moved. Use when the user wants to start a product from scratch, frame an idea before building it, write its vision and requirements, or bring them up to date. It writes only what the person accepted, assigns no version and creates no work item or fix version.
+description: Frames a new product with the person, discovers its requirements and writes its Vision at the root of the Confluence space, with Requirements and Roadmap under it as live docs, its Purpose in CLAUDE.md and a README.md at the project's root. Asks first who originates the demand (Client, Market, Internal or Platform), lists the points of any shared material, frames problem, users, success and constraints one decision at a time, orders the risks, proposes the requirements in batches (functional, business rules, the Volere non-functional types, constraints, then the unsaid), turns what cannot be measured into open questions and records the go or no-go decision; with a framed product it reviews the three pages and changes only the sections that moved. Use when the user wants to start a product from scratch, frame an idea before building it, write its vision and requirements, or bring them up to date. It writes only what the person accepted, assigns no version and creates no work item or fix version.
 argument-hint: "[idea or path to shared material]"
 disable-model-invocation: true
 allowed-tools:
@@ -10,6 +10,7 @@ allowed-tools:
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/roadmap.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/merge.py *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py *)
+  - Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/license.py *)
 ---
 
 # Project create
@@ -24,6 +25,12 @@ CLAUDE.md:
 
 ```
 !`cat "${CLAUDE_PROJECT_DIR}/CLAUDE.md" 2>/dev/null || echo "(missing)"`
+```
+
+README.md:
+
+```
+!`cat "${CLAUDE_PROJECT_DIR}/README.md" 2>/dev/null || echo "(missing)"`
 ```
 
 Vision template:
@@ -44,7 +51,7 @@ Roadmap template:
 !`cat ${CLAUDE_SKILL_DIR}/assets/roadmap.md`
 ```
 
-This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages. Resolve the operations this skill names below with:
+This skill writes or updates three Confluence pages, `Vision`, `Requirements` and `Roadmap`, and the `## Purpose` section of `CLAUDE.md` and `README.md`, and only what the person accepted. It creates and edits no work item, fix version or other page, and assigns no requirement to a version. The `site` in `atlassian.json` above is the `cloudId` of every Atlassian call, `confluence.space` the space of the pages. Resolve the operations this skill names below with:
 
 ```
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getConfluencePage updateConfluencePage createConfluencePage getConfluencePageDescendants getConfluenceSpaces lookupJiraAccountId
@@ -56,7 +63,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
 
 1. **Check the project.** When `atlassian.json` above is `(missing)`, or `CLAUDE.md` above has no `# Gemba` block, reply that the project needs `/gemba:setup` first and stop, without calling Confluence.
 
-2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. When one of them is titled `Vision`, the product is framed: follow **Review a framed product** below instead of the steps that follow.
+2. **Find the root.** Read the space of `atlassian.json` with `getConfluenceSpaces` (its `id`, `name` and `homepageId`) and the children of its home with `getConfluencePageDescendants` and `depth: 1`, following its `cursor` until the last page. When one of them is titled `Vision`, the product is framed: follow **Review a framed product** below instead of the steps that follow.
 
 3. **Ask who originates the demand,** as the first question, offering always these four options, even one that seems not to apply, with the recommended one first:
    - `Client`: a client commissions and pays for it.
@@ -114,7 +121,7 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
     ROADMAP
     ```
 
-12. **Ask the person to accept** the three drafts and the `## Purpose` section of step 14, shown in full. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
+12. **Ask the person to accept** the three drafts and the `## Purpose` section of step 14, shown in full, and, when `README.md` above is `(missing)`, the README.md of that same step. Write nothing they did not accept; with a correction, apply it, check the draft again and ask again.
 
 13. **Publish the pages** with `createConfluencePage`, each with the `id` of the space as `spaceId`, `subtype: live`, the `title` its script printed and its `body` as HTML (`contentFormat: "html"`): first `Vision` with the `homepageId` as `parentId`, then `Requirements` and `Roadmap` with the `id` of `Vision` as `parentId`. When the vision cites a `Question n`, check it again with the link to `Requirements`, run alone and exactly in this form, and update `Vision` with `updateConfluencePage` and the `body` it printed; a live doc saves late, so read the page and retry until it has the link. When a call fails, stop and say which pages were published and which were not, without creating again a page that exists:
 
@@ -124,9 +131,13 @@ The person decides. Ask one decision at a time with `AskUserQuestion`, offering 
     VISION
     ```
 
-14. **Write the Purpose.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`.
+14. **Write the Purpose and the README.** Add to `CLAUDE.md` with Edit, without retyping the rest, a `## Purpose` section inside the `# Gemba` block, right after its `## Language` section: the first sentence of the vision without its origin, and after a blank line `Vision: <the link to the page>`. When `README.md` above is `(missing)`, write one with Write: `# ` and the product's name, from the `name` `getConfluenceSpaces` returned in step 2, then the same two lines as `## Purpose`; no Install, Usage, Contributing or License section. When it already exists, leave it untouched and say so.
 
-15. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
+15. **Propose a license.** Run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py`: it prints the project's visibility, read from its `origin` remote and the GitHub API, with no credentials. When `public` is `false`, skip this step: that covers no `origin`, a remote that is not on `github.com`, or a repository this skill cannot confirm is public. When it is `true` and the project has no `LICENSE` file yet, propose a license with its reason: MIT by default, or Apache License 2.0 with a `NOTICE` when the product needs an explicit patent grant or carries third-party attributions to keep. Once the person accepts:
+    - For MIT, run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py mit`; a non-zero exit means the download failed, so stop and say so. Write its output to `LICENSE`, with `[year]` as today's year and `[fullname]` as `<the person's name, from atlassianUserInfo> (<their GitHub handle, the owner printed above>)`.
+    - For Apache License 2.0, run `python3 ${CLAUDE_SKILL_DIR}/scripts/license.py apache-2.0`; a non-zero exit means the download failed, so stop and say so. Write its output to `LICENSE` as is, then write `NOTICE` with the product's name, `Copyright <year> <the person's name>` and a line crediting who built it.
+
+16. **Reply** with the links to the three pages and what was written, and suggest `/gemba-code:version-start` to define the first version.
 
 ## Review a framed product
 
@@ -154,6 +165,6 @@ A framed product is reviewed, never framed again: only what moved changes, and o
    MERGE
    ```
 
-   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit.
+   Update the page with `updateConfluencePage`, its `id` as `pageId`, its `snapshotToken` from step 1's read and the `edits` the merge printed, then read it until it has the change. When the first sentence of the vision changed, update `## Purpose` in `CLAUDE.md` with Edit, and, when `README.md` carries a `Vision:` line, update README.md's description the same way.
 
 6. **Reply** with each page that changed, the sections changed in it and its link.

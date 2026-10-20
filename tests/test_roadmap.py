@@ -144,6 +144,7 @@ class RoadmapVersionInProgress(unittest.TestCase):
 
     def test_next_may_be_empty_once_its_entry_is_the_version(self):
         self.assertEqual(headings(self.body), ["Now", "Next", "Later", "Released"])
+        self.assertEqual(section(self.body, "Next"), "<p>Se decide con lo aprendido hasta ahora.</p>")
 
     def test_a_released_version_is_not_in_now(self):
         rejected(PLANNED.replace("[Planned]", "[Released]"), "Now", "Released")
@@ -162,6 +163,11 @@ class RoadmapVersionInProgress(unittest.TestCase):
 
     def test_a_version_without_its_link(self):
         rejected(PLANNED.replace("[Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc)", "Gemba v0.1.0"), "Now")
+
+    def test_later_stays_silently_empty_even_once_started(self):
+        start, end = PLANNED.index("* **Unnumbered** Soporte para otros"), PLANNED.index("### Released")
+        body = page(PLANNED[:start] + PLANNED[end:])
+        self.assertEqual(section(body, "Later"), "")
 
 
 RELEASED_ENTRY = "* [Gemba v0.1.0](https://example.atlassian.net/wiki/x/abc) [Released] Validar que 3 equipos adoptan Gemba. Target: 3 equipos activos a 4 semanas."
@@ -206,7 +212,9 @@ class RoadmapReleasedVersions(unittest.TestCase):
 
     def test_next_may_be_empty_once_the_version_of_now_is_released(self):
         start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
-        self.assertIn("<ul>", section(page(RELEASED[:start] + RELEASED[end:]), "Released"))
+        body = page(RELEASED[:start] + RELEASED[end:])
+        self.assertIn("<ul>", section(body, "Released"))
+        self.assertEqual(section(body, "Next"), "<p>Se decide con lo aprendido hasta ahora.</p>")
 
     def test_a_released_version_with_a_date(self):
         rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")

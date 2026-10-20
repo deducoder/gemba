@@ -13,10 +13,10 @@ SCRIPT = ROOT / "plugins/gemba-code/scripts/requirements.py"
 
 DRAFT = """### Unassigned
 
-* **R-01** Ventas registra una venta con varios tours en menos de 2 minutos. Source: notas, punto 2 [Functional]
-* **R-02** El folio de venta es único. Source: María (Ventas) [Business rule]
-* **R-03** El operador abre su hoja desde el teléfono. Source: la persona [Non-functional] [Hypothesis]
-* **R-04** Los montos van en MXN. Source: notas, punto 5 [Constraint]
+* **R-01** Ventas registra una venta con varios tours en menos de 2 minutos. [Functional] Source: Material
+* **R-02** El folio de venta es único. [Business rule] Source: Interview
+* **R-03** El operador abre su hoja desde el teléfono. [Non-functional] Source: Research [Hypothesis]
+* **R-04** Los montos van en MXN. [Constraint] Source: Vision
 
 ### Assumptions and open questions
 
@@ -87,11 +87,19 @@ class RequirementsDraft(unittest.TestCase):
         first = [re.match(r"<strong>(.+?)</strong>", line).group(1) for line in lines(self.body, "Unassigned")]
         self.assertEqual(first, ["R-01", "R-02", "R-03", "R-04"])
 
-    def test_the_source_is_grey_before_the_type(self):
+    def test_the_source_is_grey_after_the_type(self):
         line = lines(self.body, "Unassigned")[0]
-        self.assertIn('<span style="color: #97a0af">Source: notas, punto 2</span>', line)
-        self.assertTrue(line.rstrip().endswith("</span>"))
-        self.assertTrue(line.rstrip().endswith(statuses(line)[-1][1] + "</span>"))
+        type_pos = line.index('<span data-type="status" data-color="neutral">Functional</span>')
+        source_pos = line.index('<span style="color: #97a0af">Source: Material</span>')
+        self.assertLess(type_pos, source_pos)
+        self.assertTrue(line.rstrip().endswith("Source: Material</span>"))
+
+    def test_the_hypothesis_lozenge_closes_the_line_after_source(self):
+        line = lines(self.body, "Unassigned")[2]
+        source_pos = line.index('<span style="color: #97a0af">Source: Research</span>')
+        hypothesis_pos = line.index('<span data-type="status" data-color="neutral">Hypothesis</span>')
+        self.assertLess(source_pos, hypothesis_pos)
+        self.assertTrue(line.rstrip().endswith("Hypothesis</span>"))
 
     def test_the_type_is_a_lozenge_with_its_color(self):
         types = [statuses(line) for line in lines(self.body, "Unassigned")]
@@ -115,18 +123,17 @@ class RequirementsOptional(unittest.TestCase):
     def test_an_answered_question(self):
         page(DRAFT.replace("unas 20. [Open]", "unas 20. [Answered]"))
 
+    def test_a_learning_source_passes(self):
+        page(DRAFT.replace("Source: Material", "Source: Learning"))
+
 
 class RequirementsReview(unittest.TestCase):
     def test_a_gap_left_by_a_removed_proposal_passes(self):
         page(DRAFT.replace("**R-03**", "**R-05**").replace("**R-04**", "**R-06**").replace("Affects R-03.", "Affects R-05."))
 
     def test_a_malformed_requirement_does_not_cascade(self):
-        errors = rejected(DRAFT.replace(" Source: notas, punto 2", ""), "R-01")
+        errors = rejected(DRAFT.replace(" Source: Material", ""), "R-01")
         self.assertEqual(len(errors.strip().splitlines()), 1, errors)
-
-    def test_a_source_that_ends_in_brackets(self):
-        body = page(DRAFT.replace("Source: notas, punto 2 [Functional]", "Source: notas, punto [2] [Functional]"))
-        self.assertIn("Source: notas, punto [2]", flat(lines(body, "Unassigned")[0]))
 
     def test_affects_with_any_separator_checks_every_id(self):
         rejected(DRAFT.replace("Affects R-03.", "Affects R-03; R-09."), "R-09")
@@ -138,7 +145,7 @@ REVIEWED = DRAFT.replace("""### Unassigned
 
 * **R-01**""").replace("""* **R-02** El folio""", """### Unassigned
 
-* **R-02** El folio""").replace("""### Assumptions and open questions""", """* **R-06** Ventas imprime la hoja de servicio. Source: María (Ventas) [Functional]
+* **R-02** El folio""").replace("""### Assumptions and open questions""", """* **R-06** Ventas imprime la hoja de servicio. [Functional] Source: Interview
 
 ### Withdrawn
 
@@ -169,7 +176,7 @@ class RequirementsReviewMode(unittest.TestCase):
         rejected(REVIEWED.replace("**R-06** Ventas imprime", "**R-05** Ventas imprime"), "R-05", args=EXISTING)
 
     def test_a_new_requirement_below_the_highest_published(self):
-        rejected(REVIEWED.replace("**R-06** Ventas imprime", "**R-04** Ventas imprime").replace("* **R-04** Los montos van en MXN. Source: notas, punto 5 [Constraint]\n", ""),
+        rejected(REVIEWED.replace("**R-06** Ventas imprime", "**R-04** Ventas imprime").replace("* **R-04** Los montos van en MXN. [Constraint] Source: Vision\n", ""),
                  "R-04", args=("--existing", "R-01,R-02,R-03,R-05"))
 
     def test_a_withdrawn_line_without_its_date(self):
@@ -183,7 +190,7 @@ class RequirementsReviewEdges(unittest.TestCase):
     def test_withdrawn_in_the_order_they_were_withdrawn(self):
         draft = """### Unassigned
 
-* **R-01** Algo. Source: la persona [Functional]
+* **R-01** Algo. [Functional] Source: Interview
 
 ### Withdrawn
 
@@ -223,8 +230,14 @@ class RequirementsRejects(unittest.TestCase):
     def test_a_type_outside_the_closed_list(self):
         rejected(DRAFT.replace("[Constraint]", "[Preference]"), "Preference")
 
-    def test_a_requirement_without_source(self):
-        rejected(DRAFT.replace(" Source: María (Ventas)", ""), "Source", "R-02")
+    def test_a_requirement_without_source_or_hypothesis(self):
+        rejected(DRAFT.replace(" Source: Interview", ""), "Source", "R-02")
+
+    def test_a_hypothesis_without_source_passes(self):
+        page(DRAFT.replace(" Source: Research", ""))
+
+    def test_a_source_outside_the_closed_list(self):
+        rejected(DRAFT.replace("Source: Material", "Source: Notes"), "Source", "Notes")
 
     def test_a_requirement_without_type(self):
         rejected(DRAFT.replace(" [Business rule]", ""), "R-02")

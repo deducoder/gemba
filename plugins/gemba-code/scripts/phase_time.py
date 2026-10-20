@@ -1,25 +1,19 @@
 #!/usr/bin/env python3
-"""Adds up the time of a phase from its marks and the commits between them.
+"""Adds up the plain elapsed time of a phase between its marks.
 
-Usage: python3 phase_time.py --start <iso> [--end <iso>] [--base origin/develop]
-                             (from the project root)
+Usage: python3 phase_time.py --start <iso> [--end <iso>]
 
-The events are the start mark, the commits of the branch since --base that fall
-inside the phase, and the end mark (now, when --end is not given). The time is the sum of the intervals between
-consecutive events; an interval longer than CUT minutes (a night, a wait)
-counts as FIXED minutes. Prints {"minutes": N, "timeSpent": "1h 12m", "started":
-<start>} for a worklog: timeSpent is in Jira's format and started is --start.
+The time is the interval between the start mark and the end mark (now, when
+--end is not given), with no regard to what happened in between. Prints
+{"minutes": N, "timeSpent": "1h 12m", "started": <start>} for a worklog:
+timeSpent is in Jira's format and started is --start.
 """
 
 import argparse
 import json
 import re
-import subprocess
 import sys
 from datetime import datetime
-
-CUT = 60
-FIXED = 15
 
 
 def parse(text):
@@ -31,18 +25,8 @@ def parse(text):
     return time
 
 
-def commit_times(base):
-    log = subprocess.run(["git", "log", "--format=%aI", f"{base}..HEAD"], capture_output=True, text=True, check=True)
-    return [parse(line) for line in log.stdout.split()]
-
-
-def minutes(start, end, commits):
-    events = [start] + sorted(time for time in commits if start <= time <= end) + [end]
-    total = 0.0
-    for before, after in zip(events, events[1:]):
-        interval = (after - before).total_seconds() / 60
-        total += interval if interval <= CUT else FIXED
-    return max(1, round(total))
+def minutes(start, end):
+    return max(1, round((end - start).total_seconds() / 60))
 
 
 def jira_format(total):
@@ -54,7 +38,6 @@ def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--start", required=True)
     parser.add_argument("--end")
-    parser.add_argument("--base", default="origin/develop")
     args = parser.parse_args(argv)
     try:
         start = parse(args.start)
@@ -65,12 +48,7 @@ def main(argv):
     if end < start:
         print("--end is before --start", file=sys.stderr)
         return 2
-    try:
-        commits = commit_times(args.base)
-    except subprocess.CalledProcessError as error:
-        print(error.stderr.strip(), file=sys.stderr)
-        return 1
-    total = minutes(start, end, commits)
+    total = minutes(start, end)
     print(json.dumps({"minutes": total, "timeSpent": jira_format(total), "started": args.start}))
     return 0
 

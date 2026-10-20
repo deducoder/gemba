@@ -143,10 +143,14 @@ class VisionDraft(unittest.TestCase):
         colors = dict((text, color) for color, text in statuses(self.body))
         self.assertEqual((colors["Evidence"], colors["Hypothesis"]), ("green", "neutral"))
 
-    def test_go_to_validate_is_a_warning_panel_with_the_decision_as_level_three_heading(self):
+    def test_go_to_validate_is_a_warning_panel_with_the_category_as_level_three_heading(self):
         kind, content = panels(self.body)[-1]
         self.assertEqual(kind, "warning")
-        self.assertTrue(content.startswith("<h3>construir Tours v0.1.0 para validar el riesgo de valor.</h3>"))
+        self.assertTrue(content.startswith("<h3>Go to validate</h3>"))
+
+    def test_the_decision_text_is_a_quote_under_the_heading(self):
+        _, content = panels(self.body)[-1]
+        self.assertIn("<blockquote><p>construir Tours v0.1.0 para validar el riesgo de valor.</p></blockquote>", content)
 
     def test_decided_by_is_a_mention_and_the_date_a_date_node(self):
         _, content = panels(self.body)[-1]

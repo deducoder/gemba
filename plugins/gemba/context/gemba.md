@@ -27,3 +27,4 @@
 
 - The conversation is in the `Conversation:` language and the content of artifacts in the `Content:` one of the `## Language` in `CLAUDE.md`, from the first reply on, even when everything injected is in English. Without that section, both follow the language of the conversation.
 - The structure of artifacts (section headings, labels, table headers, template fields and work item titles) is in the `Structure:` language, English.
+- Spanish content quotes with «comillas angulares» first; "comillas inglesas" only to quote inside an already-quoted «segment», per RAE. A straight `"` inside code, a JQL string or a URL is a literal, not a quote, and stays straight.
