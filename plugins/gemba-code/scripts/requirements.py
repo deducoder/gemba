@@ -11,7 +11,7 @@ and `### Assumptions and open questions`, which may be empty.
 
 - A requirement: `* **R-nn** requirement [Type] Source: origin [Hypothesis]`, Type one of
   Functional, Business rule, Non-functional or Constraint, origin one of Interview, Material,
-  Research or Vision. Source and Hypothesis are each optional, but not both absent: a
+  Research, Vision or Learning. Source and Hypothesis are each optional, but not both absent: a
   requirement with nothing external to back it carries only `[Hypothesis]`. Each ID is used
   once in the page and goes upward within its section; a gap is a proposal the person removed.
 - A withdrawn requirement: `* ~~**R-nn** requirement~~ reason · YYYY-MM-DD`, in the order
@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from draft import FENCE, GREY, STRIKE, STRONG, VERSION_NAME, bullets, check_sections, filled, heading, inline, is_day, items, space, split, status, strong, date_node  # noqa: E402
 
 TYPES = {"Functional": "neutral", "Business rule": "blue", "Non-functional": "purple", "Constraint": "yellow"}
-SOURCES = ("Interview", "Material", "Research", "Vision")
+SOURCES = ("Interview", "Material", "Research", "Vision", "Learning")
 STATES = {"Open": "blue", "Answered": "green"}
 QUESTIONS = "Assumptions and open questions"
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
