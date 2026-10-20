@@ -144,7 +144,7 @@ class RoadmapVersionInProgress(unittest.TestCase):
 
     def test_next_may_be_empty_once_its_entry_is_the_version(self):
         self.assertEqual(headings(self.body), ["Now", "Next", "Later", "Released"])
-        self.assertEqual(section(self.body, "Next"), "<p>Se decide al cerrar la versión en curso, con lo aprendido.</p>")
+        self.assertEqual(section(self.body, "Next"), "<p>Se decide con lo aprendido hasta ahora.</p>")
 
     def test_a_released_version_is_not_in_now(self):
         rejected(PLANNED.replace("[Planned]", "[Released]"), "Now", "Released")
@@ -214,7 +214,7 @@ class RoadmapReleasedVersions(unittest.TestCase):
         start, end = RELEASED.index("* **Unnumbered** Validar"), RELEASED.index("### Later")
         body = page(RELEASED[:start] + RELEASED[end:])
         self.assertIn("<ul>", section(body, "Released"))
-        self.assertEqual(section(body, "Next"), "<p>Se decide al cerrar la versión en curso, con lo aprendido.</p>")
+        self.assertEqual(section(body, "Next"), "<p>Se decide con lo aprendido hasta ahora.</p>")
 
     def test_a_released_version_with_a_date(self):
         rejected(RELEASED.replace("[Released] Validar", "[Released] · 2026-11-20 Validar", 1), "Released", "date")

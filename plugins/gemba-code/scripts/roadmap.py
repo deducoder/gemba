@@ -36,7 +36,7 @@ VERSION_SECTIONS = {
     "Released": (("Released",), False, "'* [<Product> vX.Y.Z](<link>) [Released] goal Target: measurable goal'"),
 }
 OTHER = {"Now": "a released one goes to Released", "Released": "one in progress goes to Now"}
-NEXT_PLACEHOLDER = "Se decide al cerrar la versión en curso, con lo aprendido."
+NEXT_PLACEHOLDER = "Se decide con lo aprendido hasta ahora."
 
 
 def entries(name, lines, found, optional=False):
