@@ -16,9 +16,9 @@ then these sections, in this order:
 - `### Open questions`: one paragraph with the numbers of the questions that blocked the
   version; each `Question n` links to the Requirements page given in --requirements.
 
-The page ends with `## Work items`: the Jira macro of the first level of the version, its
-epics and the work items without a parent of the project given in --project. The draft does
-not write it, nor `Learned`, which version-close adds.
+The page ends with `## Work items`: a Jira issues data source table of the children of the
+version given in --project, epics left out since they only group. The draft does not write
+it, nor `Learned`, which version-close adds.
 
 Prints {"title": "<Product> vX.Y.Z", "body": <HTML>} as JSON when the draft follows the
 template. Otherwise prints one line per problem to stderr, prints nothing to stdout and exits 1.
@@ -29,11 +29,12 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, VERSION_NAME, attr_esc, bullets, check_sections, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
+from draft import BASELINE, FENCE, VERSION_NAME, attr_esc, bullets, check_sections, esc, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, stamp, strong  # noqa: E402
 
 TITLE = re.compile(rf"^{VERSION_NAME}$")
 STATUS = re.compile(r"^\[([^\]]+)\] · (\S+)$")
@@ -41,8 +42,9 @@ KINDS = ("Value", "Usability", "Feasibility", "Viability")
 RISK = re.compile(r"^Risk validated: ((\w+), «.+?».*)$")
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 SECTIONS = ["Outcome", "Requirements", "Open questions"]
-LEFT_OUT = {"Work items": "the script writes the Jira macro", "Learned": "version-close writes it"}
-COLUMNS = "type,key,summary,priority,status,duedate"
+LEFT_OUT = {"Work items": "the script writes the Jira issues table", "Learned": "version-close writes it"}
+DATASOURCE_ID = "d8b75300-dfda-4519-b6cd-e49abbd50401"
+COLUMNS = ("issuetype", "key", "summary", "priority", "status")
 PROJECT = re.compile(r"^[A-Z][A-Z0-9_]+$")
 
 
@@ -132,19 +134,20 @@ def problems(draft, first=False):
     return (found, None) if found else (found, content)
 
 
-def macro(project, version):
+def macro(project, version, site, cloud_id):
     quoted = version.replace("\\", "\\\\").replace('"', '\\"')
-    jql = f'project = {project} AND fixVersion = "{quoted}" AND (issuetype = Epic OR parent is EMPTY) ORDER BY key'
-    parameters = json.dumps({
-        "macroParams": {"jqlQuery": {"value": jql}, "columns": {"value": COLUMNS}},
-        "macroMetadata": {"schemaVersion": {"value": "1"}, "title": "Jira"},
+    jql = f'project = {project} AND fixVersion = "{quoted}" AND issuetype != Epic ORDER BY key'
+    url = f"https://{site}/issues/?jql=" + quote(jql, safe="()")
+    datasource = json.dumps({
+        "id": DATASOURCE_ID,
+        "parameters": {"cloudId": cloud_id, "jql": jql},
+        "views": [{"type": "table", "properties": {"columns": [{"key": column} for column in COLUMNS]}}],
     })
-    return ('<div data-type="extension" data-extension-key="jira" '
-            'data-extension-type="com.atlassian.confluence.macro.core" '
-            f'data-parameters="{attr_esc(parameters)}"></div>')
+    return (f'<div data-type="block-card" data-url="{attr_esc(url)}" data-datasource="{attr_esc(datasource)}">'
+            f'<a href="{attr_esc(url)}">{esc(url)}</a></div>')
 
 
-def body(content, project, requirements):
+def body(content, project, site, cloud_id, requirements):
     """Returns the live doc as HTML."""
     day, goal = content["intro"]
     parts = [paragraph(stamp("Planned", day)), paragraph(inline(goal))]
@@ -155,13 +158,15 @@ def body(content, project, requirements):
               paragraph(strong("Baseline:") + space() + inline(baseline) + space() + strong("Target:") + space() + inline(target))]
     parts += [heading("Requirements", 2), bullets([strong(rid) + space() + inline(text) for rid, text in content["requirements"]])]
     parts += [heading("Open questions", 2), paragraph(linked(content["questions"], requirements))]
-    parts += [heading("Work items", 2), macro(project, content["title"])]
+    parts += [heading("Work items", 2), macro(project, content["title"], site, cloud_id)]
     return "".join(parts)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--project", required=True, help="the key of the Jira project")
+    parser.add_argument("--site", required=True, help="the Jira/Confluence site hostname, for the Work items fallback link")
+    parser.add_argument("--cloud-id", required=True, help="the Atlassian cloudId, for the Work items data source")
     parser.add_argument("--requirements", required=True, help="the URL of the Requirements page")
     parser.add_argument("--first", action="store_true", help="the version is the first of the product")
     args = parser.parse_args()
@@ -172,7 +177,8 @@ def main():
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    print(json.dumps({"title": content["title"], "body": body(content, args.project, args.requirements)}, ensure_ascii=False))
+    body_html = body(content, args.project, args.site, args.cloud_id, args.requirements)
+    print(json.dumps({"title": content["title"], "body": body_html}, ensure_ascii=False))
     return 0
 
 
