@@ -36,6 +36,7 @@ VERSION_SECTIONS = {
     "Released": (("Released",), False, "'* [<Product> vX.Y.Z](<link>) [Released] goal Target: measurable goal'"),
 }
 OTHER = {"Now": "a released one goes to Released", "Released": "one in progress goes to Now"}
+NEXT_PLACEHOLDER = "Se decide al cerrar la versión en curso, con lo aprendido."
 
 
 def entries(name, lines, found, optional=False):
@@ -122,6 +123,7 @@ def version(name, link, state, day, goal, target):
 def body(content):
     """Returns the live doc as HTML."""
     parts = []
+    started = not isinstance(content["Now"], str) or not isinstance(content["Released"], str)
     for name in SECTIONS:
         parts.append(heading(name, 2))
         if isinstance(content[name], str):
@@ -130,6 +132,8 @@ def body(content):
             parts.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
             parts.append(bullets([entry(goal) for goal in content[name]]))
+        elif name == "Next" and started:
+            parts.append(paragraph(inline(NEXT_PLACEHOLDER)))
     return "".join(parts)
 
 
