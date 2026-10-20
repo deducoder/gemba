@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, creates the Work, Work/Spikes, Work/Researchs and Work/Templates Confluence folders that are missing, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
+description: Prepares a project for Gemba. Declares Gemba and the languages in CLAUDE.md, the Atlassian site, Jira space and Confluence space in .gemba/project/atlassian.json, creates the Work, Work/Spikes and Work/Researchs Confluence folders that are missing, how finished work reaches develop in .gemba/project/git.json, turns off commit and PR attribution, ignores the worktrees folder in .gitignore, and creates the initial git history. Safe to re-run.
 disable-model-invocation: true
 allowed-tools:
   - Read(/${CLAUDE_SKILL_DIR}/assets/*)
@@ -77,7 +77,7 @@ Ask only for what the current state lacks, in as few questions as possible, and 
    }
    ```
 
-6. **Confluence folders.** Read the Confluence space of `.gemba/project/atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants` and `depth: 2`, which reaches `Work` and its children. `Work`, `Work/Spikes`, `Work/Researchs` and `Work/Templates` are folders (`type: folder`); create with `createConfluenceContent` (`contentType: "folder"`, no body) whichever is missing, `Work` itself first when it is missing too, each with the `id` of its parent (the space's home for `Work`, `Work`'s own `id` for the other three). One already there is left as it is.
+6. **Confluence folders.** Read the Confluence space of `.gemba/project/atlassian.json` with `getConfluenceSpaces` (its `id` and `homepageId`) and the descendants of its home with `getConfluencePageDescendants` and `depth: 2`, which reaches `Work` and its children. `Work`, `Work/Spikes` and `Work/Researchs` are folders (`type: folder`); create with `createConfluenceContent` (`contentType: "folder"`, no body) whichever is missing, `Work` itself first when it is missing too, each with the `id` of its parent (the space's home for `Work`, `Work`'s own `id` for the other two). One already there is left as it is.
 
 7. **Integration declaration.** Write `.gemba/project/git.json` exactly in this shape:
 
