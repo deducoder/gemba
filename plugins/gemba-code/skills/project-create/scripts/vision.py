@@ -35,7 +35,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import BASELINE, FENCE, attr_esc, bullets, check_sections, dated, esc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
+from draft import BASELINE, FENCE, attr_esc, blockquote, bullets, check_sections, dated, esc, filled, heading, inline, is_day, items, label, linked, paragraph, paragraphs, space, split, status, strong  # noqa: E402
 
 SECTIONS = ["Problem", "Users", "Success", "Constraints", "Risks"]
 ORIGINS = ("Client", "Market", "Internal", "Platform")
@@ -209,7 +209,7 @@ def body(content, requirements=None):
     if content["decision"]:
         state, what, account, day = content["decision"]
         parts += [heading("Decision", 2), panel(
-            PANELS[state], f"<h3>{inline(what)}</h3>",
+            PANELS[state], f"<h3>{inline(state)}</h3>", blockquote(paragraph(inline(what))),
             paragraph(strong("Decided by:") + space() + mention(account) + dated(day)),
         )]
     return "".join(parts)
