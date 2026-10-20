@@ -1,6 +1,6 @@
 # Severity
 
-Severity is the impact of an observation if nobody acts on it. Deduce it from the observation's own content, never from who reported it.
+Severity is the impact of an observation if nobody acts on it. Deduce it from the observation's own content, never from who reported it. When the content does not decide between two levels, take the lower one.
 
 - **High:** it already produces a wrong result, breaks a flow with no workaround, or exposes something that should not be exposed.
 - **Medium:** it is confusing, inconsistent or fails intermittently, but a workaround exists or it rarely triggers.
