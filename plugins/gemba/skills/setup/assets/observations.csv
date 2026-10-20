@@ -1,0 +1,16 @@
+<fields>
+field_name,type,configuration
+Observation,text,
+Severity,tag,
+Status,tag,
+Origin,jira-work-item,"cloud_id:<cloud_id>"
+Date,date,
+Tracked in,jira-work-item,"cloud_id:<cloud_id>"
+</fields>
+<views>
+view_name,layout,filters,sorts,hidden_fields
+All observations,table,"","",""
+</views>
+<data>
+Observation,Severity,Status,Origin,Date,Tracked in
+</data>
