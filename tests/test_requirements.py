@@ -123,6 +123,9 @@ class RequirementsOptional(unittest.TestCase):
     def test_an_answered_question(self):
         page(DRAFT.replace("unas 20. [Open]", "unas 20. [Answered]"))
 
+    def test_a_learning_source_passes(self):
+        page(DRAFT.replace("Source: Material", "Source: Learning"))
+
 
 class RequirementsReview(unittest.TestCase):
     def test_a_gap_left_by_a_removed_proposal_passes(self):
