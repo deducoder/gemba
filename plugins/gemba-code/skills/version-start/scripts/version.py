@@ -43,7 +43,7 @@ RISK = re.compile(r"^Risk validated: ((\w+), «.+?».*)$")
 REQUIREMENT = re.compile(r"^\*\*(R-\d+)\*\* (.+)$")
 SECTIONS = ["Outcome", "Requirements", "Open questions"]
 LEFT_OUT = {"Work items": "the script writes the Jira issues table", "Learned": "version-close writes it"}
-DATASOURCE_ID = "d8b75300-dfda-4519-b6cd-e49abbd50401"
+DATASOURCE_ID = "d8b75300-dfda-4519-b6cd-e49abbd50401"  # Confluence's built-in Jira issues datasource provider
 COLUMNS = ("issuetype", "key", "summary", "priority", "status")
 PROJECT = re.compile(r"^[A-Z][A-Z0-9_]+$")
 
@@ -143,8 +143,9 @@ def macro(project, version, site, cloud_id):
         "parameters": {"cloudId": cloud_id, "jql": jql},
         "views": [{"type": "table", "properties": {"columns": [{"key": column} for column in COLUMNS]}}],
     })
-    return (f'<div data-type="block-card" data-url="{attr_esc(url)}" data-datasource="{attr_esc(datasource)}">'
-            f'<a href="{attr_esc(url)}">{esc(url)}</a></div>')
+    escaped_url = attr_esc(url)
+    return (f'<div data-type="block-card" data-url="{escaped_url}" data-datasource="{attr_esc(datasource)}">'
+            f'<a href="{escaped_url}">{esc(url)}</a></div>')
 
 
 def body(content, project, site, cloud_id, requirements):

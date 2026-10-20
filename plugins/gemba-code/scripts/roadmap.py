@@ -107,6 +107,7 @@ def problems(draft):
     }
     content["Next"] = entries("Next", sections["Next"], found, optional=started)
     content["Later"] = entries("Later", sections["Later"], found, optional=True)
+    content["started"] = started
     return (found, None) if found else (found, content)
 
 
@@ -123,7 +124,6 @@ def version(name, link, state, day, goal, target):
 def body(content):
     """Returns the live doc as HTML."""
     parts = []
-    started = not isinstance(content["Now"], str) or not isinstance(content["Released"], str)
     for name in SECTIONS:
         parts.append(heading(name, 2))
         if isinstance(content[name], str):
@@ -132,7 +132,7 @@ def body(content):
             parts.append(bullets([version(*listed) for listed in content[name]]))
         elif content[name]:
             parts.append(bullets([entry(goal) for goal in content[name]]))
-        elif name == "Next" and started:
+        elif name == "Next" and content["started"]:
             parts.append(paragraph(inline(NEXT_PLACEHOLDER)))
     return "".join(parts)
 
