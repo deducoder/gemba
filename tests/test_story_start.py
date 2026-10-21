@@ -34,8 +34,11 @@ Como cliente, quiero descargar mis facturas, para llevar mis cuentas.
 """
 
 
-def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
+def run(draft, requirements=None):
+    args = [sys.executable, str(SCRIPT), "--site", SITE]
+    if requirements:
+        args += ["--requirements", requirements]
+    return subprocess.run(args, input=draft, capture_output=True, text=True)
 
 
 class StoryDraft(unittest.TestCase):
@@ -118,6 +121,51 @@ class StoryDraft(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(result.stdout, "")
                 self.assertTrue(result.stderr.strip())
+
+
+class StoryRequirements(unittest.TestCase):
+    REQUIREMENTS = f"https://{SITE}/wiki/spaces/ABC/pages/1/Requirements"
+
+    def requirement_draft(self):
+        return DRAFT.replace(
+            "* ==Si la factura no existe, la descarga responde 404.==",
+            "* ==Si la factura no existe, la descarga responde 404 (R-15, R-16).==",
+        )
+
+    def test_each_requirement_a_criterion_cites_links_to_the_requirements_page(self):
+        result = run(self.requirement_draft(), requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn(f'<a href="{self.REQUIREMENTS}">R-15</a>', description)
+        self.assertIn(f'<a href="{self.REQUIREMENTS}">R-16</a>', description)
+
+    def test_without_the_page_the_requirement_stays_text(self):
+        result = run(self.requirement_draft())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn("R-15, R-16", description)
+        self.assertIsNone(re.search(r'<a href="[^"]*">R-1[56]</a>', description))
+
+    def test_a_criterion_that_only_cites_a_requirement_may_skip_its_evidence_line(self):
+        draft = self.requirement_draft().replace("* ran: `curl -i /invoices/0` → 404\n", "")
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(re.findall(r"<li><p>(.+?)</p></li>", json.loads(result.stdout)["comment"]),
+                          ["read: <code>app/invoices.py:12</code>"])
+
+    def test_a_criterion_without_a_requirement_still_needs_its_evidence_line(self):
+        draft = DRAFT.replace("* ran: `curl -i /invoices/0` → 404\n", "")
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Evidence", result.stderr)
+
+    def test_dropping_more_evidence_than_requirements_cited_is_rejected(self):
+        draft = self.requirement_draft().replace(
+            "* read: `app/invoices.py:12`\n* ran: `curl -i /invoices/0` → 404\n", ""
+        )
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Evidence", result.stderr)
 
 
 if __name__ == "__main__":
