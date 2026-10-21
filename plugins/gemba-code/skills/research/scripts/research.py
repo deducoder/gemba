@@ -51,13 +51,15 @@ ASKED = re.compile(r"^Asked by: ([A-Za-z0-9:_-]+) · (\d{4}-\d{2}-\d{2})$")
 
 def intro_lines(lines, found):
     """Returns the decision sentence, the Detail text and the Asked by accountId and date, or
-    None when the intro does not follow the template."""
-    lines = filled(lines)
-    if len(lines) != 3:
+    None when the intro does not follow the template. The decision sentence may wrap across
+    several lines; the Detail and Asked by lines may not."""
+    lines = [line.strip() for line in filled(lines)]
+    if len(lines) < 3:
         found.append("Detail: write the decision sentence, then a 'Detail: ...?' line and an "
                       "'Asked by: <accountId> · YYYY-MM-DD' line")
         return None
-    decision, detail_line, asked_line = lines
+    *decision_lines, detail_line, asked_line = lines
+    decision = " ".join(decision_lines)
     detail = DETAIL.match(detail_line)
     asked = ASKED.match(asked_line)
     if not detail or not detail.group(1).strip().endswith("?"):

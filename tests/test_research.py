@@ -91,6 +91,16 @@ class ResearchDraft(unittest.TestCase):
     def test_the_detail_paragraph_holds_the_full_question(self):
         self.assertIn(f"<strong>Detail:</strong> {QUESTION}", self.body)
 
+    def test_the_decision_sentence_may_wrap_across_lines(self):
+        draft = DRAFT.replace(
+            "Decide el esquema de la historia de liberar biases y lo espera quien la implementa.",
+            "Decide el esquema de la historia de liberar biases\ny lo espera quien la implementa.",
+        )
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        body = json.loads(result.stdout)["body"]
+        self.assertTrue(body.startswith("<p>Decide el esquema de la historia de liberar biases y lo espera quien la implementa.</p>"))
+
     def test_asked_by_is_a_mention_and_the_date_a_date_node(self):
         self.assertIn(
             f'<strong>Asked by:</strong> <span data-type="mention" data-user-id="{ACCOUNT}">@{ACCOUNT}</span> '
