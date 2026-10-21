@@ -159,6 +159,26 @@ class StoryRequirements(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Evidence", result.stderr)
 
+    def test_a_code_like_token_that_is_not_a_requirement_is_not_linked(self):
+        draft = DRAFT.replace(
+            "* ==Si la factura no existe, la descarga responde 404.==",
+            "* ==Si ocurre ERROR-500, la descarga se reintenta.==",
+        )
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn("ERROR-500", description)
+        self.assertIsNone(re.search(r"ERRO<a|<a[^>]*>R-500</a>", description))
+
+    def test_a_code_like_token_that_is_not_a_requirement_is_not_linked_or_exempted(self):
+        draft = DRAFT.replace(
+            "* ==Si la factura no existe, la descarga responde 404.==",
+            "* ==Si ocurre ERROR-500, la descarga se reintenta.==",
+        ).replace("* ran: `curl -i /invoices/0` → 404\n", "")
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Evidence", result.stderr)
+
     def test_dropping_more_evidence_than_requirements_cited_is_rejected(self):
         draft = self.requirement_draft().replace(
             "* read: `app/invoices.py:12`\n* ran: `curl -i /invoices/0` → 404\n", ""
