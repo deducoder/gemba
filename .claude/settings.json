@@ -12,7 +12,7 @@
     "gemba": {
       "source": {
         "source": "github",
-        "repo": "deducoder/gemba"
+        "repo": "dedurbina/gemba"
       }
     }
   }

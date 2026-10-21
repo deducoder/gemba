@@ -62,14 +62,16 @@ A request with two questions or more is one spike per question. **Observe before
 
 6. **Give it a priority and a time-box** with the Spike rules of the priority above and the Spike rules of the estimate above, and with the Window of an epic rule of the estimate above when the spike has an epic as parent: they set the time-box.
 
-7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+7. **Check the draft** with this command, run alone and exactly in this form, with `--requirements <the link to Requirements>` when the request named one, and fix each problem it names until it passes:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/spike.py --site <site> <<'SPIKE'
+   python3 ${CLAUDE_SKILL_DIR}/scripts/spike.py --site <site> [--requirements <the link to Requirements>] <<'SPIKE'
    <the draft>
    SPIKE
    ```
 
 8. **Create the spike** with `createJiraIssue`: the project, the issue type Spike, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its time-box as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<time-box>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new spike with `addCommentToJiraIssue`, as HTML.
 
-9. **Reply** with the key and link of each spike it created with the fix version and the due date it set, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, why an epic it named is not the parent and, when the time-box does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.
+9. **Link an observation.** When the request names the Observations row the question comes from, invoke `/gemba-code:observation` with the Skill tool, `declare <new KEY> [<new KEY> ...] <the row reference>`, naming every spike step 8 created.
+
+10. **Reply** with the key and link of each spike it created with the fix version and the due date it set, the answer and its source for each question the project already answers, the research it named, with its question, the story or the bug it named instead, why an epic it named is not the parent and, when the time-box does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.

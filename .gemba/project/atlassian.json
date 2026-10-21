@@ -1,5 +1,5 @@
 {
-  "site": "deducoder.atlassian.net",
+  "site": "deducoder-old.atlassian.net",
   "jira": { "project": "GEMBA" },
   "confluence": { "space": "GEMBA" }
 }

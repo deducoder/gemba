@@ -53,21 +53,23 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJ
 
 5. **Draft the story** with the template, with 8 Done when criteria at most, each one a behavior someone can check from outside: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none.
    - Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. A criterion that restates the request stays plain.
-   - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. The Evidence reaches Jira as a comment, not in the description.
+   - Give each criterion, in the same order, its Evidence line: the command you ran in step 3 with its output, or the source you read. A criterion whose only source is a requirement it cites as `(R-nn)`, with no code to read yet, gets no Evidence line. The Evidence reaches Jira as a comment, not in the description.
    - Write in Out of scope only what the Out of scope rules above allow. Add `→ <KEY>` only when another work item already covers it; read that key first, unless step 2 already did.
 
 6. **Give it a priority and an original estimate** with the Story rules of the priority above and the Story rules of the estimate above, and with the Window of an epic rule of the estimate above when the story has an epic as parent.
 
-7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+7. **Check the draft** with this command, run alone and exactly in this form, with `--requirements <the link to Requirements>` when the request named one, and fix each problem it names until it passes:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/story.py --site <site> <<'STORY'
+   python3 ${CLAUDE_SKILL_DIR}/scripts/story.py --site <site> [--requirements <the link to Requirements>] <<'STORY'
    <the draft>
    STORY
    ```
 
    When it asks to split the story, create nothing yet: propose in the conversation how to split it into stories within the limit it names, grouped by the behaviors they check, each with its Summary and its criteria, and stop until the user agrees. With the agreement, check, create and comment each agreed story as in this step and the next, each with the parent of step 2 and its fix versions when it has one, or without it with the fix version and the due date of step 8, and link them with `createIssueLink`: `Blocks` for each dependency the request or the agreed split names, the blocking story as `inwardIssue` and the blocked one as `outwardIssue`, and `Relates` between the rest.
 
-8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. Then add the `comment` the script printed to the new story with `addCommentToJiraIssue`, as HTML.
+8. **Create the story** with `createJiraIssue`: the project, the issue type Story, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), the key of the epic of step 2 as `parent` (a string) when it has one, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`, adding `"fixVersions": [{"name": "<version>"}]` with each fix version of the epic of step 2 when it has any. Without that epic, it takes the fix version the request names, and `"duedate": "<YYYY-MM-DD>"` when the Due date rule of the estimate above gives it one. When the script printed a `comment`, add it to the new story with `addCommentToJiraIssue`, as HTML.
 
-9. **Reply** with the key and link of each story it created with the fix version and the due date it set, the spikes or bugs it named instead, why an epic it named is not the parent and, when the estimate does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.
+9. **Link an observation.** When the request names the Observations row the idea comes from, invoke `/gemba-code:observation` with the Skill tool, `declare <new KEY> [<new KEY> ...] <the row reference>`, naming every story step 8 created.
+
+10. **Reply** with the key and link of each story it created with the fix version and the due date it set, the spikes or bugs it named instead, why an epic it named is not the parent and, when the estimate does not fit the window the epic leaves, that the children no longer fit its date, and nothing else.

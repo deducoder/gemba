@@ -15,6 +15,8 @@ STRIKE = ("<s>", "</s>")
 STRONG = ("<strong>", "</strong>")
 KEY = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 CODE = re.compile(r"`([^`]+)`")
+QUESTION = r"Question \d+"
+REQUIREMENT = r"\bR-\d+\b"
 HEADING = re.compile(r"^(#{3,4}) (.+?)\s*$")
 FENCE = re.compile(r"^(`{3,}|~{3,})")
 TRAIL = ("ran:", "read:")
@@ -152,6 +154,11 @@ def check_trail(name, lines, found):
             found.append(f"{name}: start each line with 'ran:' or 'read:': {line}")
 
 
+def cites_requirement(line):
+    """Tells whether a line cites a requirement (`R-nn`) outside code."""
+    return bool(re.search(REQUIREMENT, prose(line)))
+
+
 def check_criteria(criteria, found):
     for line in criteria:
         inner = line[2:-2] if wrapped(line) else line
@@ -184,26 +191,26 @@ def inline(text, marks=()):
     return "".join(parts)
 
 
-def linked(text, url):
-    """Returns the text as HTML, with each `Question n` outside code linking to the
-    Requirements page."""
+def linked(text, url, pattern=QUESTION, marks=()):
+    """Returns the text as HTML, with each match of `pattern` outside code linking to the
+    Requirements page; the other runs carry each mark in order, innermost first."""
     if not url:
-        return inline(text)
+        return inline(text, marks)
     parts = []
     for i, chunk in enumerate(CODE.split(text)):
         if i % 2:
             parts.append(inline(f"`{chunk}`"))
             continue
-        for j, part in enumerate(re.split(r"(Question \d+)", chunk)):
+        for j, part in enumerate(re.split(f"({pattern})", chunk)):
             if j % 2:
                 parts.append(f'<a href="{attr_esc(url)}">{esc(part)}</a>')
             elif part:
-                parts.append(inline(part))
+                parts.append(inline(part, marks))
     return "".join(parts)
 
 
-def criterion(line):
-    return inline(line[2:-2], (ORANGE,)) if wrapped(line) else inline(line)
+def criterion(line, url=None):
+    return linked(line[2:-2], url, REQUIREMENT, (ORANGE,)) if wrapped(line) else linked(line, url, REQUIREMENT)
 
 
 def excluded(line, site):

@@ -2,7 +2,7 @@
 """Checks a spike draft against the template and converts it to what Jira takes:
 the Summary, the description and the Evidence comment as ADF documents.
 
-Usage: python3 spike.py --site <site> < draft.md
+Usage: python3 spike.py --site <site> [--requirements <url>] < draft.md
 
 The draft comes on stdin: the Summary on its first line, one paragraph whose first
 sentence is the closed question, the only one ending in "?", followed by the decision
@@ -11,7 +11,8 @@ that waits on its answer, then the `### Done when`, `### Evidence` and
 criteria. The Evidence holds what was observed to declare the spike, so it needs
 no line per criterion.
 
-Lines are written and converted as the plugin's scripts/draft.py says.
+Lines are written and converted as the plugin's scripts/draft.py says. With
+--requirements, each `R-nn` a Done when criterion cites links to that URL.
 
 When the draft follows the template, prints {"summary": ..., "description":
 <HTML>, "comment": <HTML>} as JSON: the description holds the question and its
@@ -77,10 +78,10 @@ def problems(summary, intro, sections, subsections, repeated):
                    "evidence": evidence, "scope": scope}
 
 
-def description(content, site):
+def description(content, site, requirements=None):
     """Returns the description as HTML: the question and its decision, Done when and Out of scope."""
     return (paragraph(inline(content["intro"]))
-            + section("Done when", [criterion(line) for line in content["criteria"]])
+            + section("Done when", [criterion(line, requirements) for line in content["criteria"]])
             + section("Out of scope", [excluded(line, site) for line in content["scope"]]))
 
 
@@ -92,12 +93,14 @@ def comment(content):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--site", required=True, help="the Atlassian site, e.g. example.atlassian.net")
-    site = parser.parse_args().site
+    parser.add_argument("--requirements", help="the URL of the Requirements page")
+    args = parser.parse_args()
     found, content = problems(*split(sys.stdin.read()))
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    spike = {"summary": content["summary"], "description": description(content, site), "comment": comment(content)}
+    spike = {"summary": content["summary"], "description": description(content, args.site, args.requirements),
+             "comment": comment(content)}
     print(json.dumps(spike, ensure_ascii=False))
     return 0
 

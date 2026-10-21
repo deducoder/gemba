@@ -95,4 +95,6 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue addCommentToJ
 
 12. **Create the bug** with `createJiraIssue`: the project, the issue type Bug, the `summary` and the `description` the script printed, the description as HTML (`contentFormat: "html"`), with no parent, and in `additional_fields` its priority and its estimate as `{"priority": {"name": "<level>"}, "timetracking": {"originalEstimate": "<estimate>"}}`. Then add the `comment` the script printed to the new bug with `addCommentToJiraIssue`, as HTML, and link the bug with `createIssueLink`, the link type `Relates`, to each origin of **Read each work item key**.
 
-13. **Reply** with the key and link of the bug it created and the keys it linked it to, and nothing else.
+13. **Link an observation.** When the request names the Observations row this bug comes from, invoke `/gemba-code:observation` with the Skill tool, `declare <new KEY> <the row reference>`.
+
+14. **Reply** with the key and link of the bug it created and the keys it linked it to, and nothing else.
