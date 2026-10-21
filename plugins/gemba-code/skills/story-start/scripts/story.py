@@ -14,9 +14,10 @@ a criterion with no Evidence line of its own is allowed, since its only
 source is the requirement it cites.
 
 When the draft follows the template, prints {"summary": ..., "description":
-<HTML>, "comment": <HTML>} as JSON: the description holds the opening sentence,
-Done when and Out of scope, and the comment holds the Evidence. Otherwise
-prints one line per problem to stderr, prints nothing to stdout and exits 1.
+<HTML>[, "comment": <HTML>]} as JSON: the description holds the opening
+sentence, Done when and Out of scope, and the comment, when there is any
+Evidence to show, holds it. Otherwise prints one line per problem to stderr,
+prints nothing to stdout and exits 1.
 """
 
 import argparse
@@ -49,10 +50,12 @@ def problems(summary, intro, sections, subsections, repeated):
         found.append("sections: write no #### headings")
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
-    criteria, evidence, scope = (items(name, sections[name], found) for name in SECTIONS)
+    criteria = items("Done when", sections["Done when"], found)
+    citing = sum(1 for line in criteria if cites_requirement(line))
+    evidence = items("Evidence", sections["Evidence"], found, optional=(citing == len(criteria)))
+    scope = items("Out of scope", sections["Out of scope"], found)
     if len(criteria) > MAX_CRITERIA:
         found.append(f"Done when: {len(criteria)} criteria; split the story into stories of {MAX_CRITERIA} criteria at most")
-    citing = sum(1 for line in criteria if cites_requirement(line))
     if len(evidence) > len(criteria) or len(criteria) - len(evidence) > citing:
         found.append(
             "Evidence: give one line per Done when criterion, in order, except one that only cites a requirement, "
@@ -89,8 +92,9 @@ def main():
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    story = {"summary": content["summary"], "description": description(content, args.site, args.requirements),
-             "comment": comment(content)}
+    story = {"summary": content["summary"], "description": description(content, args.site, args.requirements)}
+    if content["evidence"]:
+        story["comment"] = comment(content)
     print(json.dumps(story, ensure_ascii=False))
     return 0
 
