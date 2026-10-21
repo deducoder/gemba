@@ -14,9 +14,10 @@ a criterion with no Evidence line of its own is allowed, since its only
 source is the requirement it cites.
 
 When the draft follows the template, prints {"summary": ..., "description":
-<HTML>, "comment": <HTML>} as JSON: the description holds the opening sentence,
-Done when and Out of scope, and the comment holds the Evidence. Otherwise
-prints one line per problem to stderr, prints nothing to stdout and exits 1.
+<HTML>[, "comment": <HTML>]} as JSON: the description holds the opening
+sentence, Done when and Out of scope, and the comment, when there is any
+Evidence to show, holds it. Otherwise prints one line per problem to stderr,
+prints nothing to stdout and exits 1.
 """
 
 import argparse
