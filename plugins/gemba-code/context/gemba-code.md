@@ -4,6 +4,10 @@
 
 Types: `bug` (incorrect behavior of something that exists), `epic` (a goal that groups the others), `spike` (time-boxed research that delivers knowledge, not code) and `story` (a deliverable feature).
 
+## Work cycle
+
+Every type goes through its own `<type>-start`, `<type>-implement`, `<type>-review` and `<type>-close` skills, in that order; each skill's own description says what it does for that type. Only `story` and `bug` merge a branch into `develop`; an epic's cycle touches no branch, and a spike's branch is deleted, never merged.
+
 ## Branches
 
 - Work branches start from an up-to-date `develop` (`git pull --ff-only`) and merge back into it with `--no-ff`, then are deleted; a spike branch is deleted without a merge.
