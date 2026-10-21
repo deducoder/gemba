@@ -159,6 +159,25 @@ class StoryRequirements(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Evidence", result.stderr)
 
+    def test_a_story_whose_only_criterion_cites_a_requirement_needs_no_evidence_at_all(self):
+        draft = """Maintain the operator's tour catalog and prices
+
+Como Administración, quiero mantener el catálogo de tours de mi operadora, para que Ventas venda tours vigentes.
+
+### Done when
+
+* Administración mantiene el catálogo de tours con sus precios (R-31).
+
+### Evidence
+
+### Out of scope
+
+* Nada
+"""
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("comment", json.loads(result.stdout))
+
     def test_a_code_like_token_that_is_not_a_requirement_is_not_linked(self):
         draft = DRAFT.replace(
             "* ==Si la factura no existe, la descarga responde 404.==",
