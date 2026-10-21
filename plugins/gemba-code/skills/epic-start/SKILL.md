@@ -49,10 +49,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/atlassian_op.py getJiraIssue getJiraProjec
 
 4. **Read the fix version.** Find the id of the issue type Epic with `getJiraProjectIssueTypesMetadata`, then read its fields with `getJiraIssueTypeMetaWithFields` and `requiredFieldsOnly: false`. Of the `allowedValues` of `fixVersions`, take the version the request names or, without one, the version neither released nor archived whose `releaseDate` is the earliest that has not passed, and keep its `releaseDate`. When the version named is released or archived, or no version qualifies, ask for one in the plan and do not make one up.
 
-5. **Draft the epic** with the template, with 8 Done when criteria at most: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. When several requirements it covers serve the same capability, they become one Done when criterion that cites each of their IDs, not one per requirement or per child story. Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. Write in Out of scope only what the Out of scope rules above allow. Check it with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+5. **Draft the epic** with the template, with 8 Done when criteria at most: its headings, labels and Summary in English, and the rest in the `Content:` language of the `## Language` section in `CLAUDE.md`, or the conversation's language when there is none. When several requirements it covers serve the same capability, they become one Done when criterion that cites each of their IDs, not one per requirement or per child story. Wrap in `==` each Done when criterion the user did not ask for, so it reaches Jira in orange. Write in Out of scope only what the Out of scope rules above allow. Check it with this command, run alone and exactly in this form, with `--requirements <the link to Requirements>` when the request named one, and fix each problem it names until it passes:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/epic.py --site <site> <<'EPIC'
+   python3 ${CLAUDE_SKILL_DIR}/scripts/epic.py --site <site> [--requirements <the link to Requirements>] <<'EPIC'
    <the draft>
    EPIC
    ```

@@ -2,14 +2,15 @@
 """Checks an epic draft against the template and converts it to what Jira
 takes: the Summary and the description as an ADF document.
 
-Usage: python3 epic.py --site <site> < draft.md
+Usage: python3 epic.py --site <site> [--requirements <url>] < draft.md
 
 The draft comes on stdin: the Summary on its first line, the opening paragraph,
 then the `### Done when` and `### Out of scope` sections, with one `* ` bullet
 per line, and at most 8 Done when criteria. An epic has no Evidence: each of its
 children carries its own. `code` becomes a code mark, a Done when criterion
 wrapped in `==` turns orange, and a work item key after `→` in Out of scope
-becomes a link to the issue on the site.
+becomes a link to the issue on the site. With --requirements, each `R-nn` a
+Done when criterion cites links to that URL.
 
 When the draft follows the template, prints {"summary": ..., "description":
 <HTML>} as JSON. Otherwise prints one line per problem to stderr, prints nothing
@@ -56,22 +57,24 @@ def problems(summary, intro, sections, subsections, repeated):
     return found, {"summary": summary, "intro": intro[0].strip() if intro else "", "criteria": criteria, "scope": scope}
 
 
-def description(content, site):
+def description(content, site, requirements=None):
     """Returns the description as HTML: the opening paragraph, Done when and Out of scope."""
     return (paragraph(inline(content["intro"]))
-            + section("Done when", [criterion(line) for line in content["criteria"]])
+            + section("Done when", [criterion(line, requirements) for line in content["criteria"]])
             + section("Out of scope", [excluded(line, site) for line in content["scope"]]))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--site", required=True, help="the Atlassian site, e.g. example.atlassian.net")
-    site = parser.parse_args().site
+    parser.add_argument("--requirements", help="the URL of the Requirements page")
+    args = parser.parse_args()
     found, content = problems(*split(sys.stdin.read()))
     if found:
         print("\n".join(found), file=sys.stderr)
         return 1
-    print(json.dumps({"summary": content["summary"], "description": description(content, site)}, ensure_ascii=False))
+    print(json.dumps({"summary": content["summary"], "description": description(content, args.site, args.requirements)},
+                      ensure_ascii=False))
     return 0
 
 
