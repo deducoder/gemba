@@ -62,10 +62,10 @@ A request with two questions or more is one spike per question. **Observe before
 
 6. **Give it a priority and a time-box** with the Spike rules of the priority above and the Spike rules of the estimate above, and with the Window of an epic rule of the estimate above when the spike has an epic as parent: they set the time-box.
 
-7. **Check the draft** with this command, run alone and exactly in this form, and fix each problem it names until it passes:
+7. **Check the draft** with this command, run alone and exactly in this form, with `--requirements <the link to Requirements>` when the request named one, and fix each problem it names until it passes:
 
    ```
-   python3 ${CLAUDE_SKILL_DIR}/scripts/spike.py --site <site> <<'SPIKE'
+   python3 ${CLAUDE_SKILL_DIR}/scripts/spike.py --site <site> [--requirements <the link to Requirements>] <<'SPIKE'
    <the draft>
    SPIKE
    ```

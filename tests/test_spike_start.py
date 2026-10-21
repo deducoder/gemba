@@ -36,8 +36,11 @@ DRAFT = f"""Check whether Acme Pay returns a customer's invoices as JSON
 """
 
 
-def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
+def run(draft, requirements=None):
+    args = [sys.executable, str(SCRIPT), "--site", SITE]
+    if requirements:
+        args += ["--requirements", requirements]
+    return subprocess.run(args, input=draft, capture_output=True, text=True)
 
 
 def headings(html):
@@ -118,6 +121,30 @@ class SpikeDraft(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, result.stdout)
                 self.assertEqual(result.stdout, "")
                 self.assertTrue(result.stderr.strip())
+
+
+class SpikeRequirements(unittest.TestCase):
+    REQUIREMENTS = f"https://{SITE}/wiki/spaces/ABC/pages/1/Requirements"
+
+    def test_each_requirement_a_criterion_cites_links_to_the_requirements_page(self):
+        draft = DRAFT.replace(
+            "* ==Cada afirmación lleva su `ran:` o su fuente.==",
+            "* ==Cada afirmación lleva su `ran:` o su fuente (R-20).==",
+        )
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'<a href="{self.REQUIREMENTS}">R-20</a>', json.loads(result.stdout)["description"])
+
+    def test_without_the_page_the_requirement_stays_text(self):
+        draft = DRAFT.replace(
+            "* ==Cada afirmación lleva su `ran:` o su fuente.==",
+            "* ==Cada afirmación lleva su `ran:` o su fuente (R-20).==",
+        )
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn("R-20", description)
+        self.assertIsNone(re.search(r'<a href="[^"]*">R-20</a>', description))
 
 
 if __name__ == "__main__":

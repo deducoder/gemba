@@ -2,6 +2,7 @@
 HTML it prints for Jira."""
 
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -27,8 +28,11 @@ Quien factura puede consultar, exportar y enviar sus facturas desde la CLI, sin 
 """
 
 
-def run(draft):
-    return subprocess.run([sys.executable, str(SCRIPT), "--site", SITE], input=draft, capture_output=True, text=True)
+def run(draft, requirements=None):
+    args = [sys.executable, str(SCRIPT), "--site", SITE]
+    if requirements:
+        args += ["--requirements", requirements]
+    return subprocess.run(args, input=draft, capture_output=True, text=True)
 
 
 def criteria(count):
@@ -67,6 +71,32 @@ class EpicDraft(unittest.TestCase):
         result = run(draft)
         self.assertEqual(result.returncode, 1)
         self.assertIn("paragraph", result.stderr)
+
+
+class EpicRequirements(unittest.TestCase):
+    REQUIREMENTS = f"https://{SITE}/wiki/spaces/ABC/pages/1/Requirements"
+
+    def test_each_requirement_a_merged_criterion_cites_links_to_the_requirements_page(self):
+        draft = DRAFT.replace(
+            "* ==Un cliente sin facturas recibe un mensaje y el código 1.==",
+            "* ==Un cliente sin facturas recibe un mensaje y el código 1 (R-15, R-16).==",
+        )
+        result = run(draft, requirements=self.REQUIREMENTS)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn(f'<a href="{self.REQUIREMENTS}">R-15</a>', description)
+        self.assertIn(f'<a href="{self.REQUIREMENTS}">R-16</a>', description)
+
+    def test_without_the_page_the_requirement_stays_text(self):
+        draft = DRAFT.replace(
+            "* ==Un cliente sin facturas recibe un mensaje y el código 1.==",
+            "* ==Un cliente sin facturas recibe un mensaje y el código 1 (R-15).==",
+        )
+        result = run(draft)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        description = json.loads(result.stdout)["description"]
+        self.assertIn("R-15", description)
+        self.assertIsNone(re.search(r'<a href="[^"]*">R-15</a>', description))
 
 
 if __name__ == "__main__":
