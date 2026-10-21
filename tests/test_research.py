@@ -15,11 +15,17 @@ SITE = "example.atlassian.net"
 URL_ONE = "https://www.sqlite.org/partialindex.html"
 URL_TWO = "https://example.com/blog/partial-indexes"
 
+TITLE = "¿SQLite puede garantizar una sola bias activa por idol?"
 QUESTION = "¿Puede SQLite garantizar con un índice parcial una sola bias activa por idol?"
+ACCOUNT = "712020:4aaa7bc9-95d7-410b-af7f-956435d83f8f"
+ASKED_DATE = "2026-10-20"
 
-DRAFT = f"""{QUESTION}
+DRAFT = f"""{TITLE}
 
 Decide el esquema de la historia de liberar biases y lo espera quien la implementa.
+
+Detail: {QUESTION}
+Asked by: {ACCOUNT} · {ASKED_DATE}
 
 ### Answer
 
@@ -76,11 +82,21 @@ class ResearchDraft(unittest.TestCase):
         self.assertEqual(self.result.returncode, 0, self.result.stderr)
         self.assertEqual(self.result.stderr, "")
 
-    def test_the_title_is_the_question(self):
-        self.assertEqual(self.page["title"], QUESTION)
+    def test_the_title_is_the_short_question(self):
+        self.assertEqual(self.page["title"], TITLE)
 
     def test_without_a_key_the_page_opens_with_the_decision_sentence(self):
         self.assertTrue(self.body.startswith("<p>Decide el esquema de la historia de liberar biases y lo espera quien la implementa.</p>"))
+
+    def test_the_detail_paragraph_holds_the_full_question(self):
+        self.assertIn(f"<strong>Detail:</strong> {QUESTION}", self.body)
+
+    def test_asked_by_is_a_mention_and_the_date_a_date_node(self):
+        self.assertIn(
+            f'<strong>Asked by:</strong> <span data-type="mention" data-user-id="{ACCOUNT}">@{ACCOUNT}</span> '
+            f'· <time datetime="{ASKED_DATE}">{ASKED_DATE}</time>',
+            self.body,
+        )
 
     def test_the_headings_are_the_five_sections_in_order(self):
         self.assertEqual(headings(self.body), ["Answer", "Method", "Findings", "Sources", "Next"])
@@ -129,6 +145,21 @@ class ResearchKey(unittest.TestCase):
 class ResearchRejects(unittest.TestCase):
     def test_a_title_that_is_not_a_question(self):
         rejected(DRAFT.replace("por idol?", "por idol."), "title", "?")
+
+    def test_a_draft_without_a_detail_line(self):
+        rejected(DRAFT.replace(f"Detail: {QUESTION}\n", ""), "Detail")
+
+    def test_a_draft_without_an_asked_by_line(self):
+        rejected(DRAFT.replace(f"Asked by: {ACCOUNT} · {ASKED_DATE}\n", ""), "Asked by")
+
+    def test_a_detail_that_is_not_a_question(self):
+        rejected(DRAFT.replace(f"Detail: {QUESTION}", f"Detail: {QUESTION[:-1]}."), "Detail", "?")
+
+    def test_an_asked_by_line_without_an_account_or_date(self):
+        rejected(DRAFT.replace(f"Asked by: {ACCOUNT} · {ASKED_DATE}", "Asked by: alguien"), "Asked by")
+
+    def test_an_asked_by_date_that_is_not_a_date(self):
+        rejected(DRAFT.replace(ASKED_DATE, "2026-13-40"), "Asked by", "2026-13-40")
 
     def test_a_draft_without_sources(self):
         draft = DRAFT[:DRAFT.index("[1] https")] + DRAFT[DRAFT.index("### Next"):]
