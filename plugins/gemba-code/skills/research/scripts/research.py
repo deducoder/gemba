@@ -4,13 +4,15 @@ that Confluence takes: the title and the body as an ADF document.
 
 Usage: python3 research.py --site <site> [--key <KEY>] < draft.md
 
-The draft comes on stdin: the question on its first line, ending in `?`; one sentence with
-the decision or doubt that prompted it and who waits on it; then the `### Answer`,
-`### Method`, `### Findings`, `### Sources` and `### Next` sections, in that order. The
-Answer cites the findings it rests on as `[Finding 1.1]`. The Findings are `#### n. Topic`
-headings with lines `n.m Documented|Inferred|Unverified: text`: a Documented finding ends
-with the number of its source as `[n]`, an Inferred one names what it follows from as
-`(from n.m)` and an Unverified one cites nothing. Each Sources line is
+The draft comes on stdin: a short closed question on its first line, ending in `?`, it is
+the title of the page; one sentence with the decision or doubt that prompted it and who
+waits on it; a `Detail: ...?` line with the question as asked, in full; an
+`Asked by: <accountId> · YYYY-MM-DD` line; then the `### Answer`, `### Method`,
+`### Findings`, `### Sources` and `### Next` sections, in that order. The Answer cites the
+findings it rests on as `[Finding 1.1]`. The Findings are `#### n. Topic` headings with
+lines `n.m Documented|Inferred|Unverified: text`: a Documented finding ends with the number
+of its source as `[n]`, an Inferred one names what it follows from as `(from n.m)` and an
+Unverified one cites nothing. Each Sources line is
 `[n] <URL> (official|spec|source|secondary, YYYY-MM-DD): what it is`, and a secondary
 source never goes before an official or a spec one.
 
@@ -30,7 +32,10 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from draft import CODE, FENCE, KEY, attr_esc, check_sections, esc, heading, inline, paragraph, paragraphs, split, unclosed  # noqa: E402
+from draft import (  # noqa: E402
+    CODE, FENCE, KEY, attr_esc, check_sections, dated, esc, filled, heading, inline, is_day, label, paragraph,
+    paragraphs, space, split, strong, unclosed,
+)
 
 SECTIONS = ["Answer", "Method", "Findings", "Sources", "Next"]
 FINDING = re.compile(r"^(\d+)\.(\d+) (\S+?): (.+)$")
@@ -40,6 +45,34 @@ CITE = re.compile(r"\[(\d+)\]")
 FROM = re.compile(r"\(from \d+\.\d+(, \d+\.\d+)*\)\s*$")
 CITED = re.compile(r"\[Finding (\d+\.\d+)\]")
 TOPIC = re.compile(r"^(\d+)\. \S")
+DETAIL = re.compile(r"^Detail: (.+)$")
+ASKED = re.compile(r"^Asked by: ([A-Za-z0-9:_-]+) · (\d{4}-\d{2}-\d{2})$")
+
+
+def intro_lines(lines, found):
+    """Returns the decision sentence, the Detail text and the Asked by accountId and date, or
+    None when the intro does not follow the template. The decision sentence may wrap across
+    several lines; the Detail and Asked by lines may not."""
+    lines = [line.strip() for line in filled(lines)]
+    if len(lines) < 3:
+        found.append("Detail: write the decision sentence, then a 'Detail: ...?' line and an "
+                      "'Asked by: <accountId> · YYYY-MM-DD' line")
+        return None
+    *decision_lines, detail_line, asked_line = lines
+    decision = " ".join(decision_lines)
+    detail = DETAIL.match(detail_line)
+    asked = ASKED.match(asked_line)
+    if not detail or not detail.group(1).strip().endswith("?"):
+        found.append(f"Detail: write the question as asked, in full, ending in ?: {detail_line}")
+        detail = None
+    if not asked:
+        found.append(f"Asked by: write the accountId of who asked and the date as 'Asked by: <accountId> · YYYY-MM-DD': {asked_line}")
+    elif not is_day(asked.group(2)):
+        found.append(f"Asked by: {asked.group(2)} is not a date")
+        asked = None
+    if not detail or not asked:
+        return None
+    return decision, detail.group(1).strip(), asked.group(1), asked.group(2)
 
 
 def problems(draft):
@@ -52,10 +85,8 @@ def problems(draft):
     title, intro, sections, subsections, repeated = split(draft)
     found = []
     if not title.endswith("?"):
-        found.append("title: write the question on the first line, ending in ?")
-    decision = paragraphs(intro)
-    if len(decision) != 1:
-        found.append("decision: write one sentence under the question: the decision or doubt that prompted it and who waits on it")
+        found.append("title: write a short closed question on the first line, ending in ?")
+    asked = intro_lines(intro, found)
     if not check_sections(sections, SECTIONS, repeated, found):
         return found, None
     blocks = {name: paragraphs(sections[name]) for name in ("Answer", "Method", "Next")}
@@ -132,8 +163,10 @@ def problems(draft):
             found.append(f"Answer: cites [Finding {name}], which Findings does not have")
     if found:
         return found, None
-    return found, {"title": title, "decision": decision[0], "answer": blocks["Answer"],
-                   "method": blocks["Method"], "topics": topics, "sources": sources, "next": blocks["Next"]}
+    decision, detail, account, day = asked
+    return found, {"title": title, "decision": decision, "detail": detail, "account": account, "day": day,
+                   "answer": blocks["Answer"], "method": blocks["Method"], "topics": topics, "sources": sources,
+                   "next": blocks["Next"]}
 
 
 def cited(text, sources):
@@ -161,12 +194,18 @@ def source(number, url, kind, date, what):
     return f'<p>[{number}] <a href="{attr_esc(url)}" data-card-appearance="inline"></a>{inline(f" ({kind}, {date}): {what}")}</p>'
 
 
+def mention(account):
+    return f'<span data-type="mention" data-user-id="{attr_esc(account)}">@{esc(account)}</span>'
+
+
 def body(content, site, key):
     """Returns the live doc as HTML."""
     link = f'<p><a href="https://{site}/browse/{key}" data-card-appearance="inline"></a></p>' if key else ""
     sources = content["sources"]
     return (link
             + paragraph(inline(content["decision"]))
+            + label("Detail", content["detail"])
+            + paragraph(strong("Asked by:") + space() + mention(content["account"]) + dated(content["day"]))
             + heading("Answer", 2) + "".join(paragraph(inline(block)) for block in content["answer"])
             + heading("Method", 2) + "".join(paragraph(inline(block)) for block in content["method"])
             + heading("Findings", 2)

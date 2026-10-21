@@ -1,6 +1,9 @@
-<The question, ending in ?>
+<Short closed question, abbreviating the question asked, ending in ?>
 
 <One sentence: the decision or doubt that prompted it and who waits on the answer>
+
+Detail: <The question as asked, in full, ending in ?>
+Asked by: <accountId> · YYYY-MM-DD
 
 ### Answer
 
